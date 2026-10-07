@@ -11,9 +11,8 @@ import Core
 ///   当前是 ad-hoc 签名，做不到；所以这里只做到「发现新版 + 打开下载页」。
 @MainActor
 public final class Updater: ObservableObject {
-    /// 发布来源：**公开**的下载仓库（只放安装包）。
-    /// 源码仓库是私有的，未认证请求会 404，所以版本信息与安装包都放在这里。
-    public static let repository = "fufer97/FU-ToDo-Download"
+    /// 发布来源：本仓库（公开）。设置里「检查更新」就是读这里的 latest release。
+    public static let repository = "fufer97/FU-ToDo"
 
     public enum Status: Equatable {
         case idle
