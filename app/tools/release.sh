@@ -42,7 +42,8 @@ git commit -m "发布 $VERSION${NOTES:+：$NOTES}"
 git push origin main
 
 # 4) 发布到 GitHub —— 只有这一个仓库
-gh release create "v$VERSION" "app/dist/FU ToDo.dmg" \
+# 附件名不带空格（GitHub 会把空格变成点，不好认），带版本号方便收藏
+gh release create "v$VERSION" "app/dist/FU ToDo.dmg#FU-ToDo-$VERSION.dmg" \
   --repo "$REPO" \
   --title "FU ToDo $VERSION" \
   --notes "${NOTES:-见提交记录}"
