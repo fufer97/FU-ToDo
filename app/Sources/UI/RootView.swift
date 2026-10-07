@@ -10,6 +10,7 @@ public struct RootView: View {
     @State private var anchor: Date = Date()
     @StateObject private var session = InputSession()
     @StateObject private var drag = DragController()
+    @State private var showWelcome = false
     @State private var showPool = false
     @State private var showDone = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -74,6 +75,20 @@ public struct RootView: View {
         }
         .environmentObject(session)
         .environmentObject(drag)
+        .sheet(isPresented: $showWelcome) {
+            WelcomeSheet(
+                onOpenHelp: { openWindow(id: "help") },
+                onClose: {
+                    showWelcome = false
+                    store.markWelcomeSeen()
+                }
+            )
+            .environmentObject(store)
+        }
+        .onAppear {
+            // 第一次打开才弹，之后不再打扰
+            if !store.welcomeSeen { showWelcome = true }
+        }
         // 让系统画的那些"不是我们画的部分"也属于这套配色：
         // 文本选中、插入符、焦点环、控件强调色都跟着走。
         .tint(Theme.accent)

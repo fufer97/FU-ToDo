@@ -865,5 +865,32 @@ do {
     check("自己是顶层时返回自己", s.topLevelAncestor(of: a.id) == a.id)
 }
 
+print("\n二十八、首次引导：只看一次，可重看")
+do {
+    let url = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appendingPathComponent("yrjy-welcome-\(UUID().uuidString).json")
+    let s = TaskStore(storeURL: url)
+    check("全新用户没有看过引导", !s.welcomeSeen)
+
+    s.markWelcomeSeen()
+    check("标记后为已看过", s.welcomeSeen)
+    let reloaded = TaskStore(storeURL: url)
+    check("标记已落盘（重开不会再弹）", reloaded.welcomeSeen)
+
+    reloaded.resetWelcome()
+    let again = TaskStore(storeURL: url)
+    check("可以重新调出引导", !again.welcomeSeen)
+
+    // 老数据文件里没有这个字段 → 默认 false，不报错
+    let legacy = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appendingPathComponent("yrjy-legacy-\(UUID().uuidString).json")
+    try? #"{"currentDay":"2026-10-08","tasks":[],"settings":{"accent":"blue","paper":"front"}}"#
+        .write(to: legacy, atomically: true, encoding: .utf8)
+    let old = TaskStore(storeURL: legacy)
+    check("老数据文件缺字段也能读", !old.welcomeSeen && old.tasks.isEmpty)
+    try? FileManager.default.removeItem(at: url)
+    try? FileManager.default.removeItem(at: legacy)
+}
+
 print("\n结果：\(passed) 项通过 / \(failed) 项失败")
 exit(failed == 0 ? 0 : 1)

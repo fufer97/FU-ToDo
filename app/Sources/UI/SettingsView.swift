@@ -85,6 +85,12 @@ public struct SettingsView: View {
 
             presetGrid
 
+            row("引导") {
+                TextButton("重新看一次首次引导", prominent: false) {
+                    store.resetWelcome()
+                    message = "关闭设置窗口后重新打开应用，就会再次看到引导。"
+                }
+            }
             row("字体") {
                 Picker("", selection: binding(\.font)) {
                     ForEach(FontChoice.allCases, id: \.self) { choice in

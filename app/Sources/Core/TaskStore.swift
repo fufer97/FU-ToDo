@@ -57,6 +57,21 @@ public final class TaskStore: ObservableObject {
     @Published public var toastHasUndo: Bool = false
     /// 外观等偏好，随数据一起落盘。
     @Published public var settings: AppSettings = AppSettings()
+    /// 首次引导是否已经看过。
+    @Published public var welcomeSeen: Bool = false
+
+    public func markWelcomeSeen() {
+        guard !welcomeSeen else { return }
+        welcomeSeen = true
+        save()
+    }
+
+    /// 重新看一次引导（设置里可以再调出来）。
+    public func resetWelcome() {
+        welcomeSeen = false
+        save()
+    }
+
     /// 从清单跳过来时，短暂高亮的那一条。
     @Published public var focusedTaskId: UUID?
 
@@ -80,6 +95,7 @@ public final class TaskStore: ObservableObject {
                 self.tasks = decoded.tasks
                 self.currentDay = decoded.currentDay
                 self.settings = decoded.settings
+                self.welcomeSeen = decoded.welcomeSeen
             }
         }
         self.selectedDay = self.currentDay
@@ -109,7 +125,7 @@ public final class TaskStore: ObservableObject {
 
     public func save() {
         guard let url = saveURL else { return }
-        let payload = AppData(currentDay: currentDay, tasks: tasks, settings: settings)
+        let payload = AppData(currentDay: currentDay, tasks: tasks, settings: settings, welcomeSeen: welcomeSeen)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
@@ -146,7 +162,7 @@ public final class TaskStore: ObservableObject {
 
     /// 导出备份：与内部数据文件同一种格式，方便直接查看。
     public func exportData() throws -> Data {
-        let payload = AppData(currentDay: currentDay, tasks: tasks, settings: settings)
+        let payload = AppData(currentDay: currentDay, tasks: tasks, settings: settings, welcomeSeen: welcomeSeen)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601

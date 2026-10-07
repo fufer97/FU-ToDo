@@ -229,6 +229,14 @@ struct RenderMain {
             to: outDir.appendingPathComponent("20-preset-indigo.png")
         )
 
+        // 首次引导
+        render(
+            WelcomeSheet(onOpenHelp: {}, onClose: {})
+                .environmentObject(seeded),
+            size: CGSize(width: 420, height: 380),
+            to: outDir.appendingPathComponent("23-welcome.png")
+        )
+
         // 苹果风字体（标题走系统无衬线）
         let appleStore = makeStore(seeded: true)
         appleStore.updateSettings { $0.font = .apple }

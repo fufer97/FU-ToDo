@@ -58,11 +58,19 @@ public struct AppData: Codable {
     public var currentDay: String
     public var tasks: [Task]
     public var settings: AppSettings
+    /// 是否已经看过首次引导（只看一次，之后不再打扰）
+    public var welcomeSeen: Bool
 
-    public init(currentDay: String, tasks: [Task], settings: AppSettings = AppSettings()) {
+    public init(
+        currentDay: String,
+        tasks: [Task],
+        settings: AppSettings = AppSettings(),
+        welcomeSeen: Bool = false
+    ) {
         self.currentDay = currentDay
         self.tasks = tasks
         self.settings = settings
+        self.welcomeSeen = welcomeSeen
     }
 
     /// 容错解码：老数据文件没有 settings 字段时用默认外观。
@@ -71,5 +79,6 @@ public struct AppData: Codable {
         currentDay = try c.decode(String.self, forKey: .currentDay)
         tasks = try c.decode([Task].self, forKey: .tasks)
         settings = try c.decodeIfPresent(AppSettings.self, forKey: .settings) ?? AppSettings()
+        welcomeSeen = try c.decodeIfPresent(Bool.self, forKey: .welcomeSeen) ?? false
     }
 }
