@@ -91,7 +91,7 @@ public struct HelpView: View {
                 Text("FUFU（不想上班版）")
                     .font(Theme.sans(12, .medium))
                     .foregroundStyle(Theme.ink)
-                Text("FU ToDo \(AppVersion.current)")
+                Text("FU ToDo \(AppVersion.current) · PolyForm Noncommercial 1.0.0")
                     .font(Theme.sans(10.5))
                     .foregroundStyle(Theme.ink3)
             }

@@ -48,7 +48,11 @@ cd app
 
 ## 许可证
 
-[MIT](LICENSE) © FUFU
+[PolyForm Noncommercial License 1.0.0](LICENSE) © 2026 FUFU
+
+- ✅ 个人使用、学习、研究、 hobby 项目、非营利组织与教育机构使用
+- ❌ **商业使用需另行取得授权**（联系仓库作者）
+- 分发时请一并保留 `LICENSE` 与 `Required Notice` 行
 
 ## 版本
 

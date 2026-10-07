@@ -53,6 +53,12 @@ cat > "$BUNDLE/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
+# 许可证：每一份分发包都要带上条款（PolyForm 的 Notices 条款要求）
+mkdir -p "$BUNDLE/Contents/Resources"
+if [ -f "../LICENSE" ]; then
+  cp "../LICENSE" "$BUNDLE/Contents/Resources/LICENSE"
+fi
+
 # 应用图标：resources/AppIcon.icns 存在就挂上（用 tools/make_icon.py 生成）
 if [ -f "resources/AppIcon.icns" ]; then
   mkdir -p "$BUNDLE/Contents/Resources"
