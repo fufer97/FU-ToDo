@@ -13,6 +13,24 @@ struct RenderMain {
 
         let seeded = makeStore(seeded: true)
 
+        // --check-update：跑应用里真正的那段检查更新代码
+        if CommandLine.arguments.contains("--check-update") {
+            let updater = Updater()
+            let done = DispatchSemaphore(value: 0)
+            _Concurrency.Task { @MainActor in
+                await updater.check()
+                print("检查结果：\(updater.status.text)")
+                if case .available(let v, let url) = updater.status {
+                    print("  版本：\(v)\n  下载页：\(url.absoluteString)")
+                }
+                done.signal()
+            }
+            while done.wait(timeout: .now() + 0.1) == .timedOut {
+                RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            }
+            return
+        }
+
         // --bench：量一帧的渲染成本（拖动时每一帧都要走这条路径）
         if CommandLine.arguments.contains("--bench") {
             benchmark(seeded)
