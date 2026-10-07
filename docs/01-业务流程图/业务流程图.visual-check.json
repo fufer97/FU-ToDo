@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "visual-check",
+  "status": "fail",
+  "visualReview": "pending",
+  "artifact": {
+    "path": "/Users/fufu/Documents/低精力计划App/docs/01-业务流程图/业务流程图.html",
+    "sha256": "73c07313533e7a61936cd0bb42aa8d4be7cf51d7bce7c3ee9ca523c8af092c81",
+    "bytes": 638523
+  },
+  "state": {
+    "detail": "read",
+    "motion": "still"
+  },
+  "chrome": {
+    "status": "available",
+    "executable": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+  },
+  "containment": {
+    "status": "fail",
+    "viewports": []
+  },
+  "captures": {
+    "status": "fail",
+    "screenshots": [],
+    "contactSheet": null
+  },
+  "sidecars": {
+    "receipt": "业务流程图.visual-check.json",
+    "contactSheet": "业务流程图.visual-check.html"
+  },
+  "error": "Chrome exited before visual-check completed (null)"
+}

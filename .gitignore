@@ -1,0 +1,8 @@
+# 构建产物
+app/.build/
+app/dist/
+app/.swiftpm/
+*.dmg
+
+# 系统垃圾
+.DS_Store

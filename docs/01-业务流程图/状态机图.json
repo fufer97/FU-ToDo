@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "「FU ToDo」任务状态机",
+    "quality_profile": "showcase",
+    "viewBox": [760, 620]
+  },
+  "lanes": [
+    { "id": "main", "label": "任务状态" }
+  ],
+  "states": [
+    { "id": "active", "type": "active", "label": "未完成", "sublabel": "默认状态 · 未勾选", "lane": "main", "col": 0, "tag": "默认" },
+    { "id": "done", "type": "success", "label": "已完成", "sublabel": "勾选完成或忽略 · 可撤销", "lane": "main", "col": 1, "tag": "终点" }
+  ],
+  "transitions": [
+    { "id": "ignore", "from": "active", "to": "done", "label": "忽略", "variant": "security", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom", "labelAt": [171, 209] },
+    { "id": "undo", "from": "done", "to": "active", "label": "撤销 / 恢复", "variant": "dashed", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom", "labelAt": [171, 240] }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "主路径",
+      "items": [
+        "任务创建后处于未完成",
+        "主流程箭头表示勾选完成",
+        "已完成可撤销 / 恢复回未完成"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "完成方式",
+      "items": [
+        "勾选完成 = 做到了",
+        "忽略 = 决定不再做",
+        "两者都进入同一个已完成状态"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "与业务流程的关系",
+      "items": [
+        "未完成池只含未完成的任务",
+        "重新执行不改变状态，仍是未完成",
+        "跨天不结转，但状态不变"
+      ]
+    }
+  ]
+}

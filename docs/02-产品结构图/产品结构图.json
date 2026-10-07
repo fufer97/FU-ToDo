@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "「FU ToDo」产品结构图",
+    "subtitle": "阶段 2 · 模块划分与关系",
+    "quality_profile": "showcase",
+    "viewBox": [980, 640]
+  },
+  "components": [
+    { "id": "today_view", "type": "frontend", "label": "今日页", "sublabel": "空白开始 · 旧任务不结转", "pos": [64, 120], "size": [150, 62] },
+    { "id": "main_goal", "type": "frontend", "label": "主目标", "sublabel": "只写一个最重要的事", "pos": [64, 208], "size": [150, 62] },
+    { "id": "task_tree", "type": "frontend", "label": "任务树", "sublabel": "圆环勾选 · 拖拽调整", "tag": "可撤销", "pos": [64, 296], "size": [150, 62] },
+    { "id": "pool_filter", "type": "frontend", "label": "未完成池", "sublabel": "本周 / 本月 / 所有", "tag": "非重点", "pos": [520, 120], "size": [170, 62] },
+    { "id": "ignore", "type": "backend", "label": "忽略", "sublabel": "结束任务 · 可恢复", "pos": [520, 208], "size": [150, 62] },
+    { "id": "reexec", "type": "backend", "label": "重新执行", "sublabel": "加入当天 · 连带整棵上级", "pos": [716, 120], "size": [170, 62] },
+    { "id": "monthly_entry", "type": "backend", "label": "月度回顾", "sublabel": "批量忽略 / 重新执行", "pos": [716, 208], "size": [150, 62] },
+    { "id": "done_list", "type": "frontend", "label": "已结束视图", "sublabel": "已完成任务列表", "pos": [520, 470], "size": [170, 62] },
+    { "id": "undo_restore", "type": "backend", "label": "撤销 / 恢复", "sublabel": "退回未完成", "pos": [716, 470], "size": [170, 62] },
+    { "id": "storage", "type": "database", "label": "本地存储", "sublabel": "本地存储 · iCloud 后置", "pos": [64, 470], "size": [170, 62] },
+    { "id": "rollover", "type": "backend", "label": "跨天检测", "sublabel": "自动 + 手动开启", "pos": [250, 470], "size": [170, 62] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "今日视图 · 主界面", "wraps": ["today_view", "main_goal", "task_tree"] },
+    { "kind": "region", "label": "未完成池 · 非重点", "wraps": ["pool_filter", "ignore", "reexec", "monthly_entry"] },
+    { "kind": "region", "label": "已结束视图", "wraps": ["done_list", "undo_restore"] },
+    { "kind": "region", "label": "数据与跨天", "wraps": ["storage", "rollover"] }
+  ],
+  "connections": [
+    { "id": "nav_pool", "from": "today_view", "to": "pool_filter", "label": "非重点", "fromSide": "right", "toSide": "left" },
+    { "id": "reexec_today", "from": "reexec", "to": "today_view", "label": "加入当天", "variant": "emphasis", "fromSide": "top", "toSide": "top", "via": [[801, 96], [139, 96]] },
+    { "id": "task_store", "from": "task_tree", "to": "storage", "label": "读写任务", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
+    { "id": "roll_today", "from": "rollover", "to": "today_view", "label": "开启新的一天", "fromSide": "top", "toSide": "left", "via": [[335, 195], [24, 195], [24, 151]], "labelAt": [180, 195] },
+    { "id": "ignore_done", "from": "ignore", "to": "done_list", "label": "结束进入已结束", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "undo_pool", "from": "undo_restore", "to": "pool_filter", "label": "退回未完成", "variant": "dashed", "fromSide": "left", "toSide": "right", "via": [[700, 501], [700, 151]] }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "核心模块",
+      "items": [
+        "今日页承载每日计划与任务树",
+        "未完成池承载非重点管理",
+        "已结束视图承载找回"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "关键交互",
+      "items": [
+        "勾选完成连带整棵子任务",
+        "重新执行连带整棵未完成上级",
+        "拖拽调整层级与顺序"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "数据与边界",
+      "items": [
+        "本地存储起步，iCloud 后置",
+        "已完成仅隐藏，可撤销 / 恢复",
+        "跨天不结转，旧任务进未完成池"
+      ]
+    }
+  ]
+}

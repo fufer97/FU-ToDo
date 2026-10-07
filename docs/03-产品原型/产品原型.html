@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FU ToDo · 产品原型</title>
+<style>
+  :root{
+    --bg:#f7f6f3; --panel:#ffffff; --panel-2:#fbfaf8; --ink:#1b1b1d; --ink-2:#3d3d42;
+    --muted:#8b8b90; --line:#e7e5e0; --line-2:#f0eeea;
+    --accent:#2f6f5e; --accent-soft:#e9f2ef; --accent-ink:#255a4c;
+    --amber:#a9761f; --amber-soft:#f7f0e2; --rose:#9c4a38; --rose-soft:#f7ebe7;
+    --shadow:0 24px 60px rgba(28,26,22,.18), 0 2px 6px rgba(28,26,22,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#17171a; --panel:#202024; --panel-2:#26262b; --ink:#f1f0ec; --ink-2:#d6d5d0;
+      --muted:#93939a; --line:#33333a; --line-2:#2b2b31;
+      --accent:#83c1ad; --accent-soft:#22302c; --accent-ink:#a5d6c6;
+      --amber:#d8ac5c; --amber-soft:#322b1d; --rose:#d89484; --rose-soft:#31231f;
+      --shadow:0 24px 60px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.4);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(47,111,94,.10), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font:15px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .stage{min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:36px 20px}
+  .window{
+    width:min(900px, 100%); height:min(660px, calc(100vh - 120px)); min-height:520px;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    box-shadow:var(--shadow); display:flex; flex-direction:column; overflow:hidden;
+  }
+  .titlebar{
+    height:46px; flex:0 0 46px; display:flex; align-items:center; gap:12px;
+    padding:0 14px; border-bottom:1px solid var(--line-2); background:var(--panel-2);
+  }
+  .lights{display:flex; gap:8px}
+  .lights i{width:12px; height:12px; border-radius:50%; display:block}
+  .lights i:nth-child(1){background:#ff5f57}
+  .lights i:nth-child(2){background:#febc2e}
+  .lights i:nth-child(3){background:#28c840}
+  .titlebar .app-name{font-size:13px; color:var(--muted); letter-spacing:.02em}
+  .titlebar .spacer{flex:1}
+  .screen{flex:1; display:flex; flex-direction:column; min-height:0}
+  .topbar{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; padding:22px 30px 14px}
+  .date{font-size:20px; font-weight:600; letter-spacing:-.01em}
+  .date-sub{font-size:12.5px; color:var(--muted); margin-top:2px}
+  .tabs{display:flex; gap:2px; background:var(--panel-2); border:1px solid var(--line); border-radius:9px; padding:2px}
+  .tab{
+    appearance:none; border:0; background:transparent; color:var(--muted);
+    font:inherit; font-size:13px; padding:5px 12px; border-radius:7px; cursor:pointer;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab.active{background:var(--panel); color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.06); font-weight:500}
+  main{flex:1; min-height:0; overflow-y:auto; padding:4px 30px 20px}
+  .section-label{font-size:12px; color:var(--muted); letter-spacing:.06em; margin:14px 0 6px; text-transform:uppercase}
+  .task{display:flex; align-items:flex-start; gap:12px; padding:9px 10px; border-radius:10px; position:relative}
+  .task:hover{background:var(--panel-2)}
+  .task.main .t-title{font-size:17px; font-weight:600; letter-spacing:-.01em}
+  .task .t-title{font-size:15px; color:var(--ink-2); flex:1; min-width:0; word-break:break-word}
+  .task.done .t-title{color:var(--muted); text-decoration:line-through}
+  .task.dropping-nest{outline:2px dashed var(--accent); outline-offset:-2px; background:var(--accent-soft)}
+  .task.drop-before{box-shadow:inset 0 2px 0 0 var(--accent)}
+  .task.drop-after{box-shadow:inset 0 -2px 0 0 var(--accent)}
+  .ring{
+    flex:0 0 auto; width:20px; height:20px; margin-top:1px; padding:0;
+    border:1.6px solid #c9c7c2; background:transparent; border-radius:50%; cursor:pointer;
+    display:grid; place-items:center; transition:border-color .15s, background .15s;
+  }
+  .task.main .ring{width:22px; height:22px}
+  .ring:hover{border-color:var(--accent)}
+  .ring::after{
+    content:""; width:9px; height:5px; border-left:2px solid #fff; border-bottom:2px solid #fff;
+    transform:rotate(-45deg) translate(1px,-1px); opacity:0; transition:opacity .12s;
+  }
+  .task.done .ring{background:var(--accent); border-color:var(--accent)}
+  .task.done .ring::after{opacity:1}
+  .crumb{font-size:11.5px; color:var(--muted); margin-bottom:2px}
+  .meta{font-size:11.5px; color:var(--muted); white-space:nowrap; margin-top:3px}
+  .row-actions{display:flex; gap:6px; opacity:0; transition:opacity .15s; margin-top:2px}
+  .task:hover .row-actions, .tasks-static .row-actions{opacity:1}
+  .mini{
+    appearance:none; font:inherit; font-size:12px; padding:3px 9px; border-radius:7px; cursor:pointer;
+    border:1px solid var(--line); background:var(--panel); color:var(--ink-2);
+  }
+  .mini:hover{border-color:var(--accent); color:var(--accent-ink)}
+  .mini.warn:hover{border-color:var(--amber); color:var(--amber)}
+  .mini.ghost{border-color:transparent; background:transparent; color:var(--muted)}
+  .mini.ghost:hover{color:var(--accent-ink); background:var(--panel-2)}
+  .tag{font-size:11px; padding:2px 7px; border-radius:999px; border:1px solid var(--line); color:var(--muted)}
+  .tag.checked{color:var(--accent-ink); background:var(--accent-soft); border-color:transparent}
+  .tag.ignored{color:var(--amber); background:var(--amber-soft); border-color:transparent}
+  .empty{padding:34px 8px; text-align:center; color:var(--muted); font-size:13.5px; line-height:1.8}
+  .add-main{display:flex; gap:10px; align-items:center; padding:10px 10px 10px 42px; border-radius:10px; border:1px dashed var(--line); margin:6px 0 2px; background:var(--panel-2)}
+  .add-main input, .add-sub input{appearance:none; border:0; background:transparent; font:inherit; color:var(--ink); flex:1; outline:none; font-size:15px}
+  .add-main input::placeholder, .add-sub input::placeholder{color:var(--muted)}
+  .add-sub{display:flex; gap:10px; align-items:center; padding:8px 10px 8px 52px}
+  .add-sub input{font-size:14px}
+  .pool-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:6px 0 10px}
+  .chips{display:flex; gap:6px}
+  .chip{appearance:none; font:inherit; font-size:12.5px; padding:4px 12px; border-radius:999px; cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--muted)}
+  .chip.active{background:var(--accent-soft); border-color:transparent; color:var(--accent-ink); font-weight:500}
+  .bottombar{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:12px 30px 16px; border-top:1px solid var(--line-2);
+  }
+  .pool-entry{
+    appearance:none; font:inherit; font-size:13px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; padding:7px 14px; border-radius:9px;
+    border:1px solid var(--line); background:var(--panel); color:var(--ink-2);
+  }
+  .pool-entry:hover{border-color:var(--accent); color:var(--accent-ink)}
+  .badge{font-size:11.5px; color:var(--accent-ink); background:var(--accent-soft); border-radius:999px; padding:1px 7px}
+  .hint{font-size:12px; color:var(--muted)}
+  .proto-note{font-size:12.5px; color:var(--muted); text-align:center; max-width:640px; line-height:1.7}
+  .toast{
+    position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(8px);
+    background:var(--ink); color:var(--panel); padding:10px 14px; border-radius:11px;
+    display:flex; align-items:center; gap:12px; font-size:13.5px; box-shadow:0 12px 30px rgba(0,0,0,.28);
+    opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; max-width:min(560px, calc(100vw - 40px));
+  }
+  @media (prefers-color-scheme: dark){ .toast{background:#f1f0ec; color:#1b1b1d} }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto}
+  .toast button{
+    appearance:none; border:0; background:transparent; font:inherit; font-size:13.5px;
+    color:var(--accent-ink); cursor:pointer; font-weight:500; padding:2px 4px;
+  }
+  @media (prefers-color-scheme: dark){ .toast button{color:#255a4c} }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="window">
+    <div class="titlebar">
+      <div class="lights"><i></i><i></i><i></i></div>
+      <div class="app-name">FU ToDo</div>
+      <div class="spacer"></div>
+      <button class="mini ghost" data-action="new-day">开启新的一天</button>
+    </div>
+    <div class="screen">
+      <header class="topbar">
+        <div>
+          <div class="date" id="dateLabel">10 月 8 日 · 星期四</div>
+          <div class="date-sub" id="dateSub">今天 · 空白开始，旧任务不结转</div>
+        </div>
+        <nav class="tabs">
+          <button class="tab active" data-action="view" data-view="today">今日</button>
+          <button class="tab" data-action="view" data-view="pool">非重点</button>
+          <button class="tab" data-action="view" data-view="done">已结束</button>
+        </nav>
+      </header>
+      <main id="content"></main>
+      <footer class="bottombar">
+        <button class="pool-entry" data-action="view" data-view="pool">
+          非重点 <span class="badge" id="poolCount">0</span>
+        </button>
+        <div class="hint" id="hint">打开即写，只写一件最重要的事</div>
+      </footer>
+    </div>
+  </div>
+  <p class="proto-note">阶段 3 · 产品原型（可交互）——点击圆环完成；拖拽任务调整顺序，拖到任务中间可变成子步骤；「非重点」里可忽略或重新执行；操作都可撤销。</p>
+</div>
+<div class="toast" id="toast"><span id="toastText"></span><button id="toastUndo" hidden>撤销</button></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var ACCENT_CHECK = 'checked';
+  var ACCENT_IGNORE = 'ignored';
+  var DAY_MS = 86400000;
+
+  var state = {
+    view: 'today',
+    range: 'week',
+    day: '2026-10-08',
+    dayLabel: '10 月 8 日 · 星期四',
+    tasks: [],
+    dragId: null,
+    undo: null,
+    toastTimer: null
+  };
+
+  var uid = 0;
+  var seq = 0;
+
+  function mk(title, parentId, day, order) {
+    var t = {
+      id: ++uid,
+      title: title,
+      parentId: parentId || null,
+      done: false,
+      doneType: null,
+      endedAt: null,
+      createdAt: ++seq,
+      day: day,
+      order: order
+    };
+    state.tasks.push(t);
+    return t;
+  }
+  function byId(id) {
+    for (var i = 0; i < state.tasks.length; i++) { if (state.tasks[i].id === id) return state.tasks[i]; }
+    return null;
+  }
+  function childrenOf(id) {
+    return state.tasks.filter(function (t) { return t.parentId === id; })
+      .sort(function (a, b) { return a.order - b.order; });
+  }
+  function roots() {
+    return state.tasks.filter(function (t) { return !t.parentId; })
+      .sort(function (a, b) { return a.order - b.order; });
+  }
+  function levelOf(t) {
+    var lv = 1, p = t.parentId, guard = 0;
+    while (p && guard++ < 20) { var x = byId(p); if (!x) break; lv++; p = x.parentId; }
+    return lv;
+  }
+  function subtree(id) {
+    var out = [], stack = [id];
+    while (stack.length) {
+      var cur = stack.pop();
+      var t = byId(cur);
+      if (!t) continue;
+      out.push(t);
+      childrenOf(cur).forEach(function (c) { stack.push(c.id); });
+    }
+    return out;
+  }
+  function isDescendant(candidateId, ancestorId) {
+    var p = byId(candidateId) ? byId(candidateId).parentId : null, guard = 0;
+    while (p && guard++ < 20) { if (p === ancestorId) return true; p = byId(p) ? byId(p).parentId : null; }
+    return false;
+  }
+  function ancestors(t) {
+    var out = [], p = t.parentId, guard = 0;
+    while (p && guard++ < 20) { var x = byId(p); if (!x) break; out.push(x); p = x.parentId; }
+    return out;
+  }
+  function nextOrder(parentId) {
+    var sib = parentId ? childrenOf(parentId) : roots();
+    var max = -1;
+    sib.forEach(function (s) { if (s.order > max) max = s.order; });
+    return max + 1;
+  }
+  function ageDays(t) {
+    var d = new Date(t.day + 'T00:00:00').getTime();
+    var n = new Date(state.day + 'T00:00:00').getTime();
+    return Math.round((n - d) / DAY_MS);
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function pathOf(t) {
+    return ancestors(t).reverse().map(function (a) { return esc(a.title); }).join(' › ');
+  }
+
+  function poolTasks() {
+    return state.tasks.filter(function (t) {
+      if (t.done) return false;
+      if (t.day === state.day) return false;
+      var age = ageDays(t);
+      if (state.range === 'week') return age <= 7;
+      if (state.range === 'month') return age <= 30;
+      return true;
+    }).sort(function (a, b) { return (a.day < b.day ? 1 : a.day > b.day ? -1 : a.order - b.order); });
+  }
+  function doneTasks() {
+    return state.tasks.filter(function (t) { return t.done; })
+      .sort(function (a, b) { return (b.endedAt || 0) - (a.endedAt || 0); });
+  }
+  function todayRoots() {
+    return roots().filter(function (t) { return t.day === state.day && !t.done; });
+  }
+
+  /* ---------- rendering ---------- */
+
+  function ring(t) {
+    return '<button class="ring" data-action="toggle" data-id="' + t.id + '" aria-label="完成"></button>';
+  }
+
+  function taskRow(t, opts) {
+    opts = opts || {};
+    var lv = levelOf(t);
+    var kids = childrenOf(t.id);
+    var isMain = !t.parentId && opts.isMain;
+    var html = '';
+    html += '<div class="task' + (isMain ? ' main' : '') + (t.done ? ' done' : '') + '" data-id="' + t.id + '" draggable="' + (opts.drag === false ? 'false' : 'true') + '"' +
+      (lv > 1 ? ' style="margin-left:' + ((lv - 1) * 22) + 'px"' : '') + '>';
+    html += ring(t);
+    html += '<div style="flex:1;min-width:0">';
+    if (opts.crumb && !t.parentId) { /* breadcrumb rendered by caller */ }
+    html += '<div class="t-title">' + esc(t.title) + '</div>';
+    if (opts.addChild) {
+      html += '<div class="row-actions"><button class="mini ghost" data-action="add-child" data-id="' + t.id + '">+ 步骤</button></div>';
+    }
+    if (opts.showAddInput && opts.showAddInput === t.id) {
+      html += '<div class="add-sub"><input type="text" placeholder="写下这一步，回车添加" data-add-sub="' + t.id + '"></div>';
+    }
+    html += '</div>';
+    if (opts.meta) html += '<div class="meta">' + opts.meta + '</div>';
+    if (opts.actions) html += '<div class="row-actions tasks-static">' + opts.actions + '</div>';
+    html += '</div>';
+    if (!t.done && !opts.noKids) {
+      kids.forEach(function (k) { html += taskRow(k, { addChild: opts.addChild, showAddInput: opts.showAddInput }); });
+    }
+    return html;
+  }
+
+  function renderToday() {
+    var rs = todayRoots();
+    var openId = state.addChildOf || null;
+    var html = '';
+    if (!rs.length) {
+      html += '<div class="empty">今天还是空的。<br>写下最重要的一件事，其余都放进「非重点」。</div>';
+    }
+    html += '<div class="section-label">今天</div>';
+    rs.forEach(function (t, i) {
+      html += taskRow(t, { isMain: i === 0, addChild: true, showAddInput: openId });
+    });
+    html += '<div class="add-main" id="rootDrop"><span style="color:var(--muted);font-size:14px">＋</span><input type="text" id="mainInput" placeholder="写下今天最重要的一件事" data-add-main="1"></div>';
+    html += '<p style="font-size:12px;color:var(--muted);margin:14px 2px 0">提示：第一个任务按「主目标」突出显示，其余自动弱化；点击圆环完成会连带整棵子步骤。</p>';
+    return html;
+  }
+
+  function renderPool() {
+    var list = poolTasks();
+    var html = '';
+    html += '<div class="pool-head"><div class="section-label" style="margin:0">未完成池 · 非重点</div>' +
+      '<div class="chips">' +
+      '<button class="chip' + (state.range === 'week' ? ' active' : '') + '" data-action="range" data-range="week">本周</button>' +
+      '<button class="chip' + (state.range === 'month' ? ' active' : '') + '" data-action="range" data-range="month">本月</button>' +
+      '<button class="chip' + (state.range === 'all' ? ' active' : '') + '" data-action="range" data-range="all">所有</button>' +
+      '</div></div>';
+    if (!list.length) {
+      html += '<div class="empty">这个范围里没有未完成的任务。<br>被忽略或完成的任务都在「已结束」里，可随时找回。</div>';
+      return html;
+    }
+    html += '<div class="tasks-static">';
+    list.forEach(function (t) {
+      var meta = ageDays(t) === 1 ? '昨天' : ageDays(t) + ' 天前';
+      html += '<div class="task" data-id="' + t.id + '" draggable="false">';
+      html += '<div style="width:20px;flex:0 0 20px"></div>';
+      html += '<div style="flex:1;min-width:0">';
+      if (t.parentId) html += '<div class="crumb">' + pathOf(t) + '</div>';
+      html += '<div class="t-title">' + esc(t.title) + '</div>';
+      html += '</div>';
+      html += '<div class="meta">' + meta + '</div>';
+      html += '<div class="row-actions tasks-static">' +
+        '<button class="mini warn" data-action="ignore" data-id="' + t.id + '">忽略</button>' +
+        '<button class="mini" data-action="reexec" data-id="' + t.id + '">重新执行</button>' +
+        '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<p style="font-size:12px;color:var(--muted);margin:14px 2px 0">忽略 = 结束任务（走出未完成池，可在「已结束」找回）；重新执行 = 加入今天，选子步骤会连带整棵未完成上级。</p>';
+    return html;
+  }
+
+  function renderDone() {
+    var list = doneTasks();
+    var html = '<div class="section-label">已结束</div>';
+    if (!list.length) {
+      html += '<div class="empty">还没有结束的任务。<br>完成或忽略之后，它们会出现在这里。</div>';
+      return html;
+    }
+    html += '<div class="tasks-static">';
+    list.forEach(function (t) {
+      var tag = t.doneType === ACCENT_IGNORE
+        ? '<span class="tag ignored">忽略</span>'
+        : '<span class="tag checked">勾选完成</span>';
+      html += '<div class="task done" data-id="' + t.id + '" draggable="false">';
+      html += '<div style="width:20px;flex:0 0 20px"></div>';
+      html += '<div style="flex:1;min-width:0">';
+      if (t.parentId) html += '<div class="crumb">' + pathOf(t) + '</div>';
+      html += '<div class="t-title">' + esc(t.title) + '</div>';
+      html += '</div>';
+      html += '<div class="meta">' + tag + '</div>';
+      html += '<div class="row-actions tasks-static"><button class="mini" data-action="revert" data-id="' + t.id + '">' +
+        (t.doneType === ACCENT_IGNORE ? '恢复' : '撤销完成') + '</button></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<p style="font-size:12px;color:var(--muted);margin:14px 2px 0">已完成是唯一终点状态，勾选完成与忽略都进入这里；撤销与恢复都让任务回到未完成。</p>';
+    return html;
+  }
+
+  function render() {
+    var el = document.getElementById('content');
+    if (state.view === 'today') el.innerHTML = renderToday();
+    else if (state.view === 'pool') el.innerHTML = renderPool();
+    else el.innerHTML = renderDone();
+
+    document.getElementById('poolCount').textContent = String(poolTasks().length);
+    document.getElementById('dateLabel').textContent = state.dayLabel;
+    document.getElementById('dateSub').textContent = state.view === 'today'
+      ? '今天 · 空白开始，旧任务不结转'
+      : state.view === 'pool' ? '未完成池 · 查看的范围：' + (state.range === 'week' ? '本周' : state.range === 'month' ? '本月' : '所有')
+      : '已完成任务 · 可撤销 / 恢复';
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-view') === state.view);
+    });
+    bindDrag();
+    var input = document.getElementById('mainInput');
+    if (input) input.placeholder = '写下今天最重要的一件事';
+  }
+
+  /* ---------- toast ---------- */
+
+  function toast(text, undoFn) {
+    var box = document.getElementById('toast');
+    var btn = document.getElementById('toastUndo');
+    document.getElementById('toastText').textContent = text;
+    state.undo = undoFn || null;
+    btn.hidden = !undoFn;
+    box.classList.add('show');
+    if (state.toastTimer) clearTimeout(state.toastTimer);
+    state.toastTimer = setTimeout(function () { box.classList.remove('show'); state.undo = null; }, 6000);
+  }
+
+  /* ---------- actions ---------- */
+
+  function finish(id, type) {
+    var t = byId(id);
+    if (!t) return;
+    var affected = subtree(id);
+    var snapshot = affected.map(function (x) {
+      return { id: x.id, done: x.done, doneType: x.doneType, endedAt: x.endedAt };
+    });
+    var now = Date.now();
+    affected.forEach(function (x) { x.done = true; x.doneType = type; x.endedAt = now; });
+    var extra = affected.length - 1;
+    var word = type === ACCENT_IGNORE ? '已结束' : '已完成';
+    var detail = extra > 0 ? word + ' · 连带 ' + extra + ' 个子步骤' : word;
+    render();
+    toast(detail, function () {
+      snapshot.forEach(function (s) {
+        var x = byId(s.id);
+        if (x) { x.done = s.done; x.doneType = s.doneType; x.endedAt = s.endedAt; }
+      });
+      render();
+      toast('已撤销');
+    });
+  }
+
+  function revert(id) {
+    var t = byId(id);
+    if (!t) return;
+    var wasIgnored = t.doneType === ACCENT_IGNORE;
+    var affected = subtree(id);
+    affected.forEach(function (x) { x.done = false; x.doneType = null; x.endedAt = null; });
+    render();
+    toast(wasIgnored ? '已恢复为未完成' : '已撤销完成');
+  }
+
+  function ignoreTask(id) {
+    var t = byId(id);
+    if (!t) return;
+    finish(id, ACCENT_IGNORE);
+  }
+
+  function reexec(id) {
+    var t = byId(id);
+    if (!t) return;
+    if (t.day === state.day) { toast('今天已经在清单里了'); return; }
+    var prev = [];
+    var chain = [t].concat(ancestors(t).filter(function (a) { return !a.done; }));
+    var parents = [];
+    chain.forEach(function (x) {
+      prev.push({ id: x.id, day: x.day, order: x.order });
+      if (x.id !== t.id) parents.push(x.title);
+      x.day = state.day;
+      if (x.id !== t.id) x.order = nextOrder(x.parentId);
+    });
+    t.day = state.day;
+    t.order = nextOrder(t.parentId);
+    render();
+    var msg = parents.length ? '已加入今天 · 连带上级「' + parents[parents.length - 1] + '」' : '已加入今天';
+    toast(msg, function () {
+      prev.forEach(function (s) {
+        var x = byId(s.id);
+        if (x) { x.day = s.day; x.order = s.order; }
+      });
+      render();
+      toast('已撤回');
+    });
+  }
+
+  function addMain(title) {
+    if (!title.trim()) return;
+    var t = mk(title.trim(), null, state.day, nextOrder(null));
+    render();
+    toast('已写下今天的主目标');
+    return t;
+  }
+
+  function addChild(parentId, title) {
+    if (!title.trim()) return;
+    mk(title.trim(), parentId, state.day, nextOrder(parentId));
+    state.addChildOf = parentId;
+    render();
+    var input = document.querySelector('[data-add-sub="' + parentId + '"]');
+    if (input) input.focus();
+  }
+
+  function newDay() {
+    var d = new Date(state.day + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    state.day = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    var week = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][d.getDay()];
+    state.dayLabel = (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日 · ' + week;
+    state.view = 'today';
+    state.addChildOf = null;
+    render();
+    toast('新的一天 · 未完成的已进入未完成池');
+  }
+
+  /* ---------- drag & drop ---------- */
+
+  function bindDrag() {
+    if (state.view !== 'today') return;
+    var rows = document.querySelectorAll('.task[draggable="true"]');
+    Array.prototype.forEach.call(rows, function (row) {
+      row.addEventListener('dragstart', function (e) {
+        state.dragId = Number(row.getAttribute('data-id'));
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', String(state.dragId)); } catch (err) {}
+      });
+      row.addEventListener('dragover', function (e) {
+        var target = byId(Number(row.getAttribute('data-id')));
+        if (!target || !state.dragId || target.id === state.dragId) return;
+        if (isDescendant(target.id, state.dragId)) return;
+        e.preventDefault();
+        var r = row.getBoundingClientRect();
+        var ratio = (e.clientY - r.top) / r.height;
+        row.classList.remove('drop-before', 'drop-after', 'dropping-nest');
+        if (ratio < 0.28) row.classList.add('drop-before');
+        else if (ratio > 0.72) row.classList.add('drop-after');
+        else row.classList.add('dropping-nest');
+      });
+      row.addEventListener('dragleave', function () {
+        row.classList.remove('drop-before', 'drop-after', 'dropping-nest');
+      });
+      row.addEventListener('drop', function (e) {
+        e.preventDefault();
+        var targetId = Number(row.getAttribute('data-id'));
+        var zone = row.classList.contains('dropping-nest') ? 'nest'
+          : row.classList.contains('drop-before') ? 'before'
+          : row.classList.contains('drop-after') ? 'after' : null;
+        row.classList.remove('drop-before', 'drop-after', 'dropping-nest');
+        if (zone) applyDrop(targetId, zone);
+      });
+      row.addEventListener('dragend', function () {
+        state.dragId = null;
+        Array.prototype.forEach.call(document.querySelectorAll('.task'), function (r) {
+          r.classList.remove('drop-before', 'drop-after', 'dropping-nest');
+        });
+      });
+    });
+  }
+
+  function applyDrop(targetId, zone) {
+    var src = byId(state.dragId), target = byId(targetId);
+    if (!src || !target || src.id === target.id) return;
+    if (isDescendant(target.id, src.id)) { toast('不能把任务拖进它自己的子步骤里'); return; }
+
+    if (zone === 'nest') {
+      src.parentId = target.id;
+      src.order = nextOrder(target.id);
+    } else {
+      var parentId = target.parentId;
+      src.parentId = parentId;
+      var sib = (parentId ? childrenOf(parentId) : roots()).filter(function (s) { return s.id !== src.id; });
+      var idx = 0;
+      for (var i = 0; i < sib.length; i++) { if (sib[i].id === target.id) { idx = i + (zone === 'after' ? 1 : 0); break; } }
+      sib.splice(idx, 0, src);
+      sib.forEach(function (s, i) { s.order = i; });
+    }
+    if (src.parentId) src.day = state.day;
+    render();
+    toast('已调整' + (zone === 'nest' ? '为子步骤' : '顺序'));
+  }
+
+  /* ---------- events ---------- */
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (el) {
+      var action = el.getAttribute('data-action');
+      var id = Number(el.getAttribute('data-id'));
+      if (action === 'view') { state.view = el.getAttribute('data-view'); state.addChildOf = null; render(); return; }
+      if (action === 'range') { state.range = el.getAttribute('data-range'); render(); return; }
+      if (action === 'toggle') {
+        var t = byId(id);
+        if (t) { if (t.done) revert(id); else finish(id, ACCENT_CHECK); }
+        return;
+      }
+      if (action === 'add-child') { state.addChildOf = (state.addChildOf === id ? null : id); render(); var inp = document.querySelector('[data-add-sub="' + id + '"]'); if (inp) inp.focus(); return; }
+      if (action === 'ignore') { ignoreTask(id); return; }
+      if (action === 'reexec') { reexec(id); return; }
+      if (action === 'revert') { revert(id); return; }
+      if (action === 'new-day') { newDay(); return; }
+    }
+    if (e.target.id === 'toastUndo' && state.undo) { var fn = state.undo; state.undo = null; document.getElementById('toast').classList.remove('show'); fn(); }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    var t = e.target;
+    if (t && t.id === 'mainInput') { addMain(t.value); t.value = ''; return; }
+    if (t && t.getAttribute && t.getAttribute('data-add-sub')) {
+      var pid = Number(t.getAttribute('data-add-sub'));
+      addChild(pid, t.value);
+      t.value = '';
+    }
+  });
+
+  document.addEventListener('dragover', function (e) {
+    var root = document.getElementById('rootDrop');
+    if (root && root.contains(e.target)) e.preventDefault();
+  });
+  document.addEventListener('drop', function (e) {
+    var root = document.getElementById('rootDrop');
+    if (root && root.contains(e.target) && state.dragId) {
+      e.preventDefault();
+      var src = byId(state.dragId);
+      if (src) { src.parentId = null; src.order = nextOrder(null); src.day = state.day; render(); toast('已移到顶层'); }
+    }
+  });
+
+  /* ---------- seed ---------- */
+
+  function seed() {
+    uid = 0; seq = 0; state.tasks = []; state.addChildOf = null;
+    var D = state.day;
+    var goal = mk('写完产品原型说明', null, D, 0);
+    var step1 = mk('整理阶段 1 的规则条目', goal.id, D, 0);
+    mk('校对文案与标点', step1.id, D, 0);
+    mk('画出三个界面的草图', goal.id, D, 1);
+    mk('回一封邮件', null, D, 1);
+
+    mk('读完《卡片笔记写作法》第 3 章', null, '2026-10-06', 0);
+    var meet = mk('整理上周会议记录', null, '2026-10-05', 0);
+    mk('补上遗漏的结论', meet.id, '2026-10-05', 0);
+    mk('预约体检', null, '2026-10-03', 1);
+    mk('学习 SwiftUI 布局', null, '2026-09-28', 0);
+    mk('备份照片', null, '2026-09-20', 0);
+    mk('研究 iCloud 同步方案', null, '2026-08-30', 0);
+
+    var w = mk('写周报', null, '2026-10-07', 0);
+    w.done = true; w.doneType = ACCENT_CHECK; w.endedAt = Date.now() - 3600000 * 20;
+    var y = mk('研究双链笔记工具', null, '2026-09-15', 0);
+    y.done = true; y.doneType = ACCENT_IGNORE; y.endedAt = Date.now() - 3600000 * 60;
+  }
+
+  seed();
+  render();
+})();
+</script>
+</body>
+</html>

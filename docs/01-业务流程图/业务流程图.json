@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "「FU ToDo」业务流程图：每日计划与未完成池整理",
+    "quality_profile": "showcase",
+    "viewBox": [760, 820]
+  },
+  "lanes": [
+    { "id": "user", "label": "用户操作" },
+    { "id": "app", "label": "应用自动行为" },
+    { "id": "pool", "label": "未完成池 · 非重点", "variant": "exception" },
+    { "id": "review", "label": "月度回顾" }
+  ],
+  "mainPath": ["open", "rollover", "today", "write_main", "execute", "check"],
+  "nodes": [
+    { "id": "open", "lane": "user", "col": 0, "type": "external", "label": "打开应用", "sublabel": "启动即写" },
+    { "id": "rollover", "lane": "app", "col": 0, "type": "backend", "label": "开启新的一天", "sublabel": "自动检测 + 手动开启" },
+    { "id": "today", "lane": "app", "col": 1, "type": "frontend", "label": "今日页", "sublabel": "空白开始 · 旧任务不结转" },
+    { "id": "write_main", "lane": "user", "col": 1, "type": "external", "label": "写下今日最重要的事", "sublabel": "拆解步骤 · 只写一个主目标", "width": 154 },
+    { "id": "execute", "lane": "user", "col": 3, "type": "external", "label": "逐步执行", "sublabel": "中断时回看今日页" },
+    { "id": "check", "lane": "user", "col": 5, "type": "external", "label": "点击完成", "sublabel": "父任务连带子任务", "tag": "可撤销" },
+    { "id": "pool", "lane": "pool", "col": 1, "type": "database", "label": "未完成池（非重点）", "sublabel": "未被勾选 · 周 / 月 / 全部", "width": 150 },
+    { "id": "ignore", "lane": "pool", "col": 3, "type": "backend", "label": "忽略", "sublabel": "结束 · 可恢复" },
+    { "id": "reexec", "lane": "pool", "col": 5, "type": "backend", "label": "重新执行", "sublabel": "加入当天 · 连带整棵上级" },
+    { "id": "monthly", "lane": "review", "col": 5, "type": "backend", "label": "月度回顾", "sublabel": "批量归档或重新执行" }
+  ],
+  "edges": [
+    { "id": "open_rollover", "from": "open", "to": "rollover" },
+    { "id": "rollover_today", "from": "rollover", "to": "today" },
+    { "id": "today_write", "from": "today", "to": "write_main" },
+    { "id": "write_execute", "from": "write_main", "to": "execute", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "execute_check", "from": "execute", "to": "check" },
+    { "id": "check_loop", "from": "check", "to": "execute", "label": "还有步骤", "role": "return" },
+    { "id": "pool_ignore", "from": "pool", "to": "ignore", "role": "branch", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "pool_reexec", "from": "pool", "to": "reexec", "role": "branch", "fromSide": "bottom", "toSide": "bottom", "route": "bottom-channel" },
+    { "id": "pool_monthly", "from": "pool", "to": "monthly", "label": "月底批量整理", "role": "branch" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "核心原则",
+      "items": [
+        "每天只聚焦一个主目标",
+        "只突出一个主目标，其余不打扰",
+        "昨天未完成的不结转，靠遗忘筛选重点",
+        "打开即写，零摩擦启动"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "关键交互",
+      "items": [
+        "完成父任务连带整棵子任务",
+        "重新执行 2 级以下连带整棵未完成上级",
+        "误操作可撤销",
+        "拖动调整层级与顺序"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "数据与边界",
+      "items": [
+        "未完成池可按本周 / 本月 / 所有筛选",
+        "忽略即结束，可撤销 / 恢复找回",
+        "本地存储起步，iCloud 后置"
+      ]
+    }
+  ]
+}
