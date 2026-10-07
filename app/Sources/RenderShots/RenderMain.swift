@@ -144,6 +144,26 @@ struct RenderMain {
             )
         }
         dragView(.nest, "12-drop-right-nest.png")
+        // 一级卡片：左上半＝排在它前面，左下半＝排在它后面（与子步骤同一套）
+        dragCtl.draggingId = dragBranch.id
+        dragCtl.target = DragState(draggedId: dragBranch.id, targetId: dragMain.id, zone: .before)
+        render(
+            VStack(spacing: 0) { TaskRowView(task: dragMain, level: 1, isMain: true) }
+                .padding(16).frame(width: 402, height: 90, alignment: .topLeading)
+                .background(Theme.paper)
+                .environmentObject(dragStore).environmentObject(dragSession).environmentObject(dragCtl),
+            size: CGSize(width: 402, height: 90),
+            to: outDir.appendingPathComponent("24-card-before.png")
+        )
+        dragCtl.target = DragState(draggedId: dragBranch.id, targetId: dragMain.id, zone: .after)
+        render(
+            VStack(spacing: 0) { TaskRowView(task: dragMain, level: 1, isMain: true) }
+                .padding(16).frame(width: 402, height: 90, alignment: .topLeading)
+                .background(Theme.paper)
+                .environmentObject(dragStore).environmentObject(dragSession).environmentObject(dragCtl),
+            size: CGSize(width: 402, height: 90),
+            to: outDir.appendingPathComponent("25-card-after.png")
+        )
         dragView(.before, "13-drop-left-sibling.png")
         dragView(.after, "17-drop-left-sibling-after.png")
 

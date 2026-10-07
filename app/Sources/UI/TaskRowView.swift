@@ -317,32 +317,28 @@ public struct TaskRowView: View {
                             .fill(Theme.accentSoft)
                             .frame(width: w * 0.5, height: h)
                             .offset(x: w * 0.5)
-                    case .before where level >= 2:
+                    case .before:
+                        // 左上半＝同级，排在它前面
                         Rectangle()
                             .fill(Theme.accentSoft)
                             .frame(width: w * 0.5, height: h * 0.5)
-                    case .after where level >= 2:
+                    case .after:
+                        // 左下半＝同级，排在它后面
                         Rectangle()
                             .fill(Theme.accentSoft)
                             .frame(width: w * 0.5, height: h * 0.5)
                             .offset(y: h * 0.5)
-                    default:
-                        // 一级卡片：整条左半边＝卡片换位
-                        Rectangle()
-                            .fill(Theme.accentSoft)
-                            .frame(width: w * 0.5, height: h)
                     }
                 }
                 .overlay(alignment: .center) {
                     Rectangle().fill(Theme.hairline).frame(width: 1)
                 }
                 .overlay(alignment: .leading) {
-                    if level >= 2 {
-                        Rectangle()
-                            .fill(Theme.hairline)
-                            .frame(width: w * 0.5, height: 1)
-                            .offset(y: h * 0.5 - 0.5)
-                    }
+                    // 横线把左半边分成上下：一级卡片与子步骤用同一套
+                    Rectangle()
+                        .fill(Theme.hairline)
+                        .frame(width: w * 0.5, height: 1)
+                        .offset(y: h * 0.5 - 0.5)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
