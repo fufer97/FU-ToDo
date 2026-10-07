@@ -7,6 +7,7 @@ import Core
 public struct SettingsView: View {
     @EnvironmentObject var store: TaskStore
 
+    @EnvironmentObject var updater: Updater
     @State private var message: String?
     @State private var pendingImport: Data?
     @State private var showClearConfirm = false
@@ -85,6 +86,37 @@ public struct SettingsView: View {
 
             presetGrid
 
+            row("更新") {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 10) {
+                        Toggle("", isOn: binding(\.autoCheckUpdates))
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                        Text("启动时自动检查")
+                            .font(Theme.sans(12))
+                            .foregroundStyle(Theme.ink2)
+                        Spacer()
+                        TextButton("检查更新") {
+                            _Concurrency.Task { await updater.check() }
+                        }
+                    }
+                    if !updater.status.text.isEmpty {
+                        HStack(spacing: 8) {
+                            Text(updater.status.text)
+                                .font(Theme.sans(11))
+                                .foregroundStyle(Theme.ink3)
+                            if case .available(_, let url) = updater.status {
+                                TextButton("打开下载页") { NSWorkspace.shared.open(url) }
+                            }
+                        }
+                    } else {
+                        Text("当前版本 \(AppVersion.current)")
+                            .font(Theme.sans(11))
+                            .foregroundStyle(Theme.ink3)
+                    }
+                }
+            }
             row("引导") {
                 TextButton("重新看一次首次引导", prominent: false) {
                     store.resetWelcome()

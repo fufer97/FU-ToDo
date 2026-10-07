@@ -21,12 +21,12 @@ struct RenderMain {
         let empty = makeStore(seeded: false)
 
         render(
-            RootView().environmentObject(seeded),
+            RootView().environmentObject(seeded).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
             to: outDir.appendingPathComponent("01-main-light.png")
         )
         render(
-            RootView().environmentObject(empty),
+            RootView().environmentObject(empty).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
             to: outDir.appendingPathComponent("02-empty-day.png")
         )
@@ -45,7 +45,7 @@ struct RenderMain {
         seeded.updateSettings { $0.appearance = .dark }
         Theme.apply(seeded.settings)
         render(
-            RootView().environmentObject(seeded),
+            RootView().environmentObject(seeded).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
             to: outDir.appendingPathComponent("05-main-dark.png")
         )
@@ -53,13 +53,13 @@ struct RenderMain {
         Theme.apply(seeded.settings)
 
         render(
-            SettingsView().environmentObject(seeded),
+            SettingsView().environmentObject(seeded).environmentObject(Updater()),
             size: CGSize(width: 470, height: 650),
             to: outDir.appendingPathComponent("06-settings.png")
         )
         // 加高一张，方便看到设置页的全部内容（含使用说明）
         render(
-            SettingsView().environmentObject(seeded),
+            SettingsView().environmentObject(seeded).environmentObject(Updater()),
             size: CGSize(width: 470, height: 650),
             to: outDir.appendingPathComponent("09-settings-full.png")
         )
@@ -72,7 +72,7 @@ struct RenderMain {
         }
         Theme.apply(seeded.settings)
         render(
-            RootView().environmentObject(seeded),
+            RootView().environmentObject(seeded).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
             to: outDir.appendingPathComponent("07-theme-indigo.png")
         )
@@ -83,7 +83,7 @@ struct RenderMain {
         branchesOnly.addTopLevel("整理收件箱", on: branchesOnly.currentDay)
         Theme.apply(branchesOnly.settings)
         render(
-            RootView().environmentObject(branchesOnly),
+            RootView().environmentObject(branchesOnly).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
             to: outDir.appendingPathComponent("08-no-main.png")
         )
@@ -192,7 +192,7 @@ struct RenderMain {
         if let userStore = TaskStore(storeURL: userURL) as TaskStore? {
             Theme.apply(userStore.settings)
             render(
-                RootView().environmentObject(userStore),
+                RootView().environmentObject(userStore).environmentObject(Updater()),
                 size: CGSize(width: 1200, height: 760),
                 to: outDir.appendingPathComponent("14-user-data.png")
             )
@@ -244,7 +244,7 @@ struct RenderMain {
         Theme.apply(presetStore.settings)
         print("墨蓝：paper=\(presetStore.settings.paper) accent=\(presetStore.settings.accent)")
         render(
-            RootView().environmentObject(presetStore),
+            RootView().environmentObject(presetStore).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
             to: outDir.appendingPathComponent("20-preset-indigo.png")
         )
@@ -262,7 +262,7 @@ struct RenderMain {
         appleStore.updateSettings { $0.font = .apple }
         Theme.apply(appleStore.settings)
         render(
-            RootView().environmentObject(appleStore),
+            RootView().environmentObject(appleStore).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
             to: outDir.appendingPathComponent("21-font-apple.png")
         )
@@ -334,7 +334,7 @@ struct RenderMain {
         // 0) 实时切换配色：同一个窗口里改设置，看像素有没有真的变
         let themeStore = makeStore(seeded: true)
         if let (hosting, window, rep) = host(
-            RootView().environmentObject(themeStore),
+            RootView().environmentObject(themeStore).environmentObject(Updater()),
             CGSize(width: 1200, height: 760)
         ) {
             func panelPixel(_ label: String) {
@@ -356,7 +356,7 @@ struct RenderMain {
 
         // 1) 整体界面：切换选中日期（最重的常规路径）
         if let (hosting, window, _) = host(
-            RootView().environmentObject(store),
+            RootView().environmentObject(store).environmentObject(Updater()),
             CGSize(width: 1200, height: 760)
         ) {
             let other = store.tasks.first(where: { $0.day != store.currentDay })?.day ?? store.currentDay

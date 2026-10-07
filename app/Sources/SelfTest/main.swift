@@ -892,5 +892,19 @@ do {
     try? FileManager.default.removeItem(at: legacy)
 }
 
+print("\n二十九、检查更新：版本号比较")
+MainActor.assumeIsolated {
+    check("0.4 比 0.3 新", Updater.isNewer("0.4", than: "0.3"))
+    check("0.3 不比 0.3 新", !Updater.isNewer("0.3", than: "0.3"))
+    check("0.2 不比 0.3 新", !Updater.isNewer("0.2", than: "0.3"))
+    check("0.10 比 0.9 新（不能按字符串比）", Updater.isNewer("0.10", than: "0.9"))
+    check("1.0 比 0.9 新", Updater.isNewer("1.0", than: "0.9"))
+    check("带 v 前缀也能比", Updater.isNewer("v0.4", than: "0.3"))
+    check("0.3.1 比 0.3 新", Updater.isNewer("0.3.1", than: "0.3"))
+    check("状态文案可读", Updater.Status.available(version: "0.4", url: URL(string: "https://x")!).text == "有新版本 0.4")
+    check("私有仓库不可达时如实提示",
+          Updater.Status.unreachable.text.contains("无法获取版本信息"))
+}
+
 print("\n结果：\(passed) 项通过 / \(failed) 项失败")
 exit(failed == 0 ? 0 : 1)

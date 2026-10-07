@@ -4,6 +4,7 @@ import Core
 /// 主界面：左边月历（一天一格，格子里是那天的内容），右边当天的一页。
 public struct RootView: View {
     @EnvironmentObject var store: TaskStore
+    @EnvironmentObject var updater: Updater
     @Environment(\.openSettings) private var openSettings
     @Environment(\.openWindow) private var openWindow
 
@@ -88,6 +89,8 @@ public struct RootView: View {
         .onAppear {
             // 第一次打开才弹，之后不再打扰
             if !store.welcomeSeen { showWelcome = true }
+            // 启动时静默检查一次新版（可在设置里关掉）
+            updater.checkIfNeeded(auto: store.settings.autoCheckUpdates)
         }
         // 让系统画的那些"不是我们画的部分"也属于这套配色：
         // 文本选中、插入符、焦点环、控件强调色都跟着走。

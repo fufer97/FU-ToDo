@@ -91,19 +91,23 @@ public struct AppSettings: Codable, Equatable {
     public var paper: PaperTone
     public var fontScale: FontScale
     public var font: FontChoice
+    /// 启动时静默检查是否有新版
+    public var autoCheckUpdates: Bool
 
     public init(
         appearance: AppearanceMode = .system,
         accent: AccentChoice = .blue,
         paper: PaperTone = .front,
         fontScale: FontScale = .medium,
-        font: FontChoice = .apple
+        font: FontChoice = .apple,
+        autoCheckUpdates: Bool = true
     ) {
         self.appearance = appearance
         self.accent = accent
         self.paper = paper
         self.fontScale = fontScale
         self.font = font
+        self.autoCheckUpdates = autoCheckUpdates
     }
 
     /// 容错解码：老数据文件缺字段时用默认值，不丢用户数据。
@@ -114,6 +118,7 @@ public struct AppSettings: Codable, Equatable {
         paper = try c.decodeIfPresent(PaperTone.self, forKey: .paper) ?? .front
         fontScale = try c.decodeIfPresent(FontScale.self, forKey: .fontScale) ?? .medium
         font = try c.decodeIfPresent(FontChoice.self, forKey: .font) ?? .apple
+        autoCheckUpdates = try c.decodeIfPresent(Bool.self, forKey: .autoCheckUpdates) ?? true
     }
 }
 

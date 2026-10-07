@@ -25,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct YiRiYiJianApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var store: TaskStore
+    @StateObject private var updater = Updater()
 
     init() {
         let demo = CommandLine.arguments.contains("--demo")
@@ -50,6 +51,7 @@ struct YiRiYiJianApp: App {
         WindowGroup("FU ToDo") {
             RootView()
                 .environmentObject(store)
+                .environmentObject(updater)
                 .frame(minWidth: 1040, minHeight: 660)
                 .onAppear {
                     Theme.apply(store.settings)
@@ -67,7 +69,9 @@ struct YiRiYiJianApp: App {
         .defaultPosition(.center)
 
         Settings {
-            SettingsView().environmentObject(store)
+            SettingsView()
+                .environmentObject(store)
+                .environmentObject(updater)
         }
     }
 }
