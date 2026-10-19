@@ -5,6 +5,9 @@ import CoreGraphics
 public enum ThemeChoice: String, Codable, CaseIterable, Equatable {
     case atelier, herbarium, acid, blueprint
 
+    /// 设置页与命令面板里可选的主题（酸纸暂时下架，代码保留）。
+    public static var available: [ThemeChoice] { [.atelier, .herbarium, .blueprint] }
+
     public var label: String {
         switch self {
         case .atelier: return "器物"
@@ -54,19 +57,6 @@ public enum FontScale: String, Codable, CaseIterable, Equatable {
     }
 }
 
-/// 月历的展开程度：整月 / 双周 / 单周。周视图的卡片更大，能看到更多内容。
-public enum CalendarRange: String, Codable, CaseIterable, Equatable {
-    case month, biweek, week
-
-    public var label: String {
-        switch self {
-        case .month: return "月"
-        case .biweek: return "双周"
-        case .week: return "周"
-        }
-    }
-}
-
 /// 应用设置。随数据一起落盘，导出备份时一并带上。
 public struct AppSettings: Codable, Equatable {
     public var theme: ThemeChoice
@@ -75,21 +65,16 @@ public struct AppSettings: Codable, Equatable {
     public var autoCheckUpdates: Bool
     /// 完成 / 翻页时的轻音效与触感
     public var soundEnabled: Bool
-    /// 月历显示范围：整月 / 双周 / 单周
-    public var calendarRange: CalendarRange
-
     public init(
         theme: ThemeChoice = .herbarium,
         fontScale: FontScale = .medium,
         autoCheckUpdates: Bool = true,
-        soundEnabled: Bool = true,
-        calendarRange: CalendarRange = .month
+        soundEnabled: Bool = true
     ) {
         self.theme = theme
         self.fontScale = fontScale
         self.autoCheckUpdates = autoCheckUpdates
         self.soundEnabled = soundEnabled
-        self.calendarRange = calendarRange
     }
 
     /// 容错解码：老数据（有 paper / accent / font 等旧字段、没有 theme）按默认主题读入，不丢数据。
@@ -99,6 +84,7 @@ public struct AppSettings: Codable, Equatable {
         fontScale = try c.decodeIfPresent(FontScale.self, forKey: .fontScale) ?? .medium
         autoCheckUpdates = try c.decodeIfPresent(Bool.self, forKey: .autoCheckUpdates) ?? true
         soundEnabled = try c.decodeIfPresent(Bool.self, forKey: .soundEnabled) ?? true
-        calendarRange = try c.decodeIfPresent(CalendarRange.self, forKey: .calendarRange) ?? .month
+        // 酸纸暂时下架：旧数据落到默认的标本室
+        if theme == .acid { theme = .herbarium }
     }
 }

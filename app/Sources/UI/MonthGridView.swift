@@ -25,31 +25,13 @@ public struct MonthGridView: View {
         self.onSelect = onSelect
     }
 
-    private var range: CalendarRange { store.settings.calendarRange }
-
     private var cells: [Date] {
         let cal = calendar
-        if range == .month {
-            guard let monthStart = cal.dateInterval(of: .month, for: anchor)?.start else { return [] }
-            let weekday = cal.component(.weekday, from: monthStart)
-            let offset = (weekday - cal.firstWeekday + 7) % 7
-            guard let start = cal.date(byAdding: .day, value: -offset, to: monthStart) else { return [] }
-            return (0..<42).compactMap { cal.date(byAdding: .day, value: $0, to: start) }
-        }
-        let base = DayKey.date(from: store.selectedDay) ?? anchor
-        let weekday = cal.component(.weekday, from: base)
+        guard let monthStart = cal.dateInterval(of: .month, for: anchor)?.start else { return [] }
+        let weekday = cal.component(.weekday, from: monthStart)
         let offset = (weekday - cal.firstWeekday + 7) % 7
-        guard let start = cal.date(byAdding: .day, value: -offset, to: base) else { return [] }
-        let count = range == .week ? 7 : 14
-        return (0..<count).compactMap { cal.date(byAdding: .day, value: $0, to: start) }
-    }
-
-    private var rowCount: Int {
-        switch range {
-        case .month: return 6
-        case .biweek: return 2
-        case .week: return 1
-        }
+        guard let start = cal.date(byAdding: .day, value: -offset, to: monthStart) else { return [] }
+        return (0..<42).compactMap { cal.date(byAdding: .day, value: $0, to: start) }
     }
 
     public var body: some View {
@@ -67,7 +49,7 @@ public struct MonthGridView: View {
             }
             .frame(height: 26)
 
-            ForEach(0..<rowCount, id: \.self) { row in
+            ForEach(0..<6, id: \.self) { row in
                 HStack(spacing: 0) {
                     ForEach(0..<7, id: \.self) { col in
                         let index = row * 7 + col
@@ -78,7 +60,6 @@ public struct MonthGridView: View {
                                 dayKey: DayKey.key(for: date),
                                 dayNumber: calendar.component(.day, from: date),
                                 inMonth: calendar.isDate(date, equalTo: anchor, toGranularity: .month),
-                                range: range,
                                 onSelect: onSelect
                             )
                         } else {
@@ -103,7 +84,6 @@ struct DayCellView: View {
     let dayKey: String
     let dayNumber: Int
     let inMonth: Bool
-    let range: CalendarRange
     let onSelect: (String) -> Void
 
     @State private var hovering = false
@@ -118,16 +98,15 @@ struct DayCellView: View {
         let roots = store.orderedRoots(of: dayKey)
         let all = store.taskCount(on: dayKey)
         let doneCount = store.doneCount(on: dayKey)
-        let capacity: Int = range == .week ? 9 : (range == .biweek ? 6 : (hovering ? 6 : 4))
-        let shown = Array(roots.prefix(capacity))
+        let shown = Array(roots.prefix(hovering ? 6 : 4))
         let hasContent = !roots.isEmpty || all > 0
         let allDone = all > 0 && doneCount == all
         let filled = hasContent && !isFuture
 
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 5) {
-                Text(range == .month ? "\(dayNumber)" : "\(Calendar(identifier: .gregorian).component(.month, from: DayKey.date(from: dayKey) ?? Date()))/\(dayNumber)")
-                    .font(Theme.mono(range == .week ? 12 : (isToday ? 10.5 : 10)))
+                Text("\(dayNumber)")
+                    .font(Theme.mono(isToday ? 10.5 : 10))
                     .foregroundStyle(isToday ? Theme.todayInk : (isFuture ? Theme.faint : Theme.ink2))
                 Spacer(minLength: 0)
                 if allDone && !isToday {
@@ -145,7 +124,7 @@ struct DayCellView: View {
                             .padding(.top, 1)
                     }
                     Text(task.title)
-                        .font(task.isMain ? Theme.display(range == .week ? 14 : 12) : Theme.sans(range == .week ? 13 : 11, .medium))
+                        .font(task.isMain ? Theme.display(12) : Theme.sans(11, .medium))
                         .foregroundStyle(
                             isToday ? Theme.todayInk
                                 : (filled ? Theme.fillInk : (isFuture ? Theme.faint : Theme.ink2))
@@ -161,8 +140,8 @@ struct DayCellView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, range == .week ? 10 : 8)
-        .padding(.vertical, range == .week ? 10 : 7)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 7)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
             isToday ? Theme.todayFill

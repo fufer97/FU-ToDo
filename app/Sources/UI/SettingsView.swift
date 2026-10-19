@@ -72,7 +72,7 @@ public struct SettingsView: View {
     private var themeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle("主题")
-            ForEach(ThemeChoice.allCases, id: \.self) { theme in
+            ForEach(ThemeChoice.available, id: \.self) { theme in
                 themeRow(theme)
             }
             Text("每个主题有自己的配色、字体和卡片样式；切换后立即生效。")

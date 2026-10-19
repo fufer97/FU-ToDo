@@ -55,6 +55,8 @@ public struct FocusModeView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var showStamp = false
+    @State private var draft = ""
+    @FocusState private var inputFocused: Bool
     private var main: Task? { store.mainGoal(on: store.selectedDay) }
     private var branches: [Task] { store.branches(on: store.selectedDay) }
     private var finishedCount: Int { store.doneCount(on: store.selectedDay) }
@@ -62,6 +64,14 @@ public struct FocusModeView: View {
     private var dayNumber: String {
         guard let date = DayKey.date(from: store.selectedDay) else { return "" }
         return String(Calendar(identifier: .gregorian).component(.day, from: date))
+    }
+
+    private func addMain() {
+        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        store.addMain(text, on: store.selectedDay)
+        draft = ""
+        Feedback.complete()
     }
 
     private var weekday: String {
@@ -81,38 +91,83 @@ public struct FocusModeView: View {
                 .allowsHitTesting(false)
 
             VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .firstTextBaseline, spacing: 14) {
                     Text("FU TODO  /  FOCUS").font(Theme.mono(9)).tracking(2.2).foregroundStyle(Theme.ink3)
-                    Spacer()
                     Text("\(dayNumber) · \(weekday)").font(Theme.mono(9)).tracking(1.6).foregroundStyle(Theme.ink3)
+                    Spacer()
+                    Button {
+                        onClose()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text("退出专注").font(Theme.mono(9, .semibold)).tracking(1)
+                            Text("ESC").font(Theme.mono(7.5)).tracking(1).opacity(0.55)
+                        }
+                        .foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 6)
+                        .background(Rectangle().fill(Theme.surface.opacity(0.6)))
+                        .overlay(Rectangle().strokeBorder(Theme.ink.opacity(0.4), lineWidth: 0.8))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(.cancelAction)
                 }
 
                 Spacer(minLength: 0)
 
-                HStack(alignment: .bottom, spacing: 40) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("今天只做这一件").font(Theme.mono(9.5)).tracking(2).foregroundStyle(Theme.ink3)
-                        Text(main?.title ?? "今天还没有主线")
-                            .font(Theme.display(64))
-                            .tracking(Theme.displayTracking(64))
-                            .foregroundStyle(main == nil ? Theme.ink3 : Theme.ink)
-                            .lineSpacing(-4)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .lineLimit(3)
-                    }
-                    Spacer(minLength: 0)
-                    BigRing(done: main?.done ?? false) {
-                        guard let main else { return }
-                        if main.done {
-                            store.revert(main.id)
-                        } else {
-                            store.complete(main.id)
-                            Feedback.complete()
-                            if !reduceMotion {
-                                showStamp = true
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { showStamp = false }
-                            }
+                if let main {
+                    HStack(alignment: .bottom, spacing: 40) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("今天只做这一件").font(Theme.mono(9.5)).tracking(2).foregroundStyle(Theme.ink3)
+                            Text(main.title)
+                                .font(Theme.display(64))
+                                .tracking(Theme.displayTracking(64))
+                                .foregroundStyle(Theme.ink)
+                                .lineSpacing(-4)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .lineLimit(3)
                         }
+                        Spacer(minLength: 0)
+                        VStack(spacing: 8) {
+                            BigRing(done: main.done) {
+                                if main.done { store.revert(main.id) } else {
+                                    store.complete(main.id)
+                                    Feedback.complete()
+                                    if !reduceMotion {
+                                        showStamp = true
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { showStamp = false }
+                                    }
+                                }
+                            }
+                            Text(main.done ? "恢复主线" : "完成主线")
+                                .font(Theme.mono(7.5)).tracking(1)
+                                .foregroundStyle(Theme.ink3)
+                        }
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("今天只做这一件").font(Theme.mono(9.5)).tracking(2).foregroundStyle(Theme.ink3)
+                        Text("今天还没有主线").font(Theme.display(64))
+                            .tracking(Theme.displayTracking(64))
+                            .foregroundStyle(Theme.ink3)
+                        HStack(spacing: 10) {
+                            TextField("写下今天最重要的一件事", text: $draft)
+                                .textFieldStyle(.plain)
+                                .font(Theme.display(24))
+                                .foregroundStyle(Theme.ink)
+                                .focused($inputFocused)
+                                .onSubmit { addMain() }
+                                .padding(.horizontal, 12).padding(.vertical, 10)
+                                .overlay(Rectangle().strokeBorder(Theme.ink.opacity(0.35), lineWidth: 0.9))
+                            Button { addMain() } label: {
+                                Text("写下来").font(Theme.mono(9, .semibold)).tracking(1)
+                                    .foregroundStyle(Theme.canvas)
+                                    .padding(.horizontal, 14).padding(.vertical, 10)
+                                    .background(Rectangle().fill(Theme.ink))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        Text("写好后按 ⏎；主线会立刻出现在这里").font(Theme.mono(8)).tracking(0.6).foregroundStyle(Theme.ink3)
                     }
                 }
 
@@ -141,18 +196,11 @@ public struct FocusModeView: View {
                 Spacer(minLength: 0)
 
                 HStack {
-                    Text("按 Esc 退出专注").font(Theme.mono(8.5)).tracking(1).foregroundStyle(Theme.ink3)
+                    Text(main == nil ? "写下主线后按 ⏎ · 退出后回到今日页" : "点右侧大圆环完成主线 · 退出后回到今日页").font(Theme.mono(8.5)).tracking(1).foregroundStyle(Theme.ink3)
                     Spacer()
                     if finishedCount > 0 {
                         Text("今日已完成 \(finishedCount) 件").font(Theme.mono(8.5)).foregroundStyle(Theme.ink3)
                     }
-                    Button(action: onClose) {
-                        Text("ESC 退出").font(Theme.mono(8.5, .semibold)).tracking(1)
-                            .foregroundStyle(Theme.canvas)
-                            .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(Rectangle().fill(Theme.ink))
-                    }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(52)
@@ -165,7 +213,9 @@ public struct FocusModeView: View {
                     .allowsHitTesting(false)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(reduceMotion ? nil : Motion.ring, value: showStamp)
+        .onAppear { inputFocused = main == nil }
         .onExitCommand(perform: onClose)
         .focusable()
         .transition(.opacity)

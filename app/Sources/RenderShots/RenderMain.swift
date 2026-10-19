@@ -126,23 +126,13 @@ struct RenderMain {
             size: CGSize(width: 1200, height: 760),
             to: outDir.appendingPathComponent("30-focus.png")
         )
-
-        seeded.updateSettings { $0.calendarRange = .week }
-        Theme.apply(seeded.settings)
+        let emptyFocus = makeStore(seeded: false)
+        Theme.apply(emptyFocus.settings)
         render(
-            RootView().environmentObject(seeded).environmentObject(Updater()),
+            FocusModeView(onClose: {}).environmentObject(emptyFocus),
             size: CGSize(width: 1200, height: 760),
-            to: outDir.appendingPathComponent("34-week.png")
+            to: outDir.appendingPathComponent("30b-focus-empty.png")
         )
-        seeded.updateSettings { $0.calendarRange = .biweek }
-        Theme.apply(seeded.settings)
-        render(
-            RootView().environmentObject(seeded).environmentObject(Updater()),
-            size: CGSize(width: 1200, height: 760),
-            to: outDir.appendingPathComponent("35-biweek.png")
-        )
-        seeded.updateSettings { $0.calendarRange = .month }
-        Theme.apply(seeded.settings)
 
         render(
             YearView(onClose: {}).environmentObject(seeded),
@@ -177,17 +167,6 @@ struct RenderMain {
             size: CGSize(width: 620, height: 560),
             to: outDir.appendingPathComponent("04-done.png")
         )
-
-        // 酸纸主题
-        seeded.updateSettings { $0.theme = .acid }
-        Theme.apply(seeded.settings)
-        render(
-            RootView().environmentObject(seeded).environmentObject(Updater()),
-            size: CGSize(width: 1200, height: 760),
-            to: outDir.appendingPathComponent("05-main-acid.png")
-        )
-        seeded.updateSettings { $0.theme = .herbarium }
-        Theme.apply(seeded.settings)
 
         render(
             SettingsView().environmentObject(seeded).environmentObject(Updater()),

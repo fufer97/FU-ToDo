@@ -187,12 +187,12 @@ do {
     let s = TaskStore(storeURL: url, today: "2026-10-08")
     _ = s.addTopLevel("设置测试任务")
     s.updateSettings {
-        $0.theme = .acid
+        $0.theme = .blueprint
         $0.fontScale = .large
     }
     let reloaded = TaskStore(storeURL: url, today: "2026-10-08")
     check("设置随数据一起落盘", reloaded.settings == s.settings)
-    check("主题持久化", reloaded.settings.theme == .acid)
+    check("主题持久化", reloaded.settings.theme == .blueprint)
     check("字号持久化", reloaded.settings.fontScale == .large)
 
     let backup = try s.exportData()
