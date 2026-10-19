@@ -37,6 +37,19 @@ struct RenderMain {
             return
         }
 
+        // --radical：整窗色域 + 满高日页（工坊 / 档案）
+        if CommandLine.arguments.contains("--radical") {
+            render(RadicalSpread(night: false), size: CGSize(width: 1200, height: 760),
+                   to: outDir.appendingPathComponent("v4-spread-day.png"))
+            render(RadicalSpread(night: true), size: CGSize(width: 1200, height: 760),
+                   to: outDir.appendingPathComponent("v4-spread-night.png"))
+            render(RadicalSpread(night: false, mosaic: true), size: CGSize(width: 1200, height: 760),
+                   to: outDir.appendingPathComponent("v4-mosaic-day.png"))
+            render(RadicalSpread(night: true, mosaic: true), size: CGSize(width: 1200, height: 760),
+                   to: outDir.appendingPathComponent("v4-mosaic-night.png"))
+            return
+        }
+
         // --frames：三张风格帧（标本室 / 酸纸 / 工坊），只用于选方向
         if CommandLine.arguments.contains("--frames") {
             render(FrameArchive(), size: CGSize(width: 900, height: 560),
