@@ -3,10 +3,9 @@ import AppKit
 import UniformTypeIdentifiers
 import Core
 
-/// 设置窗口：外观（深浅色 / 强调色 / 纸面色调 / 字号）与数据（备份、位置、清空）。
+/// 设置窗口：主题（四选一）、字号、更新、引导与数据。
 public struct SettingsView: View {
     @EnvironmentObject var store: TaskStore
-
     @EnvironmentObject var updater: Updater
     @State private var message: String?
     @State private var pendingImport: Data?
@@ -17,15 +16,16 @@ public struct SettingsView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    appearanceSection
+                VStack(alignment: .leading, spacing: 24) {
+                    themeSection
+                    optionsSection
                     previewSection
                     dataSection
                 }
                 .padding(22)
             }
             if let message {
-                Rectangle().fill(Theme.hairline).frame(height: 1)
+                Rectangle().fill(Theme.rule).frame(height: 0.8)
                 Text(message)
                     .font(Theme.sans(11.5))
                     .foregroundStyle(Theme.ink3)
@@ -67,72 +67,124 @@ public struct SettingsView: View {
         }
     }
 
-    // MARK: 外观
+    // MARK: 主题
 
-    private var appearanceSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            sectionTitle("外观")
-
-            row("深浅色") {
-                Picker("", selection: binding(\.appearance)) {
-                    ForEach(AppearanceMode.allCases, id: \.self) { mode in
-                        Text(mode.label).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 240)
+    private var themeSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("主题")
+            ForEach(ThemeChoice.allCases, id: \.self) { theme in
+                themeRow(theme)
             }
+            Text("每个主题有自己的配色、字体和卡片样式；切换后立即生效。")
+                .font(Theme.sans(10.5))
+                .foregroundStyle(Theme.ink3)
+        }
+    }
 
-            presetGrid
-
-            row("更新") {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 10) {
-                        Toggle("", isOn: binding(\.autoCheckUpdates))
-                            .labelsHidden()
-                            .toggleStyle(.switch)
-                            .controlSize(.small)
-                        Text("启动时自动检查")
-                            .font(Theme.sans(12))
-                            .foregroundStyle(Theme.ink2)
-                        Spacer()
-                        TextButton("检查更新") {
-                            _Concurrency.Task { await updater.check() }
-                        }
-                    }
-                    if !updater.status.text.isEmpty {
-                        HStack(spacing: 8) {
-                            Text(updater.status.text)
-                                .font(Theme.sans(11))
-                                .foregroundStyle(Theme.ink3)
-                            if case .available(_, let url) = updater.status {
-                                TextButton("打开下载页") { NSWorkspace.shared.open(url) }
-                            }
-                        }
-                    } else {
-                        Text("当前版本 \(AppVersion.current)")
-                            .font(Theme.sans(11))
+    private func themeRow(_ theme: ThemeChoice) -> some View {
+        let current = store.settings.theme == theme
+        return Button {
+            store.updateSettings { $0.theme = theme }
+        } label: {
+            HStack(spacing: 12) {
+                themeThumbnail(theme).frame(width: 96, height: 58)
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 7) {
+                        Text(theme.label)
+                            .font(Theme.sans(13, .semibold))
+                            .foregroundStyle(Theme.ink)
+                        Text(theme.en)
+                            .font(Theme.mono(7.5))
+                            .tracking(1)
                             .foregroundStyle(Theme.ink3)
+                        if current {
+                            Text("当前")
+                                .font(Theme.sans(9.5, .semibold))
+                                .foregroundStyle(Theme.accent)
+                                .padding(.horizontal, 5).padding(.vertical, 1)
+                                .overlay(Capsule().strokeBorder(Theme.accent.opacity(0.6), lineWidth: 0.8))
+                        }
                     }
+                    Text(theme.note)
+                        .font(Theme.sans(10.5))
+                        .foregroundStyle(Theme.ink3)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
                 }
+                Spacer(minLength: 0)
             }
-            row("引导") {
-                TextButton("重新看一次首次引导", prominent: false) {
-                    store.resetWelcome()
-                    message = "关闭设置窗口后重新打开应用，就会再次看到引导。"
-                }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.surface)
+            .overlay(
+                Rectangle().strokeBorder(current ? Theme.accent : Theme.rule, lineWidth: current ? 1.4 : 0.8)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func themeThumbnail(_ theme: ThemeChoice) -> some View {
+        ZStack(alignment: .topLeading) {
+            Rectangle().fill(themeCanvas(theme))
+            HStack(alignment: .top, spacing: 6) {
+                Text("十月")
+                    .font(Theme.previewDisplay(theme, 18))
+                    .foregroundStyle(themeInk(theme))
+                Spacer(minLength: 0)
+                Rectangle()
+                    .fill(themeFill(theme))
+                    .frame(width: 20, height: 20)
             }
-            row("字体") {
-                Picker("", selection: binding(\.font)) {
-                    ForEach(FontChoice.allCases, id: \.self) { choice in
-                        Text(choice.label).tag(choice)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 190)
+            .padding(7)
+            VStack(alignment: .leading, spacing: 3) {
+                Spacer()
+                Rectangle().fill(themeInk(theme).opacity(0.45)).frame(width: 34, height: 2)
+                Rectangle().fill(themeCard(theme)).frame(width: 52, height: 14)
+                    .overlay(Rectangle().strokeBorder(themeInk(theme).opacity(0.3), lineWidth: 0.6))
             }
+            .padding(7)
+        }
+        .frame(height: 54)
+        .overlay(Rectangle().strokeBorder(Theme.rule, lineWidth: 0.6))
+    }
+
+    private func themeCanvas(_ t: ThemeChoice) -> Color {
+        switch t {
+        case .atelier: return Color(.sRGB, red: 0.949, green: 0.933, blue: 0.890, opacity: 1)
+        case .herbarium: return Color(.sRGB, red: 0.914, green: 0.898, blue: 0.839, opacity: 1)
+        case .acid: return Color(.sRGB, red: 0.906, green: 0.973, blue: 0.420, opacity: 1)
+        case .blueprint: return Color(.sRGB, red: 0.902, green: 0.922, blue: 0.902, opacity: 1)
+        }
+    }
+    private func themeInk(_ t: ThemeChoice) -> Color {
+        switch t {
+        case .atelier: return Color(.sRGB, red: 0.078, green: 0.137, blue: 0.114, opacity: 1)
+        case .herbarium: return Color(.sRGB, red: 0.110, green: 0.141, blue: 0.114, opacity: 1)
+        case .acid: return Color(.sRGB, red: 0.067, green: 0.078, blue: 0.059, opacity: 1)
+        case .blueprint: return Color(.sRGB, red: 0.137, green: 0.286, blue: 0.420, opacity: 1)
+        }
+    }
+    private func themeFill(_ t: ThemeChoice) -> Color {
+        switch t {
+        case .atelier: return Color(.sRGB, red: 0.706, green: 0.263, blue: 0.165, opacity: 1)
+        case .herbarium: return Color(.sRGB, red: 0.875, green: 0.894, blue: 0.827, opacity: 1)
+        case .acid: return Color(.sRGB, red: 0.067, green: 0.078, blue: 0.059, opacity: 1)
+        case .blueprint: return Color(.sRGB, red: 0.137, green: 0.286, blue: 0.420, opacity: 1)
+        }
+    }
+    private func themeCard(_ t: ThemeChoice) -> Color {
+        switch t {
+        case .atelier: return Color(.sRGB, red: 0.984, green: 0.965, blue: 0.918, opacity: 1)
+        case .herbarium: return Color(.sRGB, red: 0.875, green: 0.894, blue: 0.827, opacity: 1)
+        case .acid: return Color(.sRGB, red: 0.067, green: 0.078, blue: 0.059, opacity: 1)
+        case .blueprint: return Color(.sRGB, red: 0.969, green: 0.973, blue: 0.953, opacity: 1)
+        }
+    }
+
+    // MARK: 其他选项
+
+    private var optionsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
             row("字号") {
                 Picker("", selection: binding(\.fontScale)) {
                     ForEach(FontScale.allCases, id: \.self) { scale in
@@ -143,85 +195,31 @@ public struct SettingsView: View {
                 .labelsHidden()
                 .frame(width: 160)
             }
-        }
-    }
-
-    /// 配色方案卡片：每张带小预览、说明，命中的那张标「当前」。
-    private var presetGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            ForEach(ThemePreset.all) { preset in
-                presetCard(preset)
-            }
-        }
-    }
-
-    private func presetCard(_ preset: ThemePreset) -> some View {
-        let isCurrent = preset.matches(store.settings)
-        return Button {
-            store.updateSettings {
-                $0.paper = preset.paper
-                $0.accent = preset.accent
-            }
-        } label: {
-            HStack(alignment: .top, spacing: 12) {
-                presetThumbnail(preset)
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(preset.name)
-                            .font(Theme.sans(13, .semibold))
-                            .foregroundStyle(Theme.ink)
-                        if isCurrent {
-                            Text("当前")
-                                .font(Theme.sans(10, .semibold))
-                                .foregroundStyle(Theme.accent)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1)
-                                .background(Capsule().fill(Theme.accentSoft))
-                        }
+            row("更新") {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 10) {
+                        Toggle("", isOn: binding(\.autoCheckUpdates))
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                        Text("启动时自动检查").font(Theme.sans(12)).foregroundStyle(Theme.ink2)
+                        Spacer()
+                        TextButton("检查更新") { _Concurrency.Task { await updater.check() } }
                     }
-                    Text(preset.note)
-                        .font(Theme.sans(11))
-                        .foregroundStyle(Theme.ink3)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .multilineTextAlignment(.leading)
+                    Text(updater.status.text.isEmpty ? "当前版本 \(AppVersion.current)" : updater.status.text)
+                        .font(Theme.sans(11)).foregroundStyle(Theme.ink3)
                 }
-                Spacer(minLength: 0)
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isCurrent ? Theme.surfaceAlt : Theme.surface)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(isCurrent ? Theme.accent.opacity(0.6) : Theme.hairline, lineWidth: isCurrent ? 1.4 : 1)
-            )
+            row("引导") {
+                TextButton("重新看一次首次引导") {
+                    store.resetWelcome()
+                    message = "关闭设置窗口后重新打开应用，就会再次看到引导。"
+                }
+            }
         }
-        .buttonStyle(.plain)
     }
 
-    /// 小预览：纸底 + 一条标题线 + 一个强调色圆点 + 两条内容线。
-    private func presetThumbnail(_ preset: ThemePreset) -> some View {
-        let paperColor = paperSwatch(preset.paper)
-        let accentColor = accentSwatch(preset.accent)
-        return VStack(alignment: .leading, spacing: 4) {
-            RoundedRectangle(cornerRadius: 1).fill(Theme.ink2.opacity(0.85)).frame(width: 26, height: 3)
-            Spacer(minLength: 0)
-            HStack(spacing: 4) {
-                Circle().fill(accentColor).frame(width: 6, height: 6)
-                RoundedRectangle(cornerRadius: 1).fill(Theme.ink2.opacity(0.5)).frame(width: 22, height: 2.5)
-            }
-            RoundedRectangle(cornerRadius: 1).fill(Theme.ink3.opacity(0.45)).frame(width: 32, height: 2.5)
-        }
-        .padding(7)
-        .frame(width: 62, height: 52, alignment: .topLeading)
-        .background(paperColor)
-        .overlay(
-            RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-    }
+    // MARK: 预览
 
     private var previewSection: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -235,7 +233,6 @@ public struct SettingsView: View {
                     Spacer()
                 }
                 .frame(height: Theme.rowHeight(1))
-
                 HStack(spacing: 0) {
                     TreeRails(level: 2)
                     HStack(spacing: 9) {
@@ -247,25 +244,10 @@ public struct SettingsView: View {
                     }
                 }
                 .frame(height: Theme.rowHeight(2))
-
-                HStack(spacing: 0) {
-                    TreeRails(level: 3)
-                    HStack(spacing: 9) {
-                        RingView(level: 3, done: false) {}
-                        Text("第三级：细节")
-                            .font(Theme.titleFont(3))
-                            .foregroundStyle(Theme.titleColor(3))
-                    }
-                }
-                .frame(height: Theme.rowHeight(3))
             }
             .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.surface)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1)
-            )
+            .background(Theme.surface)
+            .overlay(Rectangle().strokeBorder(Theme.rule, lineWidth: 0.8))
         }
     }
 
@@ -284,69 +266,34 @@ public struct SettingsView: View {
                 Spacer()
             }
             Text("数据存在本地，不上传任何地方。备份是一个 JSON 文件，可以自己打开看。")
-                .font(Theme.sans(11))
-                .foregroundStyle(Theme.faint)
+                .font(Theme.sans(11)).foregroundStyle(Theme.ink3)
         }
     }
 
     // MARK: 组件
 
     private func sectionTitle(_ text: String) -> some View {
-        Text(text)
-            .font(Theme.sans(11.5, .semibold))
-            .foregroundStyle(Theme.ink3)
-            .tracking(1.2)
+        Text(text).font(Theme.mono(9.5, .semibold)).tracking(1.4).foregroundStyle(Theme.ink3)
     }
 
     private func row<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
         HStack(alignment: .center, spacing: 14) {
-            Text(label)
-                .font(Theme.sans(12.5))
-                .foregroundStyle(Theme.ink2)
-                .frame(width: 66, alignment: .leading)
+            Text(label).font(Theme.sans(12.5)).foregroundStyle(Theme.ink2)
+                .frame(width: 52, alignment: .leading)
             content()
             Spacer()
         }
     }
 
-    private func swatch(label: String, color: Color, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(color)
-                    .frame(width: 14, height: 14)
-                    .overlay(
-                        Circle().strokeBorder(Theme.hairline, lineWidth: selected ? 0 : 1)
-                    )
-                Text(label)
-                    .font(Theme.sans(12))
-                    .foregroundStyle(selected ? Theme.ink : Theme.ink3)
-            }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 7)
-                    .fill(selected ? Theme.surfaceAlt : Color.clear)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 7)
-                    .strokeBorder(selected ? Theme.accent.opacity(0.55) : Color.clear, lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
     private func plainButton(_ title: String, danger: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(Theme.sans(12.5, .medium))
-                .foregroundStyle(danger ? Theme.accent : Theme.ink2)
-                .padding(.horizontal, 11)
+                .font(Theme.sans(12, .medium))
+                .foregroundStyle(danger ? Theme.accent : Theme.ink)
+                .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(RoundedRectangle(cornerRadius: 7).fill(Theme.surface))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.hairline, lineWidth: 1)
-                )
+                .background(Theme.surface)
+                .overlay(Rectangle().strokeBorder(danger ? Theme.accent.opacity(0.6) : Theme.rule, lineWidth: 0.8))
         }
         .buttonStyle(.plain)
     }
@@ -356,26 +303,6 @@ public struct SettingsView: View {
             get: { store.settings[keyPath: keyPath] },
             set: { value in store.updateSettings { $0[keyPath: keyPath] = value } }
         )
-    }
-
-    private func accentSwatch(_ choice: AccentChoice) -> Color {
-        switch choice {
-        case .blue: return Color(light: 0x3370FF, dark: 0x4E83FD)
-        case .vermilion: return Color(light: 0xC4462B, dark: 0xCE5B3E)
-        case .indigo: return Color(light: 0x3D5C99, dark: 0x7396D8)
-        case .pine: return Color(light: 0x2F6F5E, dark: 0x5FA98F)
-        case .graphite: return Color(light: 0x4C4C50, dark: 0xA6A6AD)
-        }
-    }
-
-    private func paperSwatch(_ tone: PaperTone) -> Color {
-        switch tone {
-        case .front: return Color(light: 0xF5F6F7, dark: 0x17171A)
-        case .blue: return Color(light: 0xEAF1F7, dark: 0x14181C)
-        case .warm: return Color(light: 0xF3F0E7, dark: 0x171614)
-        case .cool: return Color(light: 0xEEF1F1, dark: 0x15181A)
-        case .plain: return Color(light: 0xF6F6F4, dark: 0x1A1A1A)
-        }
     }
 
     // MARK: 数据动作
@@ -401,8 +328,7 @@ public struct SettingsView: View {
         panel.canChooseDirectories = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            let data = try Data(contentsOf: url)
-            pendingImport = data
+            pendingImport = try Data(contentsOf: url)
             message = nil
         } catch {
             message = "读取失败：\(error.localizedDescription)"
@@ -429,7 +355,6 @@ private struct ThemeSync: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            // 配色一变整棵子树重建：配色切换很少发生，重建代价可以忽略
             .id(theme.revision)
             .onAppear { theme.sync(store.settings) }
             .onChange(of: store.settings) { _, newValue in theme.sync(newValue) }

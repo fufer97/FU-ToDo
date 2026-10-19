@@ -6,3 +6,6 @@ app/.swiftpm/
 
 # 系统垃圾
 .DS_Store
+
+# 设计参考（本地素材，不入库）
+design-refs/

@@ -5,32 +5,36 @@ import Core
 public struct RingView: View {
     public let level: Int
     public let done: Bool
+    public let tint: Color?
     public let action: () -> Void
     @State private var hovering = false
 
-    public init(level: Int, done: Bool, action: @escaping () -> Void) {
+    public init(level: Int, done: Bool, tint: Color? = nil, action: @escaping () -> Void) {
         self.level = level
         self.done = done
+        self.tint = tint
         self.action = action
     }
 
     public var body: some View {
         let size = Theme.ringSize(level)
+        let stroke = tint ?? Theme.control
+        let fill = tint ?? Theme.accent
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(done ? Theme.accent : Color.clear)
+                    .fill(done ? fill : Color.clear)
                     .frame(width: size, height: size)
                 Circle()
                     .strokeBorder(
-                        done ? Theme.accent : (hovering ? Theme.accent : Theme.control),
-                        lineWidth: level == 1 ? 1.8 : 1.5
+                        done ? fill : (hovering ? fill : stroke),
+                        lineWidth: level == 1 ? 1.6 : 1.3
                     )
                     .frame(width: size, height: size)
                 if done {
                     Image(systemName: "checkmark")
                         .font(.system(size: size * 0.52, weight: .bold))
-                        .foregroundStyle(Theme.surface)
+                        .foregroundStyle(tint == nil ? Theme.surface : Theme.cardInk)
                 }
             }
             .contentShape(Circle())
@@ -78,16 +82,18 @@ public struct RoleGlyph: View {
 /// 树线：每一级一条竖向细线；相邻行首尾相接，形成连续的层级导轨。
 public struct TreeRails: View {
     public let level: Int
+    public let color: Color?
 
-    public init(level: Int) {
+    public init(level: Int, color: Color? = nil) {
         self.level = level
+        self.color = color
     }
 
     public var body: some View {
         HStack(spacing: 0) {
             ForEach(0..<Theme.railCount(level), id: \.self) { _ in
                 Rectangle()
-                    .fill(Theme.rail)
+                    .fill(color ?? Theme.rail)
                     .frame(width: 1)
                     .frame(maxHeight: .infinity)
                 Spacer(minLength: 0).frame(width: Theme.indentStep - 1)
@@ -231,9 +237,9 @@ public struct SectionLabel: View {
     public var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(text)
-                .font(Theme.sans(11.5, .semibold))
+                .font(Theme.mono(9.5, .semibold))
                 .foregroundStyle(Theme.ink3)
-                .tracking(1.2)
+                .tracking(1.4)
             Spacer()
             if let trailing {
                 Text(trailing)

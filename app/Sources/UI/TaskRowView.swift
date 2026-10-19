@@ -183,6 +183,8 @@ public struct TaskRowView: View {
     public let showsRails: Bool
     /// 角色小图标（◆ 主线 / ● 支线 / □ ▪ 层级）只在日历里用，日页不需要。
     public let showsRoleGlyph: Bool
+    /// 是否画在主题卡片上：卡片上的行要用卡片墨色，而不是页面墨色。
+    public let onCard: Bool
 
     @State private var hovering = false
     @State private var rowWidth: CGFloat = 0
@@ -197,7 +199,8 @@ public struct TaskRowView: View {
         readOnly: Bool = false,
         showsRevert: Bool = false,
         showsRails: Bool = true,
-        showsRoleGlyph: Bool = true
+        showsRoleGlyph: Bool = true,
+        onCard: Bool = false
     ) {
         self.task = task
         self.level = level
@@ -207,7 +210,16 @@ public struct TaskRowView: View {
         self.showsRevert = showsRevert
         self.showsRails = showsRails
         self.showsRoleGlyph = showsRoleGlyph
+        self.onCard = onCard
     }
+
+    private var ci: Color { onCard ? Theme.cardInk : Theme.ink }
+    private var ci2: Color { onCard ? Theme.cardInk.opacity(0.68) : Theme.ink2 }
+    private var ci3: Color { onCard ? Theme.cardInk.opacity(0.46) : Theme.ink3 }
+    private var cdone: Color { onCard ? Theme.cardInk.opacity(0.45) : Theme.doneInk }
+    private var crule: Color { onCard ? Theme.cardInk.opacity(0.20) : Theme.hairline }
+    private var csoft: Color { onCard ? Theme.cardInk.opacity(0.10) : Theme.accentSoft }
+    private var caccent: Color { onCard ? Theme.cardInk : Theme.accent }
 
     private var spring: Animation? { reduceMotion ? nil : Motion.spring }
     private var quick: Animation? { reduceMotion ? nil : Motion.quick }
@@ -229,7 +241,7 @@ public struct TaskRowView: View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
                 if showsRails {
-                    TreeRails(level: level)
+                    TreeRails(level: level, color: onCard ? Theme.cardInk.opacity(0.18) : nil)
                 } else {
                     Spacer().frame(width: CGFloat(Theme.railCount(level)) * Theme.indentStep)
                 }
@@ -238,7 +250,7 @@ public struct TaskRowView: View {
                         RoleGlyph(isMain: task.isMain, level: level)
                     }
 
-                    RingView(level: level, done: task.done) {
+                    RingView(level: level, done: task.done, tint: onCard ? Theme.cardInk : nil) {
                         if task.done {
                             store.revert(task.id)
                         } else {
@@ -298,7 +310,7 @@ public struct TaskRowView: View {
 
     /// 卡片之间的顺序提示：整行一条细线（一级任务用）。
     private var insertionLine: some View {
-        Rectangle().fill(Theme.accent).frame(height: 2)
+        Rectangle().fill(caccent).frame(height: 2)
     }
 
     /// 拖动经过时把投放区画出来：竖线分左右（左＝同级，右＝衔接），
@@ -314,29 +326,29 @@ public struct TaskRowView: View {
                     switch zone {
                     case .nest:
                         Rectangle()
-                            .fill(Theme.accentSoft)
+                            .fill(csoft)
                             .frame(width: w * 0.5, height: h)
                             .offset(x: w * 0.5)
                     case .before:
                         // 左上半＝同级，排在它前面
                         Rectangle()
-                            .fill(Theme.accentSoft)
+                            .fill(csoft)
                             .frame(width: w * 0.5, height: h * 0.5)
                     case .after:
                         // 左下半＝同级，排在它后面
                         Rectangle()
-                            .fill(Theme.accentSoft)
+                            .fill(csoft)
                             .frame(width: w * 0.5, height: h * 0.5)
                             .offset(y: h * 0.5)
                     }
                 }
                 .overlay(alignment: .center) {
-                    Rectangle().fill(Theme.hairline).frame(width: 1)
+                    Rectangle().fill(crule).frame(width: 1)
                 }
                 .overlay(alignment: .leading) {
                     // 横线把左半边分成上下：一级卡片与子步骤用同一套
                     Rectangle()
-                        .fill(Theme.hairline)
+                        .fill(crule)
                         .frame(width: w * 0.5, height: 1)
                         .offset(y: h * 0.5 - 0.5)
                 }
@@ -344,15 +356,15 @@ public struct TaskRowView: View {
             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .strokeBorder(Theme.accent.opacity(0.6), lineWidth: 1.2)
+                    .strokeBorder(caccent.opacity(0.6), lineWidth: 1.2)
             )
             .allowsHitTesting(false)
         } else if store.focusedTaskId == task.id {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(Theme.accentSoft)
+                .fill(csoft)
                 .overlay(
                     RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .strokeBorder(Theme.accent.opacity(0.7), lineWidth: 1.2)
+                        .strokeBorder(caccent.opacity(0.7), lineWidth: 1.2)
                 )
         } else {
             Color.clear
@@ -369,7 +381,7 @@ public struct TaskRowView: View {
                     TextField("", text: $session.text)
                         .textFieldStyle(.plain)
                         .font(Theme.titleFont(level, isMain: isMain))
-                        .foregroundStyle(Theme.ink)
+                        .foregroundStyle(ci)
                         .focused($inputFocused)
                         .onAppear { focusSoon() }
                         .onSubmit { session.commit(store: store, editContinue: continueMode) }
@@ -382,13 +394,13 @@ public struct TaskRowView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.accentSoft)
+                    RoundedRectangle(cornerRadius: 6, style: .continuous).fill(csoft)
                 )
             } else {
                 Text(task.title)
                     .font(Theme.titleFont(level, isMain: isMain))
-                    .foregroundStyle(task.done ? Theme.doneInk : Theme.titleColor(level, isMain: isMain))
-                    .strikethrough(task.done, color: Theme.doneInk)
+                    .foregroundStyle(task.done ? cdone : (onCard ? ci : Theme.titleColor(level, isMain: isMain)))
+                    .strikethrough(task.done, color: cdone)
                     .lineLimit(1)
                     .animation(spring, value: task.done)
                     .overlay(alignment: .bottom) {
@@ -434,7 +446,7 @@ public struct TaskRowView: View {
         HStack(spacing: 2) {
             Image(systemName: "line.3.horizontal")
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(hovering ? Theme.ink3 : Theme.faint.opacity(0.5))
+                .foregroundStyle(hovering ? ci3 : Theme.faint.opacity(0.5))
                 .frame(width: 18, height: 18)
                 .help("按住拖动：拖到行的上下缘调整顺序，拖到行中间变成子步骤，拖到日历某天则移到那天")
 
@@ -473,7 +485,7 @@ public struct TaskRowView: View {
                 Image(systemName: "plus").font(.system(size: 9, weight: .semibold))
                 Text(title).font(Theme.sans(10.5, .medium))
             }
-            .foregroundStyle(Theme.ink2)
+            .foregroundStyle(ci2)
             .padding(.horizontal, 5)
             .padding(.vertical, 3)
             .background(
@@ -492,7 +504,7 @@ public struct TaskRowView: View {
             Spacer().frame(width: CGFloat(Theme.railCount(level)) * Theme.indentStep + extra)
             Image(systemName: "arrow.turn.down.right")
                 .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(caccent)
                 .frame(width: markerWidth)
             TextField(placeholder(mode), text: $session.text)
                 .textFieldStyle(.plain)
@@ -511,7 +523,7 @@ public struct TaskRowView: View {
         .padding(.trailing, 8)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Theme.accentSoft)
+                .fill(csoft)
         )
         .padding(.vertical, 2)
     }
@@ -532,6 +544,7 @@ public struct TaskSubtreeView: View {
     public let showsRevert: Bool
     public let showsRails: Bool
     public let showsRoleGlyph: Bool
+    public let onCard: Bool
 
     public init(
         parentId: UUID,
@@ -539,7 +552,8 @@ public struct TaskSubtreeView: View {
         readOnly: Bool = false,
         showsRevert: Bool = false,
         showsRails: Bool = true,
-        showsRoleGlyph: Bool = true
+        showsRoleGlyph: Bool = true,
+        onCard: Bool = false
     ) {
         self.parentId = parentId
         self.level = level
@@ -547,6 +561,7 @@ public struct TaskSubtreeView: View {
         self.showsRevert = showsRevert
         self.showsRails = showsRails
         self.showsRoleGlyph = showsRoleGlyph
+        self.onCard = onCard
     }
 
     public var body: some View {
@@ -557,7 +572,8 @@ public struct TaskSubtreeView: View {
                 readOnly: readOnly,
                 showsRevert: showsRevert,
                 showsRails: showsRails,
-                showsRoleGlyph: showsRoleGlyph
+                showsRoleGlyph: showsRoleGlyph,
+                onCard: onCard
             )
             TaskSubtreeView(
                 parentId: child.id,
@@ -565,7 +581,8 @@ public struct TaskSubtreeView: View {
                 readOnly: readOnly,
                 showsRevert: showsRevert,
                 showsRails: showsRails,
-                showsRoleGlyph: showsRoleGlyph
+                showsRoleGlyph: showsRoleGlyph,
+                onCard: onCard
             )
         }
     }

@@ -1,7 +1,7 @@
 import SwiftUI
 import Core
 
-/// 主界面：左边月历（一天一格，格子里是那天的内容），右边当天的一页。
+/// 主界面：左边报头 + 色块月历，右边是当天的一整页。
 public struct RootView: View {
     @EnvironmentObject var store: TaskStore
     @EnvironmentObject var updater: Updater
@@ -21,12 +21,21 @@ public struct RootView: View {
 
     public init() {}
 
+    private var monthName: String {
+        let m = Calendar(identifier: .gregorian).component(.month, from: anchor)
+        let names = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"]
+        return names[max(0, min(11, m - 1))]
+    }
+
+    private var yearName: String {
+        String(Calendar(identifier: .gregorian).component(.year, from: anchor))
+    }
+
     public var body: some View {
         ZStack(alignment: .bottom) {
-            VStack(spacing: 0) {
-                header
-                Rectangle().fill(Theme.hairline).frame(height: 1)
-                HStack(spacing: 0) {
+            HStack(spacing: 0) {
+                VStack(spacing: 0) {
+                    masthead
                     MonthGridView(anchor: anchor, drag: drag) { day in
                         store.selectDay(day)
                         if let date = DayKey.date(from: day),
@@ -34,26 +43,26 @@ public struct RootView: View {
                             anchor = date
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 14)
-                    .padding(.bottom, 16)
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 18)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(
-                        Theme.paper
+                        Theme.canvas
                             .contentShape(Rectangle())
                             .onTapGesture { session.finishByClickingAway(store: store) }
                     )
                     .animation(motion, value: store.selectedDay)
-
-                    Rectangle().fill(Theme.hairline).frame(width: 1)
-
-                    DayPageView(day: store.selectedDay)
-                        .id(store.selectedDay)
-                        .frame(width: 402)
-                        .transition(.opacity)
                 }
+                .frame(maxWidth: .infinity)
+                .background(Theme.canvas)
+
+                DayPageView(day: store.selectedDay)
+                    .id(store.selectedDay)
+                    .frame(width: 460)
+                    .frame(maxHeight: .infinity)
+                    .transition(.opacity)
             }
-            .background(Theme.paper)
+            .background(Theme.canvas)
 
             if let toast = store.toast {
                 ToastBar(text: toast, hasUndo: store.toastHasUndo) {
@@ -64,14 +73,12 @@ public struct RootView: View {
             }
         }
         .onChange(of: store.selectedDay) { _, day in
-            // 从清单跳转过来时，月历也要翻到那一天所在的月份
             if let date = DayKey.date(from: day),
                !Calendar(identifier: .gregorian).isDate(date, equalTo: anchor, toGranularity: .month) {
                 anchor = date
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            // 合盖过夜、或切回应用时，自动开启新的一天
             if phase == .active { store.checkRollover() }
         }
         .environmentObject(session)
@@ -87,13 +94,9 @@ public struct RootView: View {
             .environmentObject(store)
         }
         .onAppear {
-            // 第一次打开才弹，之后不再打扰
             if !store.welcomeSeen { showWelcome = true }
-            // 启动时静默检查一次新版（可在设置里关掉）
             updater.checkIfNeeded(auto: store.settings.autoCheckUpdates)
         }
-        // 让系统画的那些"不是我们画的部分"也属于这套配色：
-        // 文本选中、插入符、焦点环、控件强调色都跟着走。
         .tint(Theme.accent)
         .animation(reduceMotion ? nil : Motion.spring, value: store.toast)
         .animation(reduceMotion ? nil : Motion.soft, value: store.selectedDay)
@@ -108,29 +111,43 @@ public struct RootView: View {
         }
     }
 
-    private var header: some View {
-        HStack(spacing: 10) {
-            Text(MonthFormat.label(for: anchor))
-                .font(Theme.serif(16, .semibold))
-                .foregroundStyle(Theme.ink2)
-            IconButton(systemName: "chevron.left", help: "上个月") { shiftMonth(-1) }
-            IconButton(systemName: "chevron.right", help: "下个月") { shiftMonth(1) }
+    private var masthead: some View {
+        HStack(alignment: .bottom, spacing: 14) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(yearName).font(Theme.mono(9)).tracking(2.6).foregroundStyle(Theme.ink3)
+                Text(monthName)
+                    .font(Theme.display(Theme.monthDisplaySize))
+                    .tracking(Theme.displayTracking(Theme.monthDisplaySize))
+                    .foregroundStyle(Theme.ink)
+            }
+            HStack(spacing: 4) {
+                IconButton(systemName: "chevron.left", help: "上个月") { shiftMonth(-1) }
+                IconButton(systemName: "chevron.right", help: "下个月") { shiftMonth(1) }
+            }
+            .padding(.bottom, 10)
             TextButton("今天") { goToday() }
+                .padding(.bottom, 6)
 
             Spacer()
 
-            TextButton("未完成项目清单", badge: store.poolCount) { showPool = true }
-            TextButton("已结束项目清单") { showDone = true }
-            TextButton("使用说明") { openWindow(id: "help") }
-            TextButton("设置") { openSettings() }
+            VStack(alignment: .trailing, spacing: 5) {
+                HStack(spacing: 12) {
+                    Text("未完成").font(Theme.mono(9)).tracking(1).foregroundStyle(Theme.ink3)
+                    Text("\(store.poolCount)").font(Theme.mono(9)).foregroundStyle(Theme.ink)
+                    Text("已结束").font(Theme.mono(9)).tracking(1).foregroundStyle(Theme.ink3)
+                }
+                HStack(spacing: 12) {
+                    TextButton("清单") { showPool = true }
+                    TextButton("已结束") { showDone = true }
+                    TextButton("说明") { openWindow(id: "help") }
+                    TextButton("设置") { openSettings() }
+                }
+            }
+            .padding(.bottom, 4)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 11)
-        .background(
-            Theme.paper
-                .contentShape(Rectangle())
-                .onTapGesture { session.finishByClickingAway(store: store) }
-        )
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 10)
     }
 
     private func shiftMonth(_ delta: Int) {

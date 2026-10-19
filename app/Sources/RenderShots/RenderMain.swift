@@ -119,15 +119,15 @@ struct RenderMain {
             to: outDir.appendingPathComponent("04-done.png")
         )
 
-        // 深色：走设置（RootView 出现时会按设置重设外观，直接改 NSApp 会被覆盖）
-        seeded.updateSettings { $0.appearance = .dark }
+        // 酸纸主题
+        seeded.updateSettings { $0.theme = .acid }
         Theme.apply(seeded.settings)
         render(
             RootView().environmentObject(seeded).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
-            to: outDir.appendingPathComponent("05-main-dark.png")
+            to: outDir.appendingPathComponent("05-main-acid.png")
         )
-        seeded.updateSettings { $0.appearance = .system }
+        seeded.updateSettings { $0.theme = .herbarium }
         Theme.apply(seeded.settings)
 
         render(
@@ -142,17 +142,16 @@ struct RenderMain {
             to: outDir.appendingPathComponent("09-settings-full.png")
         )
 
-        // 换一套外观：靛蓝 + 纯白纸 + 大字号，验证外观确实可配
+        // 器物主题
         seeded.updateSettings {
-            $0.accent = .indigo
-            $0.paper = .plain
-            $0.fontScale = .large
+            $0.theme = .atelier
+            $0.fontScale = .medium
         }
         Theme.apply(seeded.settings)
         render(
             RootView().environmentObject(seeded).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
-            to: outDir.appendingPathComponent("07-theme-indigo.png")
+            to: outDir.appendingPathComponent("07-main-atelier.png")
         )
 
         // 只有支线、没有主线的状态
@@ -186,12 +185,6 @@ struct RenderMain {
             .environmentObject(DragController()),
             size: CGSize(width: 402, height: 220),
             to: outDir.appendingPathComponent("10-input-row.png")
-        )
-
-        render(
-            HelpView().environmentObject(seeded),
-            size: CGSize(width: 470, height: 640),
-            to: outDir.appendingPathComponent("11-help.png")
         )
 
         // 拖动经过行时的两个投放区
@@ -318,39 +311,35 @@ struct RenderMain {
 
         // 预设生效检查：墨蓝（冷纸 + 靛蓝）
         let presetStore = makeStore(seeded: true)
-        presetStore.updateSettings { $0.paper = .cool; $0.accent = .indigo }
+        presetStore.updateSettings { $0.theme = .blueprint }
         Theme.apply(presetStore.settings)
-        print("墨蓝：paper=\(presetStore.settings.paper) accent=\(presetStore.settings.accent)")
+        print("蓝图主题：\(presetStore.settings.theme)")
         render(
             RootView().environmentObject(presetStore).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
-            to: outDir.appendingPathComponent("20-preset-indigo.png")
+            to: outDir.appendingPathComponent("20-main-blueprint.png")
         )
 
-        // 首次引导
+        // 首次引导（固定标本室主题）
+        seeded.updateSettings { $0.theme = .herbarium; $0.fontScale = .medium }
+        Theme.apply(seeded.settings)
         render(
             WelcomeSheet(onOpenHelp: {}, onClose: {})
                 .environmentObject(seeded),
-            size: CGSize(width: 420, height: 380),
+            size: CGSize(width: 420, height: 440),
             to: outDir.appendingPathComponent("23-welcome.png")
         )
 
-        // 苹果风字体（标题走系统无衬线）
-        let appleStore = makeStore(seeded: true)
-        appleStore.updateSettings { $0.font = .apple }
-        Theme.apply(appleStore.settings)
+        // 使用说明按真实窗口尺寸截
         render(
-            RootView().environmentObject(appleStore).environmentObject(Updater()),
-            size: CGSize(width: 1200, height: 760),
-            to: outDir.appendingPathComponent("21-font-apple.png")
+            HelpView().environmentObject(seeded),
+            size: CGSize(width: 470, height: 640),
+            to: outDir.appendingPathComponent("11-help.png")
         )
-        Theme.apply(presetStore.settings)
 
         // 恢复默认，避免影响后续
         seeded.updateSettings {
-            $0.appearance = .system
-            $0.accent = .vermilion
-            $0.paper = .warm
+            $0.theme = .herbarium
             $0.fontScale = .medium
         }
         Theme.apply(seeded.settings)
@@ -427,7 +416,7 @@ struct RenderMain {
                              cal.redComponent * 255, cal.greenComponent * 255, cal.blueComponent * 255))
             }
             panelPixel("切换前（暖纸）")
-            themeStore.updateSettings { $0.paper = .cool; $0.accent = .indigo }
+            themeStore.updateSettings { $0.theme = .blueprint }
             panelPixel("切到墨蓝后")
             window.orderOut(nil)
         }

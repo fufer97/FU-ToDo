@@ -187,14 +187,12 @@ do {
     let s = TaskStore(storeURL: url, today: "2026-10-08")
     _ = s.addTopLevel("设置测试任务")
     s.updateSettings {
-        $0.appearance = .dark
-        $0.accent = .indigo
-        $0.paper = .plain
+        $0.theme = .acid
         $0.fontScale = .large
     }
     let reloaded = TaskStore(storeURL: url, today: "2026-10-08")
     check("设置随数据一起落盘", reloaded.settings == s.settings)
-    check("深浅色持久化", reloaded.settings.appearance == .dark)
+    check("主题持久化", reloaded.settings.theme == .acid)
     check("字号持久化", reloaded.settings.fontScale == .large)
 
     let backup = try s.exportData()
@@ -888,6 +886,7 @@ do {
         .write(to: legacy, atomically: true, encoding: .utf8)
     let old = TaskStore(storeURL: legacy)
     check("老数据文件缺字段也能读", !old.welcomeSeen && old.tasks.isEmpty)
+    check("老数据默认落到标本室主题", old.settings.theme == .herbarium)
     try? FileManager.default.removeItem(at: url)
     try? FileManager.default.removeItem(at: legacy)
 }
