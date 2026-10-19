@@ -37,6 +37,15 @@ struct RenderMain {
             return
         }
 
+        // --themes：四套主题（器物 / 档案 / 天文台 / 酸纸），同一结构不同世界
+        if CommandLine.arguments.contains("--themes") {
+            for t in SpreadTheme.all {
+                render(ThemeSpread(theme: t), size: CGSize(width: 1200, height: 760),
+                       to: outDir.appendingPathComponent("v5-theme-\(t.id).png"))
+            }
+            return
+        }
+
         // --radical：整窗色域 + 满高日页（工坊 / 档案）
         if CommandLine.arguments.contains("--radical") {
             render(RadicalSpread(night: false), size: CGSize(width: 1200, height: 760),
