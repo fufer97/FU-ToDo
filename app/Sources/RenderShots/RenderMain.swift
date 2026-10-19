@@ -37,6 +37,17 @@ struct RenderMain {
             return
         }
 
+        // --frames：三张风格帧（标本室 / 酸纸 / 工坊），只用于选方向
+        if CommandLine.arguments.contains("--frames") {
+            render(FrameArchive(), size: CGSize(width: 900, height: 560),
+                   to: outDir.appendingPathComponent("style-A-archive.png"))
+            render(FrameAcid(), size: CGSize(width: 900, height: 560),
+                   to: outDir.appendingPathComponent("style-B-acid.png"))
+            render(FrameAtelier(), size: CGSize(width: 900, height: 560),
+                   to: outDir.appendingPathComponent("style-C-atelier.png"))
+            return
+        }
+
         // --tokens：设计校准 A/B（画布 / 夜航），不写正式 shots
         if CommandLine.arguments.contains("--tokens") {
             render(TokenSheetView(dark: false), size: CGSize(width: 1400, height: 1000),
