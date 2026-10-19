@@ -188,6 +188,7 @@ public struct TaskRowView: View {
 
     @State private var hovering = false
     @State private var rowWidth: CGFloat = 0
+    @State private var showStamp = false
     @FocusState private var inputFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -253,8 +254,14 @@ public struct TaskRowView: View {
                     RingView(level: level, done: task.done, tint: onCard ? Theme.cardInk : nil) {
                         if task.done {
                             store.revert(task.id)
-                        } else {
+                        } else if readOnly || reduceMotion {
                             store.complete(task.id)
+                        } else {
+                            showCompletionStamp()
+                            // 先看到章，再让这一行移走
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
+                                store.complete(task.id)
+                            }
                         }
                     }
                     .scaleEffect(task.done ? 1.08 : 1)
@@ -270,6 +277,15 @@ public struct TaskRowView: View {
                 }
             }
             .frame(height: rowHeight)
+            .overlay(alignment: .trailing) {
+                if showStamp {
+                    CompletionStamp(style: Theme.cardStyle, date: task.day.replacingOccurrences(of: "-", with: "."))
+                        .padding(.trailing, onCard ? 34 : 18)
+                        .transition(.scale(scale: 1.25).combined(with: .opacity))
+                        .allowsHitTesting(false)
+                }
+            }
+            .animation(reduceMotion ? nil : Motion.ring, value: showStamp)
             .contentShape(Rectangle())
             .contextMenu {
                 if showsRevert {
@@ -438,6 +454,14 @@ public struct TaskRowView: View {
 
     private func focusSoon() {
         DispatchQueue.main.async { inputFocused = true }
+    }
+
+    /// 完成时盖一枚当前主题的章，短暂停留后消失。
+    private func showCompletionStamp() {
+        showStamp = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+            showStamp = false
+        }
     }
 
     // MARK: 行内动作

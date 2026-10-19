@@ -98,7 +98,7 @@ struct DayCellView: View {
         let roots = store.orderedRoots(of: dayKey)
         let all = store.taskCount(on: dayKey)
         let doneCount = store.doneCount(on: dayKey)
-        let shown = Array(roots.prefix(4))
+        let shown = Array(roots.prefix(hovering ? 6 : 4))
         let hasContent = !roots.isEmpty || all > 0
         let allDone = all > 0 && doneCount == all
         let filled = hasContent && !isFuture

@@ -44,6 +44,18 @@ struct RenderMain {
             return
         }
 
+        // --focus：专注模式样张
+        if CommandLine.arguments.contains("--focus") {
+            let focusStore = makeStore(seeded: true)
+            Theme.apply(focusStore.settings)
+            render(
+                FocusModeView(onClose: {}).environmentObject(focusStore),
+                size: CGSize(width: 1200, height: 760),
+                to: outDir.appendingPathComponent("30-focus.png")
+            )
+            return
+        }
+
         // --specimen：标本卡组件样张（Herbarium 风格的浅色版）
         if CommandLine.arguments.contains("--specimen") {
             render(SpecimenBoard(), size: CGSize(width: 1200, height: 760),
@@ -108,6 +120,13 @@ struct RenderMain {
             size: CGSize(width: 1200, height: 760),
             to: outDir.appendingPathComponent("02-empty-day.png")
         )
+        Theme.apply(seeded.settings)
+        render(
+            FocusModeView(onClose: {}).environmentObject(seeded),
+            size: CGSize(width: 1200, height: 760),
+            to: outDir.appendingPathComponent("30-focus.png")
+        )
+
         render(
             PoolSheetView(onClose: {}).environmentObject(seeded).environmentObject(DragController()),
             size: CGSize(width: 620, height: 560),

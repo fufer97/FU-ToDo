@@ -14,6 +14,7 @@ public struct RootView: View {
     @State private var showWelcome = false
     @State private var showPool = false
     @State private var showDone = false
+    @State private var focusMode = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
@@ -60,9 +61,19 @@ public struct RootView: View {
                     .id(store.selectedDay)
                     .frame(width: 460)
                     .frame(maxHeight: .infinity)
-                    .transition(.opacity)
+                    .transition(.asymmetric(
+                        insertion: .offset(x: 26).combined(with: .opacity),
+                        removal: .offset(x: -26).combined(with: .opacity)
+                    ))
             }
             .background(Theme.canvas)
+
+            if focusMode {
+                FocusModeView(onClose: { focusMode = false })
+                    .environmentObject(store)
+                    .transition(.opacity)
+                    .zIndex(10)
+            }
 
             if let toast = store.toast {
                 ToastBar(text: toast, hasUndo: store.toastHasUndo) {
@@ -98,6 +109,14 @@ public struct RootView: View {
             updater.checkIfNeeded(auto: store.settings.autoCheckUpdates)
         }
         .tint(Theme.accent)
+        .background(
+            Button("专注") { focusMode.toggle() }
+                .keyboardShortcut("f", modifiers: [.command, .shift])
+                .opacity(0)
+                .frame(width: 0, height: 0)
+                .accessibilityHidden(true)
+        )
+        .animation(reduceMotion ? nil : Motion.soft, value: focusMode)
         .animation(reduceMotion ? nil : Motion.spring, value: store.toast)
         .animation(reduceMotion ? nil : Motion.soft, value: store.selectedDay)
         .themeSynced()
@@ -137,6 +156,7 @@ public struct RootView: View {
                     Text("已结束").font(Theme.mono(9)).tracking(1).foregroundStyle(Theme.ink3)
                 }
                 HStack(spacing: 12) {
+                    TextButton("专注") { focusMode = true }
                     TextButton("清单") { showPool = true }
                     TextButton("已结束") { showDone = true }
                     TextButton("说明") { openWindow(id: "help") }
