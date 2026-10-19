@@ -156,13 +156,14 @@ public struct TextButton: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Text(title).font(Theme.sans(12.5, .medium)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                if let badge, badge > 0 {
+                if let badge {
                     Text("\(badge)")
-                        .font(Theme.mono(10, .semibold))
-                        .foregroundStyle(Theme.ink2)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(Capsule().fill(Theme.surfaceAlt))
+                        .font(Theme.mono(10.5, .semibold))
+                        .foregroundStyle(Theme.canvas)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 1.5)
+                        .background(Capsule().fill(Theme.ink))
                 }
             }
             .foregroundStyle(prominent ? Theme.ink : (hovering ? Theme.ink : Theme.ink2))

@@ -102,12 +102,13 @@ struct DayCellView: View {
         let hasContent = !roots.isEmpty || all > 0
         let allDone = all > 0 && doneCount == all
         let filled = hasContent && !isFuture
+        let doneFilled = filled && allDone
 
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 5) {
                 Text("\(dayNumber)")
                     .font(Theme.mono(isToday ? 10.5 : 10))
-                    .foregroundStyle(isToday ? Theme.todayInk : (isFuture ? Theme.faint : Theme.ink2))
+                    .foregroundStyle(isToday ? Theme.todayInk : (doneFilled ? Theme.ink : (isFuture ? Theme.faint : Theme.ink2)))
                 Spacer(minLength: 0)
                 if allDone && !isToday {
                     Image(systemName: "checkmark")
@@ -119,7 +120,7 @@ struct DayCellView: View {
                 HStack(alignment: .top, spacing: 5) {
                     if task.isMain {
                         Rectangle()
-                            .fill(isToday ? Theme.todayInk : (filled ? Theme.fillInk : Theme.accent))
+                            .fill(isToday ? Theme.todayInk : (doneFilled ? Theme.ink : (filled ? Theme.fillInk : Theme.accent)))
                             .frame(width: 3, height: 9)
                             .padding(.top, 1)
                     }
@@ -127,7 +128,7 @@ struct DayCellView: View {
                         .font(task.isMain ? Theme.display(12) : Theme.sans(11, .medium))
                         .foregroundStyle(
                             isToday ? Theme.todayInk
-                                : (filled ? Theme.fillInk : (isFuture ? Theme.faint : Theme.ink2))
+                                : (doneFilled ? Theme.ink : (filled ? Theme.fillInk : (isFuture ? Theme.faint : Theme.ink2)))
                         )
                         .lineLimit(1)
                 }
@@ -145,7 +146,7 @@ struct DayCellView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
             isToday ? Theme.todayFill
-                : (filled ? Theme.fill : (hovering ? Theme.surfaceAlt.opacity(0.45) : Color.clear))
+                : (doneFilled ? Theme.doneFill : (filled ? Theme.fill : (hovering ? Theme.surfaceAlt.opacity(0.45) : Color.clear)))
         )
         .overlay(alignment: .leading) {
             Rectangle().fill(Theme.rule).frame(width: 0.7)

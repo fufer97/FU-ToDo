@@ -5,7 +5,7 @@ import CoreGraphics
 public enum ThemeChoice: String, Codable, CaseIterable, Equatable {
     case atelier, herbarium, acid, blueprint
 
-    /// 设置页与命令面板里可选的主题（酸纸暂时下架，代码保留）。
+    /// 设置页里可选的主题（酸纸暂时下架，代码保留）。
     public static var available: [ThemeChoice] { [.atelier, .herbarium, .blueprint] }
 
     public var label: String {

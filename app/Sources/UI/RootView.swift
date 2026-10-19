@@ -14,9 +14,7 @@ public struct RootView: View {
     @State private var showWelcome = false
     @State private var showPool = false
     @State private var showDone = false
-    @State private var focusMode = false
     @State private var showYear = false
-    @State private var showPalette = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
@@ -70,24 +68,11 @@ public struct RootView: View {
             }
             .background(Theme.canvas)
 
-            if focusMode {
-                FocusModeView(onClose: { focusMode = false })
-                    .environmentObject(store)
-                    .transition(.opacity)
-                    .zIndex(10)
-            }
-
             if showYear {
                 YearView(onClose: { showYear = false })
                     .environmentObject(store)
                     .transition(.opacity)
                     .zIndex(15)
-            }
-
-            if showPalette {
-                CommandPaletteView(actions: paletteActions, onClose: { showPalette = false })
-                    .transition(.opacity)
-                    .zIndex(20)
             }
 
             if let toast = store.toast {
@@ -128,21 +113,13 @@ public struct RootView: View {
         }
         .tint(Theme.accent)
         .background(
-            ZStack {
-                Button("专注") { focusMode.toggle() }
-                    .keyboardShortcut("f", modifiers: [.command, .shift])
-                Button("年视图") { showYear.toggle() }
-                    .keyboardShortcut("y", modifiers: [.command])
-                Button("命令面板") { showPalette.toggle() }
-                    .keyboardShortcut("k", modifiers: [.command])
-            }
+            Button("年视图") { showYear.toggle() }
+                .keyboardShortcut("y", modifiers: [.command])
             .opacity(0)
             .frame(width: 0, height: 0)
             .accessibilityHidden(true)
         )
-        .animation(reduceMotion ? nil : Motion.soft, value: focusMode)
         .animation(reduceMotion ? nil : Motion.soft, value: showYear)
-        .animation(reduceMotion ? nil : Motion.soft, value: showPalette)
         .animation(reduceMotion ? nil : Motion.spring, value: store.toast)
         .animation(reduceMotion ? nil : Motion.soft, value: store.selectedDay)
         .themeSynced()
@@ -175,58 +152,19 @@ public struct RootView: View {
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 6) {
-                HStack(spacing: 14) {
-                    Button { showPool = true } label: {
-                        HStack(spacing: 5) {
-                            Text("未完成").font(Theme.mono(9)).tracking(1).foregroundStyle(Theme.ink3)
-                            Text("\(store.poolCount)").font(Theme.mono(9, .semibold)).foregroundStyle(Theme.ink)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    Button { showDone = true } label: {
-                        Text("已结束").font(Theme.mono(9)).tracking(1)
-                            .foregroundStyle(Theme.ink3)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-                HStack(spacing: 8) {
-                    TextButton("⌘K") { showPalette = true }
-                    TextButton("年") { showYear = true }
-                    TextButton("专注") { focusMode = true }.help("⌘⇧F 专注模式：只看今天的一件")
-                    TextButton("说明") { openWindow(id: "help") }
-                    TextButton("设置") { openSettings() }
-                }
+            HStack(spacing: 8) {
+                TextButton("未完成", badge: store.poolCount) { showPool = true }
+                TextButton("已结束", badge: store.doneTasks.count) { showDone = true }
+                TextButton("年") { showYear = true }
+                TextButton("说明") { openWindow(id: "help") }
+                TextButton("设置") { openSettings() }
             }
+            .padding(.bottom, 4)
             .padding(.bottom, 4)
         }
         .padding(.horizontal, 20)
         .padding(.top, 16)
         .padding(.bottom, 10)
-    }
-
-    private var paletteActions: [PaletteAction] {
-        var list: [PaletteAction] = [
-            PaletteAction(title: "专注模式", hint: "⌘⇧F · 整窗只留今天的主线") { focusMode = true },
-            PaletteAction(title: "年视图", hint: "⌘Y · 12 个小月历") { showYear = true },
-            PaletteAction(title: "跳到今天", hint: "回到今天并选中") {
-                store.selectDay(store.currentDay)
-                anchor = Date()
-            },
-            PaletteAction(title: "未完成清单", hint: "只列一级任务") { showPool = true },
-            PaletteAction(title: "已结束清单", hint: "完成与结束都在这里") { showDone = true },
-            PaletteAction(title: "使用说明", hint: "独立窗口") { openWindow(id: "help") },
-            PaletteAction(title: "设置", hint: "主题 / 字号 / 数据") { openSettings() },
-            PaletteAction(title: "导出本月海报", hint: "PNG · 可打印") { PosterExporter.export(store: store) }
-        ]
-        for theme in ThemeChoice.available {
-            list.append(PaletteAction(title: "主题：\(theme.label)", hint: theme.en) {
-                store.updateSettings { $0.theme = theme }
-            })
-        }
-        return list
     }
 
     private func shiftMonth(_ delta: Int) {

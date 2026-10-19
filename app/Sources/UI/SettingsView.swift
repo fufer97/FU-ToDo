@@ -267,7 +267,6 @@ public struct SettingsView: View {
                 plainButton("导出备份…") { exportBackup() }
                 plainButton("从备份导入…") { importBackup() }
                 plainButton("打开数据文件夹") { openDataFolder() }
-                plainButton("导出本月海报…") { PosterExporter.export(store: store) }
             }
             HStack(spacing: 10) {
                 plainButton("清空所有数据", danger: true) { showClearConfirm = true }
