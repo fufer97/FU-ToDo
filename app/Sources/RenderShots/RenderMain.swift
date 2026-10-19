@@ -128,6 +128,29 @@ struct RenderMain {
         )
 
         render(
+            YearView(onClose: {}).environmentObject(seeded),
+            size: CGSize(width: 1200, height: 760),
+            to: outDir.appendingPathComponent("31-year.png")
+        )
+        if let built = PosterBuilder.build(store: seeded) {
+            render(
+                MonthPosterView(year: built.year, month: built.month, days: built.days),
+                size: CGSize(width: 1200, height: 1600),
+                to: outDir.appendingPathComponent("33-poster.png")
+            )
+        }
+        render(
+            CommandPaletteView(actions: [
+                PaletteAction(title: "专注模式", hint: "⌘⇧F") {},
+                PaletteAction(title: "年视图", hint: "⌘Y") {},
+                PaletteAction(title: "导出本月海报", hint: "PNG") {},
+                PaletteAction(title: "主题：标本室", hint: "HERBARIUM") {}
+            ], onClose: {}),
+            size: CGSize(width: 1200, height: 760),
+            to: outDir.appendingPathComponent("32-palette.png")
+        )
+
+        render(
             PoolSheetView(onClose: {}).environmentObject(seeded).environmentObject(DragController()),
             size: CGSize(width: 620, height: 560),
             to: outDir.appendingPathComponent("03-pool.png")

@@ -256,8 +256,10 @@ public struct TaskRowView: View {
                             store.revert(task.id)
                         } else if readOnly || reduceMotion {
                             store.complete(task.id)
+                            Feedback.complete()
                         } else {
                             showCompletionStamp()
+                            Feedback.complete()
                             // 先看到章，再让这一行移走
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
                                 store.complete(task.id)

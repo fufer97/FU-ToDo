@@ -163,6 +163,7 @@ public enum Theme {
     // MARK: - 字体
 
     public static var fontScale: CGFloat { current.fontScale.factor }
+    public static var soundEnabled: Bool { current.soundEnabled }
 
     /// 主题的展示声部：标题、日期、月名、卡片大标题。
     public static func display(_ size: CGFloat) -> Font {

@@ -210,6 +210,13 @@ public struct SettingsView: View {
                         .font(Theme.sans(11)).foregroundStyle(Theme.ink3)
                 }
             }
+            row("音效") {
+                Toggle("", isOn: binding(\.soundEnabled))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                Text("完成与翻页的轻音效 / 触感").font(Theme.sans(12)).foregroundStyle(Theme.ink2)
+            }
             row("引导") {
                 TextButton("重新看一次首次引导") {
                     store.resetWelcome()
@@ -260,6 +267,7 @@ public struct SettingsView: View {
                 plainButton("导出备份…") { exportBackup() }
                 plainButton("从备份导入…") { importBackup() }
                 plainButton("打开数据文件夹") { openDataFolder() }
+                plainButton("导出本月海报…") { PosterExporter.export(store: store) }
             }
             HStack(spacing: 10) {
                 plainButton("清空所有数据", danger: true) { showClearConfirm = true }

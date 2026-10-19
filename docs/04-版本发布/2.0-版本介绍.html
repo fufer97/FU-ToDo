@@ -117,6 +117,11 @@
   .settings{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:center}
   .settings img{width:100%;border:1.5px solid var(--acid);padding:8px;background:rgba(231,248,107,.04)}
   .settings ul{margin:0;padding:0 0 0 18px;line-height:1.85;font-size:14px}
+  .more{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  .more figure{margin:0;border:1.5px solid var(--ink);background:var(--paper)}
+  .more img{display:block;width:100%;height:210px;object-fit:cover;object-position:top;border-bottom:1.5px solid var(--ink)}
+  .more figcaption{padding:12px 14px;font-size:12.5px;line-height:1.65;opacity:.82}
+  .more b{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px;opacity:.95}
   .settings li{margin-bottom:8px}
   .settings li b{font-family:var(--mono);font-size:11px;letter-spacing:.12em}
 
@@ -304,11 +309,37 @@
   </div>
 </section>
 
+<section class="paper">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="idx">05 / MORE</div>
+        <h2>还有三个顺手的小东西</h2>
+        <p>年视图、命令面板、月度海报——都不是新功能，是把「看、找、留下」做得更像这个应用。</p>
+      </div>
+    </div>
+    <div class="more">
+      <figure>
+        <img src="assets/year.png" alt="年视图">
+        <figcaption><b>YEAR · ⌘Y</b>12 个小月历，有内容的日子按主题色标记，点一天直接跳过去。</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/palette.png" alt="命令面板">
+        <figcaption><b>COMMAND · ⌘K</b>专注、年视图、导出海报、切换主题，都可以搜；↑↓ 选择，⏎ 执行。</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/poster.png" alt="月度海报">
+        <figcaption><b>POSTER</b>把当前月导出成 1200×1600 PNG，一张可打印的月度标本。</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
 <section class="dark">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="idx">05 / SETTINGS</div>
+        <div class="idx">06 / SETTINGS</div>
         <h2>主题在设置里，一眼可换</h2>
         <p>设置页只留主题、字号、更新、引导与数据。旧的 5 套配色、深浅色与字体开关被移除；旧数据与旧备份会自动落到新主题，不丢内容。</p>
       </div>
@@ -329,7 +360,7 @@
   <div class="wrap">
     <div class="section-head">
       <div>
-        <div class="idx">06 / UPDATE</div>
+        <div class="idx">07 / UPDATE</div>
         <h2>怎么拿到 2.0</h2>
         <p>数据格式没有变，直接覆盖安装即可；首次打开会沿用你原来的任务与历史。</p>
       </div>

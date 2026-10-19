@@ -60,15 +60,19 @@ public struct AppSettings: Codable, Equatable {
     public var fontScale: FontScale
     /// 启动时静默检查是否有新版
     public var autoCheckUpdates: Bool
+    /// 完成 / 翻页时的轻音效与触感
+    public var soundEnabled: Bool
 
     public init(
         theme: ThemeChoice = .herbarium,
         fontScale: FontScale = .medium,
-        autoCheckUpdates: Bool = true
+        autoCheckUpdates: Bool = true,
+        soundEnabled: Bool = true
     ) {
         self.theme = theme
         self.fontScale = fontScale
         self.autoCheckUpdates = autoCheckUpdates
+        self.soundEnabled = soundEnabled
     }
 
     /// 容错解码：老数据（有 paper / accent / font 等旧字段、没有 theme）按默认主题读入，不丢数据。
@@ -77,5 +81,6 @@ public struct AppSettings: Codable, Equatable {
         theme = try c.decodeIfPresent(ThemeChoice.self, forKey: .theme) ?? .herbarium
         fontScale = try c.decodeIfPresent(FontScale.self, forKey: .fontScale) ?? .medium
         autoCheckUpdates = try c.decodeIfPresent(Bool.self, forKey: .autoCheckUpdates) ?? true
+        soundEnabled = try c.decodeIfPresent(Bool.self, forKey: .soundEnabled) ?? true
     }
 }

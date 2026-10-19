@@ -107,6 +107,7 @@ public struct FocusModeView: View {
                             store.revert(main.id)
                         } else {
                             store.complete(main.id)
+                            Feedback.complete()
                             if !reduceMotion {
                                 showStamp = true
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { showStamp = false }
