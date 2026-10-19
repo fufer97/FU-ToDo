@@ -36,6 +36,19 @@ struct RenderMain {
             benchmark(seeded)
             return
         }
+
+        // --tokens：设计校准 A/B（画布 / 夜航），不写正式 shots
+        if CommandLine.arguments.contains("--tokens") {
+            render(TokenSheetView(dark: false), size: CGSize(width: 1400, height: 1000),
+                   to: outDir.appendingPathComponent("00-tokens-light.png"))
+            render(TokenSheetView(dark: true), size: CGSize(width: 1400, height: 1000),
+                   to: outDir.appendingPathComponent("00-tokens-dark.png"))
+            render(ConceptMainV2(dark: false), size: CGSize(width: 1200, height: 760),
+                   to: outDir.appendingPathComponent("00-concept-main-light.png"))
+            render(ConceptMainV2(dark: true), size: CGSize(width: 1200, height: 760),
+                   to: outDir.appendingPathComponent("00-concept-main-dark.png"))
+            return
+        }
         let empty = makeStore(seeded: false)
 
         render(
