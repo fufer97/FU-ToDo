@@ -14,7 +14,7 @@ private func sMono(_ s: CGFloat) -> Font { .system(size: s, design: .monospaced)
 private func sHeavyCN(_ s: CGFloat) -> Font { .system(size: s, weight: .heavy) }
 private func sCondensed(_ s: CGFloat) -> Font { .custom("HelveticaNeue-CondensedBlack", size: s) }
 
-private struct SpecPalette {
+struct SpecPalette {
     let page: Color
     let card: Color
     let ink: Color
@@ -32,7 +32,7 @@ private func barcodeImage(_ seed: String, width: CGFloat, height: CGFloat) -> NS
     return NSImage(cgImage: cg, size: NSSize(width: width, height: height))
 }
 
-private struct SpecimenCardView: View {
+struct SpecimenCardView: View {
     let title: String
     let summary: String
     let specs: [(String, String)]
@@ -103,12 +103,10 @@ private struct SpecimenCardView: View {
         )
         .overlay(alignment: .topTrailing) {
             if completed {
-                VStack(spacing: 2) {
-                    Text("DRIED & MOUNTED").font(sMono(8.5)).tracking(1.2)
-                    Text("2026.10.08").font(sMono(8)).tracking(1)
-                }
-                .foregroundStyle(p.accent.opacity(0.95))
-                .padding(.horizontal, 8).padding(.vertical, 5)
+                Text("DRIED & MOUNTED · 2026.10.08")
+                    .font(sMono(7)).tracking(0.6)
+                    .foregroundStyle(p.accent.opacity(0.95))
+                    .padding(.horizontal, 10).padding(.vertical, 6)
                 .overlay(Rectangle().strokeBorder(p.accent.opacity(0.9), lineWidth: 1.2))
                 .rotationEffect(.degrees(-7))
                 .padding(.top, 18).padding(.trailing, 16)

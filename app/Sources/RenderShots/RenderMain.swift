@@ -37,6 +37,13 @@ struct RenderMain {
             return
         }
 
+        // --cards：卡片家族（同一任务在四个浅色主题里的四种印刷品）
+        if CommandLine.arguments.contains("--cards") {
+            render(CardFamilyBoard(), size: CGSize(width: 1400, height: 1000),
+                   to: outDir.appendingPathComponent("v7-card-family.png"))
+            return
+        }
+
         // --specimen：标本卡组件样张（Herbarium 风格的浅色版）
         if CommandLine.arguments.contains("--specimen") {
             render(SpecimenBoard(), size: CGSize(width: 1200, height: 760),
