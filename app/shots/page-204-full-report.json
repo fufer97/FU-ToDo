@@ -1,0 +1,59 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x1000",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.kicker「THREE THEMES · CARD SPEC」"
+        ]
+      },
+      {
+        "rule": "numbered",
+        "label": "标题上方的编号标签",
+        "count": 6,
+        "examples": [
+          "div.idx「01 / THEMES」",
+          "div.idx「02 / CARDS」",
+          "div.idx「03 / LAYOUT」"
+        ]
+      },
+      {
+        "rule": "englishLabel",
+        "label": "中文界面里的英文大写标签",
+        "count": 9,
+        "examples": [
+          "div「FU TODO / RELEASE 2.0.4」",
+          "b「FU TODO」",
+          "span.kicker「THREE THEMES · CARD SPEC」"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 33,
+        "examples": [
+          "p.lede「主界面是「报头 + 线格月历 + 满高日页」。三」（4.14:1）",
+          "div.idx「01 / THEMES」（3.91:1）",
+          "p「酸纸暂时下架；主题有自己的底色、整页色块、字体与」（4.14:1）"
+        ]
+      },
+      {
+        "rule": "smallText",
+        "label": "正文小于 13px",
+        "count": 2,
+        "examples": [
+          "div.cmd「cd app ./build.sh run # 」（11.5px）",
+          "div.meta「FU TODO 2.0.4 · POLYFORM」（10.5px）"
+        ]
+      }
+    ]
+  }
+]
