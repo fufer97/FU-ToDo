@@ -88,12 +88,12 @@ public enum Theme {
             )
         case .acid:
             return Spec(
-                canvas: 0x10231B, surface: 0xE7F86B, surfaceAlt: 0x1A3327,
+                canvas: 0x173A2B, surface: 0xE7F86B, surfaceAlt: 0x1F4032,
                 ink: 0xF2F0E4, ink2: 0xAAB5A6, ink3: 0x768578, ruleOpacity: 0.22,
                 fill: 0xE7F86B, fillInk: 0x11140F, todayFill: 0xD8D5C7, todayInk: 0x11140F,
                 accent: 0xE7F86B, accentSoft: 0x274536, stamp: 0x11140F,
                 dayBackground: 0x10231B, cardBackground: 0xE7F86B, cardInk: 0x11140F,
-                cardBorder: 0x0A1710, cardBorderOpacity: 0.85, gridOpacity: 0
+                cardBorder: 0x0E2219, cardBorderOpacity: 0.85, gridOpacity: 0
             )
         case .blueprint:
             return Spec(

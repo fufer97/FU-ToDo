@@ -152,7 +152,7 @@ public struct SettingsView: View {
         switch t {
         case .atelier: return Color(.sRGB, red: 0.949, green: 0.937, blue: 0.902, opacity: 1)
         case .herbarium: return Color(.sRGB, red: 0.914, green: 0.898, blue: 0.839, opacity: 1)
-        case .acid: return Color(.sRGB, red: 0.063, green: 0.137, blue: 0.106, opacity: 1)
+        case .acid: return Color(.sRGB, red: 0.090, green: 0.227, blue: 0.169, opacity: 1)
         case .blueprint: return Color(.sRGB, red: 0.902, green: 0.922, blue: 0.902, opacity: 1)
         }
     }

@@ -74,4 +74,4 @@ cd app
 
 ## 版本
 
-版本号单一来源：`app/Sources/Core/AppVersion.swift`。当前 **2.0**。
+版本号单一来源：`app/Sources/Core/AppVersion.swift`。当前 **2.0.1**。
