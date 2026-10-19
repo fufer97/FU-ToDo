@@ -70,36 +70,36 @@ public enum Theme {
         switch current.theme {
         case .atelier:
             return Spec(
-                canvas: 0xF2EEE3, surface: 0xFBF6EA, surfaceAlt: 0xEFE9DA,
-                ink: 0x14231D, ink2: 0x5B635C, ink3: 0x8B9089, ruleOpacity: 0.20,
-                fill: 0xB4432A, fillInk: 0xF6EFE2, todayFill: 0x14231D, todayInk: 0xF2EEE3,
-                accent: 0xB4432A, accentSoft: 0xEAD9CE, stamp: 0xB4432A,
-                dayBackground: 0xB4432A, cardBackground: 0xFBF6EA, cardInk: 0x14231D,
-                cardBorder: 0x14231D, cardBorderOpacity: 0.55, gridOpacity: 0
+                canvas: 0xF2EFE6, surface: 0xFBF8F0, surfaceAlt: 0xE6E1D3,
+                ink: 0x1C2A22, ink2: 0x5A6358, ink3: 0x899085, ruleOpacity: 0.20,
+                fill: 0x233A2E, fillInk: 0xF3EFE2, todayFill: 0xDAD6C9, todayInk: 0x1C2A22,
+                accent: 0x2F4A3A, accentSoft: 0xDEE4D7, stamp: 0x2F4A3A,
+                dayBackground: 0xE7EADF, cardBackground: 0xFBF8F0, cardInk: 0x1C2A22,
+                cardBorder: 0x1C2A22, cardBorderOpacity: 0.55, gridOpacity: 0
             )
         case .herbarium:
             return Spec(
                 canvas: 0xE9E5D6, surface: 0xF4F1E5, surfaceAlt: 0xD3DEC5,
                 ink: 0x1C241D, ink2: 0x4F5A50, ink3: 0x7C857A, ruleOpacity: 0.22,
-                fill: 0xC9D9BF, fillInk: 0x1C241D, todayFill: 0x1C241D, todayInk: 0xE9E5D6,
+                fill: 0xC9D9BF, fillInk: 0x1C241D, todayFill: 0xDAD6C9, todayInk: 0x1C241D,
                 accent: 0x3F7A4E, accentSoft: 0xD9E2CF, stamp: 0x3F7A4E,
                 dayBackground: 0xF4F1E5, cardBackground: 0xDFE4D3, cardInk: 0x1C241D,
                 cardBorder: 0x1C241D, cardBorderOpacity: 0.50, gridOpacity: 0
             )
         case .acid:
             return Spec(
-                canvas: 0xE7F86B, surface: 0xF3F9D0, surfaceAlt: 0xD6E85C,
-                ink: 0x11140F, ink2: 0x3A3E33, ink3: 0x6B705F, ruleOpacity: 0.22,
-                fill: 0x11140F, fillInk: 0xE7F86B, todayFill: 0xF3F9D0, todayInk: 0x11140F,
-                accent: 0x11140F, accentSoft: 0xD6E85C, stamp: 0xE7F86B,
-                dayBackground: 0xE7F86B, cardBackground: 0x11140F, cardInk: 0xE7F86B,
-                cardBorder: 0x11140F, cardBorderOpacity: 1, gridOpacity: 0
+                canvas: 0x10231B, surface: 0xE7F86B, surfaceAlt: 0x1A3327,
+                ink: 0xF2F0E4, ink2: 0xAAB5A6, ink3: 0x768578, ruleOpacity: 0.22,
+                fill: 0xE7F86B, fillInk: 0x11140F, todayFill: 0xD8D5C7, todayInk: 0x11140F,
+                accent: 0xE7F86B, accentSoft: 0x274536, stamp: 0x11140F,
+                dayBackground: 0x10231B, cardBackground: 0xE7F86B, cardInk: 0x11140F,
+                cardBorder: 0x0A1710, cardBorderOpacity: 0.85, gridOpacity: 0
             )
         case .blueprint:
             return Spec(
                 canvas: 0xE6EBE6, surface: 0xF7F8F3, surfaceAlt: 0xEDF1EC,
                 ink: 0x23496B, ink2: 0x456A86, ink3: 0x7A93A5, ruleOpacity: 0.25,
-                fill: 0x23496B, fillInk: 0xF7F8F3, todayFill: 0xD96A2B, todayInk: 0xFFF8F0,
+                fill: 0x23496B, fillInk: 0xF7F8F3, todayFill: 0xDCE0D8, todayInk: 0x23496B,
                 accent: 0xD96A2B, accentSoft: 0xF0DCCB, stamp: 0xD96A2B,
                 dayBackground: 0xF7F8F3, cardBackground: 0xF7F8F3, cardInk: 0x23496B,
                 cardBorder: 0x23496B, cardBorderOpacity: 0.65, gridOpacity: 0.10
@@ -148,12 +148,7 @@ public enum Theme {
     public static var cardBorder: Color { hex(spec.cardBorder).opacity(spec.cardBorderOpacity) }
 
     /// 日页上的正文色（在 dayBackground 上）。
-    public static var dayInk: Color {
-        switch current.theme {
-        case .atelier: return fillInk
-        default: return ink
-        }
-    }
+    public static var dayInk: Color { ink }
     public static var dayInk2: Color { dayInk.opacity(0.68) }
     public static var dayInk3: Color { dayInk.opacity(0.45) }
     public static var dayRule: Color { dayInk.opacity(0.22) }

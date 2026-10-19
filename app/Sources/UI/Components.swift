@@ -119,12 +119,17 @@ public struct IconButton: View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(hovering ? Theme.ink : Theme.ink3)
-                .frame(width: 22, height: 22)
+                .foregroundStyle(hovering ? Theme.ink : Theme.ink2)
+                .frame(width: 28, height: 28)
                 .background(
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(hovering ? Theme.surfaceAlt : Color.clear)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(hovering ? Theme.accentSoft : Color.clear)
                 )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 3)
+                        .strokeBorder(hovering ? Theme.ink.opacity(0.45) : Theme.rule, lineWidth: 0.8)
+                )
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .help(help)
@@ -150,10 +155,10 @@ public struct TextButton: View {
     public var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Text(title).font(Theme.sans(12.5, .medium))
+                Text(title).font(Theme.sans(12.5, .medium)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
                 if let badge, badge > 0 {
                     Text("\(badge)")
-                        .font(Theme.sans(11, .semibold))
+                        .font(Theme.mono(10, .semibold))
                         .foregroundStyle(Theme.ink2)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 1)
@@ -161,12 +166,18 @@ public struct TextButton: View {
                 }
             }
             .foregroundStyle(prominent ? Theme.ink : (hovering ? Theme.ink : Theme.ink2))
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 11)
+            .padding(.vertical, 7)
+            .frame(minHeight: 28)
             .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(prominent ? Theme.surfaceAlt : (hovering ? Theme.surfaceAlt : Color.clear))
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(hovering ? Theme.accentSoft : Color.clear)
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 3)
+                    .strokeBorder(hovering ? Theme.ink.opacity(0.45) : Theme.rule, lineWidth: 0.8)
+            )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }

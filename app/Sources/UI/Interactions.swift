@@ -30,7 +30,7 @@ struct CompletionStamp: View {
         case .acid:
             Text("DONE")
                 .font(.system(size: 16, weight: .black))
-                .foregroundStyle(Theme.canvas)
+                .foregroundStyle(Theme.cardBackground)
                 .padding(.horizontal, 10).padding(.vertical, 3)
                 .background(Rectangle().fill(Theme.stamp))
                 .rotationEffect(.degrees(-4))

@@ -150,33 +150,33 @@ public struct SettingsView: View {
 
     private func themeCanvas(_ t: ThemeChoice) -> Color {
         switch t {
-        case .atelier: return Color(.sRGB, red: 0.949, green: 0.933, blue: 0.890, opacity: 1)
+        case .atelier: return Color(.sRGB, red: 0.949, green: 0.937, blue: 0.902, opacity: 1)
         case .herbarium: return Color(.sRGB, red: 0.914, green: 0.898, blue: 0.839, opacity: 1)
-        case .acid: return Color(.sRGB, red: 0.906, green: 0.973, blue: 0.420, opacity: 1)
+        case .acid: return Color(.sRGB, red: 0.063, green: 0.137, blue: 0.106, opacity: 1)
         case .blueprint: return Color(.sRGB, red: 0.902, green: 0.922, blue: 0.902, opacity: 1)
         }
     }
     private func themeInk(_ t: ThemeChoice) -> Color {
         switch t {
-        case .atelier: return Color(.sRGB, red: 0.078, green: 0.137, blue: 0.114, opacity: 1)
+        case .atelier: return Color(.sRGB, red: 0.110, green: 0.165, blue: 0.133, opacity: 1)
         case .herbarium: return Color(.sRGB, red: 0.110, green: 0.141, blue: 0.114, opacity: 1)
-        case .acid: return Color(.sRGB, red: 0.067, green: 0.078, blue: 0.059, opacity: 1)
+        case .acid: return Color(.sRGB, red: 0.949, green: 0.941, blue: 0.894, opacity: 1)
         case .blueprint: return Color(.sRGB, red: 0.137, green: 0.286, blue: 0.420, opacity: 1)
         }
     }
     private func themeFill(_ t: ThemeChoice) -> Color {
         switch t {
-        case .atelier: return Color(.sRGB, red: 0.706, green: 0.263, blue: 0.165, opacity: 1)
+        case .atelier: return Color(.sRGB, red: 0.137, green: 0.227, blue: 0.180, opacity: 1)
         case .herbarium: return Color(.sRGB, red: 0.875, green: 0.894, blue: 0.827, opacity: 1)
-        case .acid: return Color(.sRGB, red: 0.067, green: 0.078, blue: 0.059, opacity: 1)
+        case .acid: return Color(.sRGB, red: 0.949, green: 0.941, blue: 0.894, opacity: 1)
         case .blueprint: return Color(.sRGB, red: 0.137, green: 0.286, blue: 0.420, opacity: 1)
         }
     }
     private func themeCard(_ t: ThemeChoice) -> Color {
         switch t {
-        case .atelier: return Color(.sRGB, red: 0.984, green: 0.965, blue: 0.918, opacity: 1)
+        case .atelier: return Color(.sRGB, red: 0.984, green: 0.973, blue: 0.941, opacity: 1)
         case .herbarium: return Color(.sRGB, red: 0.875, green: 0.894, blue: 0.827, opacity: 1)
-        case .acid: return Color(.sRGB, red: 0.067, green: 0.078, blue: 0.059, opacity: 1)
+        case .acid: return Color(.sRGB, red: 0.949, green: 0.941, blue: 0.894, opacity: 1)
         case .blueprint: return Color(.sRGB, red: 0.969, green: 0.973, blue: 0.953, opacity: 1)
         }
     }

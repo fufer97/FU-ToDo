@@ -127,6 +127,23 @@ struct RenderMain {
             to: outDir.appendingPathComponent("30-focus.png")
         )
 
+        seeded.updateSettings { $0.calendarRange = .week }
+        Theme.apply(seeded.settings)
+        render(
+            RootView().environmentObject(seeded).environmentObject(Updater()),
+            size: CGSize(width: 1200, height: 760),
+            to: outDir.appendingPathComponent("34-week.png")
+        )
+        seeded.updateSettings { $0.calendarRange = .biweek }
+        Theme.apply(seeded.settings)
+        render(
+            RootView().environmentObject(seeded).environmentObject(Updater()),
+            size: CGSize(width: 1200, height: 760),
+            to: outDir.appendingPathComponent("35-biweek.png")
+        )
+        seeded.updateSettings { $0.calendarRange = .month }
+        Theme.apply(seeded.settings)
+
         render(
             YearView(onClose: {}).environmentObject(seeded),
             size: CGSize(width: 1200, height: 760),

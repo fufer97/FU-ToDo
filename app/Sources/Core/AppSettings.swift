@@ -25,9 +25,9 @@ public enum ThemeChoice: String, Codable, CaseIterable, Equatable {
 
     public var note: String {
         switch self {
-        case .atelier: return "奶油纸、宋体、赭红整页，像一页装订好的工单。"
+        case .atelier: return "奶油纸、宋体、墨绿整页，像一页装订好的工单。"
         case .herbarium: return "鼠尾草卡、窄黑体、标本标签与条码，默认主题。"
-        case .acid: return "荧光黄绿、重黑体、黑贴纸，最冲的一档。"
+        case .acid: return "黑绿底、荧光黄绿贴纸、重黑体；暗处白字，贴纸上黑字。"
         case .blueprint: return "图纸底、蓝墨、标题栏与修订章，工具感最强。"
         }
     }
@@ -47,9 +47,22 @@ public enum FontScale: String, Codable, CaseIterable, Equatable {
 
     public var factor: CGFloat {
         switch self {
-        case .small: return 0.92
-        case .medium: return 1.0
-        case .large: return 1.14
+        case .small: return 1.0
+        case .medium: return 1.10
+        case .large: return 1.26
+        }
+    }
+}
+
+/// 月历的展开程度：整月 / 双周 / 单周。周视图的卡片更大，能看到更多内容。
+public enum CalendarRange: String, Codable, CaseIterable, Equatable {
+    case month, biweek, week
+
+    public var label: String {
+        switch self {
+        case .month: return "月"
+        case .biweek: return "双周"
+        case .week: return "周"
         }
     }
 }
@@ -62,17 +75,21 @@ public struct AppSettings: Codable, Equatable {
     public var autoCheckUpdates: Bool
     /// 完成 / 翻页时的轻音效与触感
     public var soundEnabled: Bool
+    /// 月历显示范围：整月 / 双周 / 单周
+    public var calendarRange: CalendarRange
 
     public init(
         theme: ThemeChoice = .herbarium,
         fontScale: FontScale = .medium,
         autoCheckUpdates: Bool = true,
-        soundEnabled: Bool = true
+        soundEnabled: Bool = true,
+        calendarRange: CalendarRange = .month
     ) {
         self.theme = theme
         self.fontScale = fontScale
         self.autoCheckUpdates = autoCheckUpdates
         self.soundEnabled = soundEnabled
+        self.calendarRange = calendarRange
     }
 
     /// 容错解码：老数据（有 paper / accent / font 等旧字段、没有 theme）按默认主题读入，不丢数据。
@@ -82,5 +99,6 @@ public struct AppSettings: Codable, Equatable {
         fontScale = try c.decodeIfPresent(FontScale.self, forKey: .fontScale) ?? .medium
         autoCheckUpdates = try c.decodeIfPresent(Bool.self, forKey: .autoCheckUpdates) ?? true
         soundEnabled = try c.decodeIfPresent(Bool.self, forKey: .soundEnabled) ?? true
+        calendarRange = try c.decodeIfPresent(CalendarRange.self, forKey: .calendarRange) ?? .month
     }
 }

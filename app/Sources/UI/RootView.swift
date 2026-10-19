@@ -172,21 +172,32 @@ public struct RootView: View {
             .padding(.bottom, 10)
             TextButton("今天") { goToday() }
                 .padding(.bottom, 6)
+            rangeSwitch
+                .padding(.bottom, 6)
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 5) {
-                HStack(spacing: 12) {
-                    Text("未完成").font(Theme.mono(9)).tracking(1).foregroundStyle(Theme.ink3)
-                    Text("\(store.poolCount)").font(Theme.mono(9)).foregroundStyle(Theme.ink)
-                    Text("已结束").font(Theme.mono(9)).tracking(1).foregroundStyle(Theme.ink3)
+            VStack(alignment: .trailing, spacing: 6) {
+                HStack(spacing: 14) {
+                    Button { showPool = true } label: {
+                        HStack(spacing: 5) {
+                            Text("未完成").font(Theme.mono(9)).tracking(1).foregroundStyle(Theme.ink3)
+                            Text("\(store.poolCount)").font(Theme.mono(9, .semibold)).foregroundStyle(Theme.ink)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    Button { showDone = true } label: {
+                        Text("已结束").font(Theme.mono(9)).tracking(1)
+                            .foregroundStyle(Theme.ink3)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     TextButton("⌘K") { showPalette = true }
                     TextButton("年") { showYear = true }
                     TextButton("专注") { focusMode = true }
-                    TextButton("清单") { showPool = true }
-                    TextButton("已结束") { showDone = true }
                     TextButton("说明") { openWindow(id: "help") }
                     TextButton("设置") { openSettings() }
                 }
@@ -198,10 +209,37 @@ public struct RootView: View {
         .padding(.bottom, 10)
     }
 
+    private var rangeSwitch: some View {
+        HStack(spacing: 0) {
+            ForEach(CalendarRange.allCases, id: \.self) { range in
+                let current = store.settings.calendarRange == range
+                Button {
+                    store.updateSettings { $0.calendarRange = range }
+                } label: {
+                    Text(range.label)
+                        .font(Theme.mono(9, .semibold))
+                        .tracking(0.6)
+                        .foregroundStyle(current ? Theme.canvas : Theme.ink2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .frame(minHeight: 28)
+                        .background(Rectangle().fill(current ? Theme.ink : Color.clear))
+                        .overlay(Rectangle().strokeBorder(Theme.rule, lineWidth: 0.8))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(range == .month ? "整月" : (range == .biweek ? "双周：卡片更大" : "单周：一屏一周"))
+            }
+        }
+    }
+
     private var paletteActions: [PaletteAction] {
         var list: [PaletteAction] = [
             PaletteAction(title: "专注模式", hint: "⌘⇧F · 整窗只留今天的主线") { focusMode = true },
             PaletteAction(title: "年视图", hint: "⌘Y · 12 个小月历") { showYear = true },
+            PaletteAction(title: "月历：整月", hint: "M") { store.updateSettings { $0.calendarRange = .month } },
+            PaletteAction(title: "月历：双周", hint: "两周并排，卡片更大") { store.updateSettings { $0.calendarRange = .biweek } },
+            PaletteAction(title: "月历：单周", hint: "一屏一周") { store.updateSettings { $0.calendarRange = .week } },
             PaletteAction(title: "跳到今天", hint: "回到今天并选中") {
                 store.selectDay(store.currentDay)
                 anchor = Date()
