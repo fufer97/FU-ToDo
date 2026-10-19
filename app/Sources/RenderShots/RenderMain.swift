@@ -37,6 +37,13 @@ struct RenderMain {
             return
         }
 
+        // --specimen：标本卡组件样张（Herbarium 风格的浅色版）
+        if CommandLine.arguments.contains("--specimen") {
+            render(SpecimenBoard(), size: CGSize(width: 1200, height: 760),
+                   to: outDir.appendingPathComponent("v6-specimen-card.png"))
+            return
+        }
+
         // --themes：四套主题（器物 / 档案 / 天文台 / 酸纸），同一结构不同世界
         if CommandLine.arguments.contains("--themes") {
             for t in SpreadTheme.all {
