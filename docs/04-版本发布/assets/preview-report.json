@@ -1,0 +1,48 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.kicker「THEME SYSTEM · CARD SPEC」"
+        ]
+      },
+      {
+        "rule": "numbered",
+        "label": "标题上方的编号标签",
+        "count": 5,
+        "examples": [
+          "div.idx「01 / THEMES」",
+          "div.idx「02 / CARD SPECIES」",
+          "div.idx「03 / LAYOUT」"
+        ]
+      },
+      {
+        "rule": "englishLabel",
+        "label": "中文界面里的英文大写标签",
+        "count": 10,
+        "examples": [
+          "div「FU TODO / RELEASE 2.0」",
+          "b「FU TODO」",
+          "span.kicker「THEME SYSTEM · CARD SPEC」"
+        ]
+      },
+      {
+        "rule": "smallText",
+        "label": "正文小于 13px",
+        "count": 1,
+        "examples": [
+          "div.meta「FU TODO 2.0 · POLYFORM N」（11px）"
+        ]
+      }
+    ]
+  }
+]
