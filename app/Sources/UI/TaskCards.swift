@@ -57,3 +57,27 @@ public struct CutCornerShape: Shape {
         return p
     }
 }
+
+/// 夜之城的面板：切角容器（主线 22pt / 子面板 14pt），内容自带留白。
+public struct NightPanel<Content: View>: View {
+    var corner: CGFloat
+    private let content: Content
+
+    public init(corner: CGFloat, @ViewBuilder content: () -> Content) {
+        self.corner = corner
+        self.content = content()
+    }
+
+    public var body: some View {
+        content
+            .padding(.horizontal, 26)
+            .padding(.vertical, 20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.cardBackground)
+            .clipShape(CutCornerShape(radius: corner))
+            .overlay(
+                CutCornerShape(radius: corner)
+                    .stroke(Theme.cardBorder, lineWidth: 1)
+            )
+    }
+}

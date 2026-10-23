@@ -172,7 +172,7 @@ public struct RootView: View {
                 nightRail
                 DayPageView(day: store.selectedDay)
                     .id(store.selectedDay)
-                    .frame(maxWidth: 700)
+                    .frame(maxWidth: .infinity)
                     .frame(maxHeight: .infinity)
                     .background(
                         Theme.canvas

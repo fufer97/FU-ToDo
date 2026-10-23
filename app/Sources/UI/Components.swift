@@ -79,9 +79,17 @@ public struct RoleGlyph: View {
                     .font(.system(size: 10))
                     .foregroundStyle(Theme.accent)
             } else if level <= 1 {
-                Circle()
-                    .fill(Theme.ink2)
-                    .frame(width: 6, height: 6)
+                if Theme.isNight {
+                    // 夜之城：支线的角色标是空心菱形（Side Job）。
+                    Rectangle()
+                        .strokeBorder(Theme.ink2, lineWidth: 1.2)
+                        .frame(width: 6.5, height: 6.5)
+                        .rotationEffect(.degrees(45))
+                } else {
+                    Circle()
+                        .fill(Theme.ink2)
+                        .frame(width: 6, height: 6)
+                }
             } else if level == 2 {
                 Rectangle()
                     .strokeBorder(Theme.ink3, lineWidth: 1.2)
