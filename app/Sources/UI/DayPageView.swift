@@ -71,6 +71,9 @@ public struct DayPageView: View {
                         sectionGap
                         doneSection
                     }
+                    if Theme.isNight {
+                        nightStatus
+                    }
                 }
                 .padding(.horizontal, 26)
                 .padding(.top, 34)
@@ -120,6 +123,23 @@ public struct DayPageView: View {
         )
     }
 
+    /// 夜之城：页面底部的终端状态行。
+    private var nightStatus: some View {
+        HStack(spacing: 16) {
+            Text("未结 \(store.poolCount) · 归档 \(store.doneTasks.count) · ALL LOCAL")
+                .font(Theme.mono(9.5))
+                .tracking(2)
+                .foregroundStyle(Theme.ink3)
+            Spacer()
+            HazardStripe()
+            Text("REV \(AppVersion.current) // NC")
+                .font(Theme.mono(9.5))
+                .tracking(2)
+                .foregroundStyle(Theme.ink3)
+        }
+        .padding(.top, 30)
+    }
+
     private func startDragWatchdog() {
         dragWatchdog?.invalidate()
         dragWatchdog = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { timer in
@@ -139,43 +159,86 @@ public struct DayPageView: View {
         Spacer().frame(height: Theme.panelEnabled ? 26 : 42)
     }
 
-    /// 刊头：3pt 墨线 + 宋体日期 + 星期与年内日序。今天没有 LIVE、没有大数字。
+    /// 刊头：日课＝3pt 墨线 + 宋体日期；夜之城＝终端读出行。
+    @ViewBuilder
     private var header: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Rectangle().fill(Theme.ink).frame(height: 3)
-            HStack(alignment: .firstTextBaseline) {
-                Text(cnDate)
-                    .font(Theme.display(Theme.dateDisplaySize))
-                    .tracking(2)
-                    .foregroundStyle(isFuture ? Theme.ink3 : Theme.ink)
+        if Theme.isNight {
+            HStack(alignment: .firstTextBaseline, spacing: 16) {
+                Text("JOB_\(dayOfYear) · \(compactDate)")
+                    .font(Theme.mono(10.5, .semibold))
+                    .tracking(2.5)
+                    .foregroundStyle(Theme.signal)
+                if !isToday {
+                    Button {
+                        store.selectDay(store.currentDay)
+                    } label: {
+                        Text("回到今天")
+                            .font(Theme.mono(9.5))
+                            .tracking(1)
+                            .foregroundStyle(Theme.ink2)
+                            .overlay(alignment: .bottom) {
+                                Rectangle().fill(Theme.rule).frame(height: 1).offset(y: 2)
+                            }
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 6) {
-                    Text("星期\(weekdayName) · 第 \(dayOfYear) 日")
-                        .font(Theme.mono(Theme.metaSize))
-                        .tracking(1.5)
-                        .foregroundStyle(Theme.ink3)
-                    if !isToday {
-                        Button {
-                            store.selectDay(store.currentDay)
-                        } label: {
-                            Text("回到今天")
-                                .font(Theme.mono(9.5))
-                                .tracking(1)
-                                .foregroundStyle(Theme.ink2)
-                                .overlay(alignment: .bottom) {
-                                    Rectangle().fill(Theme.hairline).frame(height: 1).offset(y: 2)
-                                }
-                                .contentShape(Rectangle())
+                Text(isToday ? "今日一件" : "查看那一天")
+                    .font(Theme.mono(9))
+                    .tracking(2)
+                    .foregroundStyle(Theme.ink3)
+            }
+            .padding(.horizontal, 26)
+            .padding(.top, 36)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(Theme.rule).frame(height: 1).padding(.horizontal, 26)
+            }
+            .padding(.bottom, 10)
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                Rectangle().fill(Theme.ink).frame(height: 3)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(cnDate)
+                        .font(Theme.display(Theme.dateDisplaySize))
+                        .tracking(2)
+                        .foregroundStyle(isFuture ? Theme.ink3 : Theme.ink)
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 6) {
+                        Text("星期\(weekdayName) · 第 \(dayOfYear) 日")
+                            .font(Theme.mono(Theme.metaSize))
+                            .tracking(1.5)
+                            .foregroundStyle(Theme.ink3)
+                        if !isToday {
+                            Button {
+                                store.selectDay(store.currentDay)
+                            } label: {
+                                Text("回到今天")
+                                    .font(Theme.mono(9.5))
+                                    .tracking(1)
+                                    .foregroundStyle(Theme.ink2)
+                                    .overlay(alignment: .bottom) {
+                                        Rectangle().fill(Theme.hairline).frame(height: 1).offset(y: 2)
+                                    }
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
+                .padding(.top, 20)
+                Rectangle().fill(Theme.dayRule).frame(height: 1).padding(.top, 20)
             }
-            .padding(.top, 20)
-            Rectangle().fill(Theme.dayRule).frame(height: 1).padding(.top, 20)
+            .padding(.horizontal, 26)
+            .padding(.top, 44)
         }
-        .padding(.horizontal, 26)
-        .padding(.top, 44)
+    }
+
+    /// 10.24
+    private var compactDate: String {
+        guard let date = DayKey.date(from: day) else { return day }
+        let cal = Calendar(identifier: .gregorian)
+        return String(format: "%02d.%02d", cal.component(.month, from: date), cal.component(.day, from: date))
     }
 
     // MARK: 三栏
@@ -183,7 +246,7 @@ public struct DayPageView: View {
     private var mainSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             sectionHeader(
-                "今日主线",
+                sectionTitle("今日主线", night: "MAIN JOB · 主线任务"),
                 hint: "把任务拖到这里 = 设为主线",
                 targeted: mainTargeted,
                 binding: $mainTargeted,
@@ -193,11 +256,15 @@ public struct DayPageView: View {
             if let goal = mainGoal {
                 draggableCard(goal, at: 0, in: [goal]) {
                     TaskCardChrome(task: goal, style: Theme.cardStyle, completed: goal.done) {
+                        if Theme.isNight {
+                            questTag
+                        }
                         TaskRowView(task: goal, level: 1, isMain: true, showsRoleGlyph: false, onCard: true, showsFolio: false)
-                            .padding(.top, Theme.panelEnabled ? 0 : 16)
+                            .padding(.top, Theme.panelEnabled ? (Theme.isNight ? 16 : 0) : 16)
                         if !collapseCards {
+                            if Theme.isNight { objectivesLabel }
                             TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
-                                .padding(.top, Theme.panelEnabled ? 0 : 10)
+                                .padding(.top, Theme.panelEnabled ? (Theme.isNight ? 8 : 0) : 10)
                         }
                     }
                 }
@@ -213,8 +280,8 @@ public struct DayPageView: View {
                 }
                 .padding(.top, 18)
                 if !roots.isEmpty {
-                    Text("今天还没有主线")
-                        .font(Theme.sans(10.5))
+                    Text(Theme.isNight ? "NO MAIN JOB · 今天还没有主线" : "今天还没有主线")
+                        .font(Theme.mono(9))
                         .tracking(1)
                         .foregroundStyle(Theme.ink3)
                         .padding(.top, 10)
@@ -223,10 +290,42 @@ public struct DayPageView: View {
         }
     }
 
+    /// 夜之城：主线面板的黄标签与任务代码。
+    private var questTag: some View {
+        HStack(spacing: 14) {
+            Text("主线任务 MAIN JOB")
+                .font(Theme.mono(10, .bold))
+                .tracking(2)
+                .foregroundStyle(Theme.fillInk)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 3)
+                .background(Theme.accent)
+                .clipShape(CutCornerShape(radius: 5))
+            Text("JOB_\(dayOfYear) // 今日一件")
+                .font(Theme.mono(9.5))
+                .tracking(1.5)
+                .foregroundStyle(Theme.ink3)
+        }
+        .padding(.bottom, 4)
+    }
+
+    /// 夜之城：目标区的青色小标。
+    private var objectivesLabel: some View {
+        Text("目标 OBJECTIVES")
+            .font(Theme.mono(9.5, .semibold))
+            .tracking(3)
+            .foregroundStyle(Theme.signal)
+            .padding(.bottom, 6)
+    }
+
+    private func sectionTitle(_ rike: String, night: String) -> String {
+        Theme.isNight ? night : rike
+    }
+
     private var branchSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             sectionHeader(
-                "今日支线",
+                sectionTitle("今日支线", night: "SIDE JOBS · 支线任务"),
                 hint: "拖到这里 = 作为支线",
                 targeted: branchTargeted,
                 binding: $branchTargeted,
@@ -285,7 +384,7 @@ public struct DayPageView: View {
         if !finished.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
                 sectionHeader(
-                    "今日完成",
+                    sectionTitle("今日完成", night: "COMPLETED · 已完成"),
                     hint: "拖到这里 = 直接完成",
                     targeted: false,
                     binding: nil,
@@ -320,9 +419,11 @@ public struct DayPageView: View {
         let dragging = drag.draggingId != nil && relevant
         return HStack(alignment: .firstTextBaseline, spacing: 16) {
             Text(title)
-                .font(Theme.sans(Theme.sectionSize, .medium))
-                .tracking(8)
-                .foregroundStyle(targeted ? Theme.ink : Theme.ink2)
+                .font(Theme.isNight
+                      ? Theme.mono(10, .semibold)
+                      : Theme.sans(Theme.sectionSize, .medium))
+                .tracking(Theme.isNight ? 3 : 8)
+                .foregroundStyle(targeted ? (Theme.isNight ? Theme.accent : Theme.ink) : (Theme.isNight ? Theme.signal : Theme.ink2))
             if let note {
                 Text(note).font(Theme.sans(10)).foregroundStyle(Theme.ink3)
             }

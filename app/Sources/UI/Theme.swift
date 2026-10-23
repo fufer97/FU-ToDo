@@ -32,6 +32,7 @@ public enum Theme {
     }
 
     public static var choice: ThemeChoice { current.theme }
+    public static var isNight: Bool { current.theme == .night }
 
     public static var cardStyle: CardStyle {
         current.theme == .night ? .night : .rike
@@ -120,6 +121,8 @@ public enum Theme {
     public static var stamp: Color { hex(spec.stamp) }
     /// 数据色：日课是次墨，夜之城是青。
     public static var signal: Color { hex(spec.signal) }
+    /// 警示色：夜之城是洋红（未结标记），日课回落到朱砂。
+    public static var warn: Color { current.theme == .night ? hex(0xFF3A6C) : hex(spec.accent) }
 
     /// 日页与卡片同底（纸上一体）；夜之城里日页就是夜底。
     public static var dayBackground: Color { canvas }
@@ -141,12 +144,12 @@ public enum Theme {
     public static var fontScale: CGFloat { current.fontScale.factor }
     public static var soundEnabled: Bool { current.soundEnabled }
 
-    /// 展示声部：日课用宋体（日期、月名、主线标题），夜之城用重无衬线。
+    /// 展示声部：日课用宋体（日期、月名、主线标题），夜之城用 DIN 窄体（拉丁与数字）。
     public static func display(_ size: CGFloat) -> Font {
         let scaled = size * fontScale
         switch current.theme {
         case .rike: return .custom("Songti SC Bold", size: scaled)
-        case .night: return .system(size: scaled, weight: .heavy)
+        case .night: return .custom("DIN Alternate", size: scaled)
         }
     }
 
@@ -161,7 +164,7 @@ public enum Theme {
     public static func previewDisplay(_ theme: ThemeChoice, _ size: CGFloat) -> Font {
         switch theme {
         case .rike: return .custom("Songti SC Bold", size: size)
-        case .night: return .system(size: size, weight: .heavy)
+        case .night: return .custom("DIN Alternate", size: size)
         }
     }
 

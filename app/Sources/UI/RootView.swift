@@ -35,24 +35,28 @@ public struct RootView: View {
 
     public var body: some View {
         ZStack(alignment: .bottom) {
-            HStack(spacing: 0) {
-                rail
-                DayPageView(day: store.selectedDay)
-                    .id(store.selectedDay)
-                    .frame(maxWidth: 660)
-                    .frame(maxHeight: .infinity)
-                    .background(
-                        Theme.canvas
-                            .contentShape(Rectangle())
-                            .onTapGesture { session.finishByClickingAway(store: store) }
-                    )
-                    .transition(.asymmetric(
-                        insertion: .offset(x: 26).combined(with: .opacity),
-                        removal: .offset(x: -26).combined(with: .opacity)
-                    ))
-                    .frame(maxWidth: .infinity)
+            if Theme.isNight {
+                nightFrame
+            } else {
+                HStack(spacing: 0) {
+                    rail
+                    DayPageView(day: store.selectedDay)
+                        .id(store.selectedDay)
+                        .frame(maxWidth: 660)
+                        .frame(maxHeight: .infinity)
+                        .background(
+                            Theme.canvas
+                                .contentShape(Rectangle())
+                                .onTapGesture { session.finishByClickingAway(store: store) }
+                        )
+                        .transition(.asymmetric(
+                            insertion: .offset(x: 26).combined(with: .opacity),
+                            removal: .offset(x: -26).combined(with: .opacity)
+                        ))
+                        .frame(maxWidth: .infinity)
+                }
+                .background(Theme.canvas)
             }
-            .background(Theme.canvas)
 
             if showYear {
                 YearView(onClose: { showYear = false })
@@ -68,6 +72,9 @@ public struct RootView: View {
                 .padding(.bottom, 24)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
+        }
+        .overlay {
+            if Theme.isNight { Scanlines() }
         }
         .onChange(of: store.selectedDay) { _, day in
             if let date = DayKey.date(from: day),
@@ -123,7 +130,130 @@ public struct RootView: View {
         }
     }
 
-    // MARK: 刊眉栏
+    // MARK: 夜之城（HUD 顶栏 + 终端左栏 + 任务日志）
+
+    /// HUD 日期读出：2026.10.24 SAT · DAY 297
+    private var hudDate: String {
+        let d = DayKey.date(from: store.currentDay) ?? Date()
+        let cal = Calendar(identifier: .gregorian)
+        let m = cal.component(.month, from: d), day = cal.component(.day, from: d)
+        let w = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][max(0, min(6, cal.component(.weekday, from: d) - 1))]
+        let yStart = cal.dateInterval(of: .year, for: d)?.start ?? d
+        let dayOfYear = (cal.dateComponents([.day], from: yStart, to: cal.startOfDay(for: d)).day ?? 0) + 1
+        return "\(cal.component(.year, from: d)).\(String(format: "%02d", m)).\(String(format: "%02d", day)) \(w) · DAY \(dayOfYear)"
+    }
+
+    private var nightFrame: some View {
+        VStack(spacing: 0) {
+            // HUD 顶栏
+            HStack(spacing: 18) {
+                Text("FU//TODO")
+                    .font(Theme.display(14))
+                    .tracking(3)
+                    .foregroundStyle(Theme.accent)
+                Text("NIGHT CITY TERMINAL · \(hudDate)")
+                    .font(Theme.mono(10))
+                    .tracking(1.5)
+                    .foregroundStyle(Theme.ink2)
+                Spacer(minLength: 12)
+                HudButton("今天", active: store.selectedDay == store.currentDay, action: goToday)
+                HudButton("未完成", count: store.poolCount, action: { showPool = true })
+                HudButton("已结束", count: store.doneTasks.count, action: { showDone = true })
+                HudButton("年视图", action: { showYear = true })
+                HudButton("设置", action: { openSettings() })
+            }
+            .padding(.horizontal, 24)
+            .frame(height: 54)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(Theme.rule).frame(height: 1)
+            }
+
+            HStack(spacing: 0) {
+                nightRail
+                DayPageView(day: store.selectedDay)
+                    .id(store.selectedDay)
+                    .frame(maxWidth: 700)
+                    .frame(maxHeight: .infinity)
+                    .background(
+                        Theme.canvas
+                            .contentShape(Rectangle())
+                            .onTapGesture { session.finishByClickingAway(store: store) }
+                    )
+                    .transition(.asymmetric(
+                        insertion: .offset(x: 26).combined(with: .opacity),
+                        removal: .offset(x: -26).combined(with: .opacity)
+                    ))
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .background(Theme.canvas)
+    }
+
+    private var nightRail: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(monthName)
+                    .font(Theme.display(20))
+                    .tracking(3)
+                    .foregroundStyle(Theme.ink)
+                Text("\(yearName) / \(String(Calendar(identifier: .gregorian).component(.month, from: anchor)))")
+                    .font(Theme.mono(10))
+                    .tracking(2)
+                    .foregroundStyle(Theme.ink3)
+            }
+
+            HStack(spacing: 14) {
+                Button { shiftMonth(-1) } label: { nightNav("‹ 上月") }
+                Button { goToday() } label: { nightNav("今天", active: store.selectedDay == store.currentDay) }
+                Button { shiftMonth(1) } label: { nightNav("下月 ›") }
+            }
+            .padding(.top, 14)
+
+            MonthGridView(anchor: anchor, drag: drag) { day in
+                store.selectDay(day)
+                if let date = DayKey.date(from: day),
+                   !Calendar(identifier: .gregorian).isDate(date, equalTo: anchor, toGranularity: .month) {
+                    anchor = date
+                }
+            }
+            .padding(.top, 24)
+
+            Spacer(minLength: 24)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("SYS OK · 数据全部本地")
+                Text("NO CLOUD · NO ADS")
+            }
+            .font(Theme.mono(9))
+            .tracking(2)
+            .foregroundStyle(Theme.ink3)
+        }
+        .padding(.leading, 32)
+        .padding(.trailing, 20)
+        .padding(.top, 30)
+        .padding(.bottom, 28)
+        .frame(width: 264, alignment: .topLeading)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Theme.canvas)
+        .overlay(alignment: .trailing) {
+            Rectangle().fill(Theme.rule).frame(width: 1)
+        }
+    }
+
+    private func nightNav(_ title: String, active: Bool = false) -> some View {
+        Text(title)
+            .font(Theme.mono(10))
+            .tracking(1)
+            .foregroundStyle(active ? Theme.signal : Theme.ink2)
+            .overlay(alignment: .bottom) {
+                if active {
+                    Rectangle().fill(Theme.signal).frame(height: 1).offset(y: 2)
+                }
+            }
+            .contentShape(Rectangle())
+    }
+
+    // MARK: 刊眉栏（日课）
 
     private var rail: some View {
         VStack(alignment: .leading, spacing: 0) {

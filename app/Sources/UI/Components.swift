@@ -1,7 +1,8 @@
 import SwiftUI
 import Core
 
-/// 圆形勾选圈：本产品唯一的「完成」操作，尺寸随层级递减。
+/// 圆形勾选圈（日课）：本产品唯一的「完成」操作，尺寸随层级递减。
+/// 夜之城换成切角方框——终端的复选语言。
 public struct RingView: View {
     public let level: Int
     public let done: Bool
@@ -21,23 +22,39 @@ public struct RingView: View {
         let stroke = tint ?? Theme.control
         let fill = tint ?? Theme.accent
         Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(done ? fill : Color.clear)
-                    .frame(width: size, height: size)
-                Circle()
-                    .strokeBorder(
-                        done ? fill : (hovering ? fill : stroke),
-                        lineWidth: level == 1 ? 1.6 : 1.3
-                    )
-                    .frame(width: size, height: size)
-                if done {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: size * 0.52, weight: .bold))
-                        .foregroundStyle(tint == nil ? Theme.surface : Theme.cardInk)
+            Group {
+                if Theme.isNight {
+                    let box = CutCornerShape(radius: max(2.5, size * 0.26))
+                    ZStack {
+                        if done { box.fill(fill) }
+                        box.stroke(done ? fill : (hovering ? fill : stroke), lineWidth: 1.4)
+                        if done {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: size * 0.5, weight: .bold))
+                                .foregroundStyle(Theme.fillInk)
+                        }
+                    }
+                } else {
+                    ZStack {
+                        Circle()
+                            .fill(done ? fill : Color.clear)
+                            .frame(width: size, height: size)
+                        Circle()
+                            .strokeBorder(
+                                done ? fill : (hovering ? fill : stroke),
+                                lineWidth: level == 1 ? 1.6 : 1.3
+                            )
+                            .frame(width: size, height: size)
+                        if done {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: size * 0.52, weight: .bold))
+                                .foregroundStyle(tint == nil ? Theme.surface : Theme.cardInk)
+                        }
+                    }
                 }
             }
-            .contentShape(Circle())
+            .frame(width: size, height: size)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
@@ -259,5 +276,94 @@ public struct SectionLabel: View {
                     .foregroundStyle(Theme.faint)
             }
         }
+    }
+}
+
+// MARK: 夜之城组件
+
+/// 扫描线：整窗覆盖的 CRT 质感（2.5% 白，不伤对比度，不吃点击）。
+public struct Scanlines: View {
+    public init() {}
+
+    public var body: some View {
+        Canvas { ctx, size in
+            let color = GraphicsContext.Shading.color(Color.white.opacity(0.025))
+            var y: CGFloat = 0
+            while y < size.height {
+                ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: color)
+                y += 3
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+/// 斜纹警示条：终端状态行的装饰音。
+public struct HazardStripe: View {
+    var width: CGFloat = 92
+
+    public init(width: CGFloat = 92) {
+        self.width = width
+    }
+
+    public var body: some View {
+        Canvas { ctx, size in
+            let color = GraphicsContext.Shading.color(Theme.accent.opacity(0.5))
+            var x: CGFloat = -size.height
+            while x < size.width {
+                var p = Path()
+                p.move(to: CGPoint(x: x, y: size.height))
+                p.addLine(to: CGPoint(x: x + size.height, y: 0))
+                p.addLine(to: CGPoint(x: x + size.height + 4, y: 0))
+                p.addLine(to: CGPoint(x: x + 4, y: size.height))
+                ctx.fill(p, with: color)
+                x += 12
+            }
+        }
+        .frame(width: width, height: 6)
+        .allowsHitTesting(false)
+    }
+}
+
+/// HUD 切角按钮：夜之城顶栏用语。激活＝黄底黑字。
+public struct HudButton: View {
+    let title: String
+    var count: Int? = nil
+    var active: Bool = false
+    let action: () -> Void
+    @State private var hovering = false
+
+    public init(_ title: String, count: Int? = nil, active: Bool = false, action: @escaping () -> Void) {
+        self.title = title
+        self.count = count
+        self.active = active
+        self.action = action
+    }
+
+    public var body: some View {
+        Button(action: action) {
+            HStack(spacing: 7) {
+                Text(title)
+                    .font(Theme.sans(11.5, active ? .semibold : .regular))
+                    .tracking(1.5)
+                if let count {
+                    Text("\(count)")
+                        .font(Theme.mono(10, .bold))
+                        .foregroundStyle(active ? Theme.fillInk : Theme.accent)
+                }
+            }
+            .foregroundStyle(active ? Theme.fillInk : (hovering ? Theme.ink : Theme.ink2))
+            .padding(.horizontal, 13)
+            .frame(height: 27)
+            .background(active ? Theme.accent : Theme.cardBackground)
+            .clipShape(CutCornerShape(radius: 6))
+            .overlay(
+                CutCornerShape(radius: 6)
+                    .stroke(hovering || active ? Theme.accent.opacity(0.8) : Theme.cardBorder, lineWidth: 1)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
     }
 }

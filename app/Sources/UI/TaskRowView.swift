@@ -239,6 +239,8 @@ public struct TaskRowView: View {
 
     private var isEditingThis: Bool { session.isEditing && session.targetId == task.id }
     private var isCreatingUnderThis: Bool { session.isCreating && session.targetId == task.id }
+    /// glitch 套印只给夜之城的主线标题，且未完成时才亮。
+    private var glitch: Bool { Theme.isNight && isMain && level == 1 && !task.done }
 
     private var dropZone: DropZone? {
         guard let state = drag.target, state.targetId == task.id, state.draggedId != task.id else { return nil }
@@ -436,6 +438,9 @@ public struct TaskRowView: View {
                     .strikethrough(task.done, color: cdone)
                     .lineLimit(1)
                     .animation(spring, value: task.done)
+                    // 夜之城：只有主线标题带 1px 青/洋红套印（glitch）
+                    .shadow(color: glitch ? Theme.signal.opacity(0.55) : .clear, radius: 0.9, x: 0.9, y: 0)
+                    .shadow(color: glitch ? Theme.warn.opacity(0.5) : .clear, radius: 0.9, x: -0.9, y: 0)
                     .overlay(alignment: .bottom) {
                         if hovering && !readOnly {
                             Rectangle().fill(Theme.faint.opacity(0.6)).frame(height: 1)

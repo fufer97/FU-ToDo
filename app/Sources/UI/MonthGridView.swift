@@ -98,8 +98,21 @@ struct DayCellView: View {
         let all = store.taskCount(on: dayKey)
         return all > 0 && store.doneCount(on: dayKey) == all
     }
+    /// 过去、且有没做完的事：夜之城给它一枚洋红点（未结）。
+    private var hasUnfinished: Bool {
+        dayKey < store.currentDay && store.doneCount(on: dayKey) < store.taskCount(on: dayKey)
+    }
 
     var body: some View {
+        if Theme.isNight {
+            nightCell
+        } else {
+            rikeCell
+        }
+    }
+
+    /// 日课格子：数字 + 墨点；今天＝朱砂圈。
+    private var rikeCell: some View {
         Text("\(dayNumber)")
             .font(Theme.mono(isToday ? 10.5 : 10, isToday ? .bold : .regular))
             .foregroundStyle(
@@ -148,6 +161,61 @@ struct DayCellView: View {
                 dayKey: dayKey,
                 isTargeted: $dropHovering
             ))
+    }
+
+    /// 夜之城格子：数字 + 青色刻度；今天＝黄色切角块；未结＝洋红点。
+    private var nightCell: some View {
+        Group {
+            if isToday {
+                Text("\(dayNumber)")
+                    .font(Theme.mono(10.5, .bold))
+                    .foregroundStyle(Theme.fillInk)
+                    .frame(width: 21, height: 21)
+                    .background(Theme.accent)
+                    .clipShape(CutCornerShape(radius: 5))
+            } else {
+                Text("\(dayNumber)")
+                    .font(Theme.mono(10.5))
+                    .foregroundStyle(
+                        isFuture ? Theme.faint.opacity(0.6)
+                            : (inMonth ? Theme.ink2 : Theme.faint.opacity(0.3))
+                    )
+                    .frame(width: 21, height: 21)
+                    .background(alignment: .bottom) {
+                        if hasContent {
+                            Rectangle()
+                                .fill(isFuture ? Theme.faint.opacity(0.45) : (allDone ? Theme.ink3.opacity(0.6) : Theme.signal))
+                                .frame(width: 8, height: 2.5)
+                                .offset(y: 2)
+                        }
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        if hasUnfinished {
+                            Circle().fill(Theme.warn).frame(width: 4, height: 4).offset(x: 2, y: -1)
+                        }
+                    }
+                    .overlay {
+                        if isSelected {
+                            Rectangle().fill(Theme.accent).frame(width: 12, height: 1.5).offset(y: 11)
+                        } else if dropHovering {
+                            CutCornerShape(radius: 4)
+                                .stroke(Theme.accent, lineWidth: 1.2)
+                                .frame(width: 19, height: 19)
+                        }
+                    }
+            }
+        }
+        .frame(width: 23, height: 23)
+        .animation(reduceMotion ? nil : Motion.quick, value: dropHovering)
+        .animation(reduceMotion ? nil : Motion.quick, value: isSelected)
+        .contentShape(Rectangle())
+        .onTapGesture { onSelect(dayKey) }
+        .onDrop(of: [UTType.text], delegate: DayCellDropDelegate(
+            store: store,
+            drag: drag,
+            dayKey: dayKey,
+            isTargeted: $dropHovering
+        ))
     }
 }
 
