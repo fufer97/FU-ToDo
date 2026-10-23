@@ -187,6 +187,10 @@ public struct TaskRowView: View {
     public let onCard: Bool
     /// 页边编号：任务树的地址（01 / 01.1 / B-01），排在行首的固定列里。
     public let showsFolio: Bool
+    /// 是否画完成勾选框（夜之城的主线是标题，不配勾选框）。
+    public let showsRing: Bool
+    /// 主线的完成动作（夜之城：不配勾选框，用行尾按钮完成）。
+    public let mainCompleteAction: (() -> Void)?
 
     @State private var hovering = false
     @State private var rowWidth: CGFloat = 0
@@ -204,7 +208,9 @@ public struct TaskRowView: View {
         showsRails: Bool = true,
         showsRoleGlyph: Bool = true,
         onCard: Bool = false,
-        showsFolio: Bool = false
+        showsFolio: Bool = false,
+        showsRing: Bool = true,
+        mainCompleteAction: (() -> Void)? = nil
     ) {
         self.task = task
         self.level = level
@@ -216,6 +222,8 @@ public struct TaskRowView: View {
         self.showsRoleGlyph = showsRoleGlyph
         self.onCard = onCard
         self.showsFolio = showsFolio
+        self.showsRing = showsRing
+        self.mainCompleteAction = mainCompleteAction
     }
 
     private var ci: Color { onCard ? Theme.cardInk : Theme.ink }
@@ -241,6 +249,8 @@ public struct TaskRowView: View {
     private var isCreatingUnderThis: Bool { session.isCreating && session.targetId == task.id }
     /// glitch 套印只给夜之城的主线标题，且未完成时才亮。
     private var glitch: Bool { Theme.isNight && isMain && level == 1 && !task.done }
+    /// 夜之城：支线一级行的勾选框是菱形（Side Job 的角色语言），其余照旧。
+    private var useDiamondRing: Bool { Theme.isNight && level == 1 && !isMain }
 
     private var dropZone: DropZone? {
         guard let state = drag.target, state.targetId == task.id, state.draggedId != task.id else { return nil }
@@ -268,27 +278,47 @@ public struct TaskRowView: View {
                         RoleGlyph(isMain: task.isMain, level: level)
                     }
 
-                    RingView(level: level, done: task.done, tint: onCard ? Theme.cardInk : nil) {
-                        if task.done {
-                            store.revert(task.id)
-                        } else if readOnly || reduceMotion {
-                            store.complete(task.id)
-                            Feedback.complete()
-                        } else {
-                            showCompletionStamp()
-                            Feedback.complete()
-                            // 先看到章，再让这一行移走
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
+                    if showsRing {
+                        RingView(level: level, done: task.done, diamond: useDiamondRing, tint: onCard ? Theme.cardInk : nil) {
+                            if task.done {
+                                store.revert(task.id)
+                            } else if readOnly || reduceMotion {
                                 store.complete(task.id)
+                                Feedback.complete()
+                            } else {
+                                showCompletionStamp()
+                                Feedback.complete()
+                                // 先看到章，再让这一行移走
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
+                                    store.complete(task.id)
+                                }
                             }
                         }
+                        .scaleEffect(task.done ? 1.08 : 1)
+                        .animation(reduceMotion ? nil : Motion.ring, value: task.done)
                     }
-                    .scaleEffect(task.done ? 1.08 : 1)
-                    .animation(reduceMotion ? nil : Motion.ring, value: task.done)
 
                     titleArea
 
                     Spacer(minLength: 6)
+
+                    if let complete = mainCompleteAction, !task.done {
+                        Button(action: complete) {
+                            HStack(spacing: 5) {
+                                Image(systemName: "checkmark").font(.system(size: 9, weight: .bold))
+                                Text("完成").font(Theme.sans(11, .semibold)).tracking(1)
+                            }
+                            .foregroundStyle(hovering ? Theme.fillInk : Theme.accent)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(hovering ? Theme.accent : Color.clear)
+                            .clipShape(CutCornerShape(radius: 4))
+                            .overlay(CutCornerShape(radius: 4).stroke(Theme.accent.opacity(0.7), lineWidth: 1))
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .help("完成今天的主线")
+                    }
 
                     if !readOnly {
                         rowActions

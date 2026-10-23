@@ -1,20 +1,29 @@
 import SwiftUI
 import Core
 
-/// 圆形勾选圈（日课）：本产品唯一的「完成」操作，尺寸随层级递减。
-/// 夜之城换成切角方框——终端的复选语言。
+/// 勾选框：日课是圆形；夜之城主线子步骤是切角方框、支线是菱形。
+/// 本产品唯一的「完成」操作，尺寸随层级递减。
 public struct RingView: View {
+    public enum Form { case circle, square, diamond }
+
     public let level: Int
     public let done: Bool
+    public let diamond: Bool
     public let tint: Color?
     public let action: () -> Void
     @State private var hovering = false
 
-    public init(level: Int, done: Bool, tint: Color? = nil, action: @escaping () -> Void) {
+    public init(level: Int, done: Bool, diamond: Bool = false, tint: Color? = nil, action: @escaping () -> Void) {
         self.level = level
         self.done = done
+        self.diamond = diamond
         self.tint = tint
         self.action = action
+    }
+
+    private var form: Form {
+        if diamond { return .diamond }
+        return Theme.isNight ? .square : .circle
     }
 
     public var body: some View {
@@ -22,37 +31,31 @@ public struct RingView: View {
         let stroke = tint ?? Theme.control
         let fill = tint ?? Theme.accent
         Button(action: action) {
-            Group {
-                if Theme.isNight {
+            ZStack {
+                switch form {
+                case .circle:
+                    Circle()
+                        .fill(done ? fill : Color.clear)
+                        .frame(width: size, height: size)
+                    Circle()
+                        .strokeBorder(done ? fill : (hovering ? fill : stroke), lineWidth: level == 1 ? 1.6 : 1.3)
+                        .frame(width: size, height: size)
+                case .square:
                     let box = CutCornerShape(radius: max(2.5, size * 0.26))
-                    ZStack {
-                        if done { box.fill(fill) }
-                        box.stroke(done ? fill : (hovering ? fill : stroke), lineWidth: 1.4)
-                        if done {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: size * 0.5, weight: .bold))
-                                .foregroundStyle(Theme.fillInk)
-                        }
-                    }
-                } else {
-                    ZStack {
-                        Circle()
-                            .fill(done ? fill : Color.clear)
-                            .frame(width: size, height: size)
-                        Circle()
-                            .strokeBorder(
-                                done ? fill : (hovering ? fill : stroke),
-                                lineWidth: level == 1 ? 1.6 : 1.3
-                            )
-                            .frame(width: size, height: size)
-                        if done {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: size * 0.52, weight: .bold))
-                                .foregroundStyle(tint == nil ? Theme.surface : Theme.cardInk)
-                        }
-                    }
+                    if done { box.fill(fill) }
+                    box.stroke(done ? fill : (hovering ? fill : stroke), lineWidth: 1.4)
+                case .diamond:
+                    let box = Rectangle()
+                    if done { box.fill(fill) }
+                    box.stroke(done ? fill : (hovering ? fill : stroke), lineWidth: 1.4)
+                }
+                if done {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: size * 0.5, weight: .bold))
+                        .foregroundStyle(Theme.fillInk)
                 }
             }
+            .scaleEffect(form == .diamond ? 0.82 : 1)
             .frame(width: size, height: size)
             .contentShape(Rectangle())
         }

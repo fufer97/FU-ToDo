@@ -62,24 +62,26 @@ public struct DayPageView: View {
     private var cnDate: String { DayKey.cnLabel(for: day) }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            header
-            ScrollView {
-                Group {
-                    if Theme.isNight {
-                        nightLayout
-                    } else {
+        Group {
+            if Theme.isNight {
+                // 夜之城：整页固定视口（不滚动），滚动只发生在三个面板内部
+                nightLayout
+                    .frame(maxHeight: .infinity, alignment: .top)
+            } else {
+                VStack(alignment: .leading, spacing: 0) {
+                    header
+                    ScrollView {
                         rikeLayout
+                            .padding(.bottom, 26)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if drag.draggingId == nil { session.finishByClickingAway(store: store) }
+                            }
+                            .animation(listAnimation, value: store.tasks)
+                            .animation(listAnimation, value: store.selectedDay)
                     }
                 }
-                .padding(.bottom, 26)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if drag.draggingId == nil { session.finishByClickingAway(store: store) }
-                }
-                .animation(listAnimation, value: store.tasks)
-                .animation(listAnimation, value: store.selectedDay)
             }
         }
         .onChange(of: collapseCards) { _, collapsed in
@@ -191,29 +193,24 @@ public struct DayPageView: View {
         .padding(.top, 34)
     }
 
-    /// 夜之城：任务日志三面板——主线铺满在上，
-    /// 支线与已完成左右并排在下（1.35 : 1），底部状态行。
-    /// 面板高度固定，内容超出在面板内滚动。
+    /// 夜之城：任务日志三面板——主线小面板在上（高度小于下面一行），
+    /// 支线与已完成左右并排（1.35 : 1，支线长于完成），底部状态行。
+    /// 整页不滚动；面板内部各自滚动。
     private var nightLayout: some View {
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(alignment: .leading, spacing: 20) {
             nightMainPanel
-                .frame(height: 320)
+                .frame(height: 232)
             HStack(alignment: .top, spacing: 22) {
-                if finished.isEmpty {
-                    nightSidePanel
-                        .frame(height: 280)
-                } else if logRowWidth < 100 {
-                    // 宽度还没量到（首帧/切换主题后重建）：先弹性布局，量到后按比例。
-                    nightSidePanel.frame(height: 280)
-                    nightDonePanel.frame(height: 280)
-                } else {
-                    let usable = max(0, logRowWidth - 22)
-                    nightSidePanel
-                        .frame(width: usable * 0.575, height: 280, alignment: .topLeading)
+                nightSidePanel
+                    .frame(maxHeight: .infinity)
+                    .frame(maxWidth: .infinity)
+                if !nightFinished.isEmpty {
                     nightDonePanel
-                        .frame(width: usable * 0.425, height: 280, alignment: .topLeading)
+                        .frame(maxHeight: .infinity)
+                        .frame(width: logRowWidth >= 100 ? max(0, logRowWidth - 22) * 0.425 : 320)
                 }
             }
+            .frame(maxHeight: .infinity, alignment: .top)
             .background(
                 GeometryReader { geo in
                     Color.clear
@@ -222,10 +219,21 @@ public struct DayPageView: View {
                 }
             )
             nightStatus
-                .padding(.top, 2)
         }
         .padding(.horizontal, 34)
-        .padding(.top, 26)
+        .padding(.top, 28)
+        .padding(.bottom, 20)
+    }
+
+    /// 当天的主线（含已完成）：一天只有一个；完成后留在主线面板里，
+    /// 不进已完成面板，并且可以接着写新的主线。
+    private var mainAny: Task? {
+        store.tasks.first { $0.day == day && $0.isMain && $0.parentId == nil }
+    }
+
+    /// 夜之城的已完成面板：只收支线（主线留在主线面板）。
+    private var nightFinished: [Task] {
+        finished.filter { !$0.isMain }
     }
 
     /// 分栏之间的空隙：一整行 breathing（日课用）。
@@ -361,53 +369,96 @@ public struct DayPageView: View {
 
     // MARK: 夜之城三面板
 
-    /// 主线任务面板（22pt 大切角，铺满宽度）：黄标签 + JOB 码 + glitch 标题 + 目标列表。
-    /// 面板高度固定，目标多时在面板内滚动。
+    /// 主线任务面板（22pt 大切角）：黄标签 + JOB 码 + DIN 标题 + 目标列表。
+    /// 主线不配勾选框——完成用行尾的「完成」按钮；完成后留在面板里标「今日主线已完成」。
     @ViewBuilder
     private var nightMainPanel: some View {
         NightPanel(corner: 22) {
             VStack(alignment: .leading, spacing: 0) {
-                nightQuestHeader
-                if let goal = mainGoal {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 0) {
+                if let m = mainAny, m.done {
+                    doneQuestHeader
+                } else {
+                    nightQuestHeader
+                }
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if let goal = mainAny {
                             draggableCard(goal, at: 0, in: [goal]) {
                                 VStack(alignment: .leading, spacing: 0) {
-                                    TaskRowView(task: goal, level: 1, isMain: true, showsRoleGlyph: false, onCard: true, showsFolio: false)
-                                        .padding(.top, 12)
+                                    TaskRowView(
+                                        task: goal,
+                                        level: 1,
+                                        isMain: true,
+                                        showsRoleGlyph: false,
+                                        onCard: true,
+                                        showsFolio: false,
+                                        showsRing: false,
+                                        mainCompleteAction: goal.done ? nil : { store.complete(goal.id) }
+                                    )
+                                    .padding(.top, 10)
                                     if !collapseCards {
+                                        // 主线下方的横线：把它衬成「这一天的主题」，而不是一条任务
+                                        Rectangle().fill(Theme.rule).frame(height: 1).padding(.top, 14)
                                         objectivesLabel
-                                            .padding(.top, 14)
+                                            .padding(.top, 12)
                                         TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
                                     }
                                 }
                             }
+                            if goal.done {
+                                writingLine(
+                                    text: $mainDraft,
+                                    placeholder: "写一条新的主线",
+                                    prominent: true,
+                                    commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" },
+                                    onTab: commitMainContinue
+                                )
+                                .padding(.top, 16)
+                            }
                             rootDropZone
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .frame(maxHeight: .infinity)
-                } else {
-                    ScrollView {
-                        writingLine(
-                            text: $mainDraft,
-                            placeholder: isToday ? "写下今天最重要的一件事" : "写下这一天最重要的事",
-                            prominent: true,
-                            commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" },
-                            onTab: commitMainContinue
-                        )
-                        .padding(.top, 16)
-                        if !roots.isEmpty {
-                            Text("NO MAIN JOB · 今天还没有主线")
-                                .font(Theme.mono(9))
-                                .tracking(1.5)
-                                .foregroundStyle(Theme.ink3)
-                                .padding(.top, 10)
+                        } else {
+                            writingLine(
+                                text: $mainDraft,
+                                placeholder: isToday ? "写下今天最重要的一件事" : "写下这一天最重要的事",
+                                prominent: true,
+                                commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" },
+                                onTab: commitMainContinue
+                            )
+                            .padding(.top, 12)
+                            if !roots.isEmpty {
+                                Text("NO MAIN JOB · 今天还没有主线")
+                                    .font(Theme.mono(9))
+                                    .tracking(1.5)
+                                    .foregroundStyle(Theme.ink3)
+                                    .padding(.top, 10)
+                            }
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .frame(maxHeight: .infinity)
             }
         }
+    }
+
+    /// 主线完成后的标签行：不进已完成面板，留在主线位。
+    private var doneQuestHeader: some View {
+        HStack(spacing: 14) {
+            Text("今日主线已完成")
+                .font(Theme.mono(10, .bold))
+                .tracking(2)
+                .foregroundStyle(Theme.accent)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 3)
+                .clipShape(CutCornerShape(radius: 5))
+                .overlay(CutCornerShape(radius: 5).stroke(Theme.accent, lineWidth: 1.2))
+            Text("JOB_\(dayOfYear) // DONE")
+                .font(Theme.mono(9.5))
+                .tracking(1.5)
+                .foregroundStyle(Theme.ink3)
+            Spacer(minLength: 0)
+        }
+        .padding(.bottom, 2)
     }
 
     /// 支线面板（14pt 切角）：菱形角色标 + 行间 hairline；固定高度，超出内部滚动。
@@ -426,9 +477,9 @@ public struct DayPageView: View {
                         ForEach(Array(branches.enumerated()), id: \.element.id) { index, task in
                             draggableCard(task, at: index, in: branches) {
                                 VStack(alignment: .leading, spacing: 0) {
-                                    TaskRowView(task: task, level: 1, showsRoleGlyph: true, onCard: true, showsFolio: true)
+                                    TaskRowView(task: task, level: 1, showsRoleGlyph: false, onCard: true, showsFolio: true)
                                     if !collapseCards {
-                                        TaskSubtreeView(parentId: task.id, level: 2, showsRails: false, showsRoleGlyph: true, onCard: true)
+                                        TaskSubtreeView(parentId: task.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
                                     }
                                 }
                                 .padding(.vertical, 9)
@@ -482,10 +533,10 @@ public struct DayPageView: View {
     private var nightDonePanel: some View {
         NightPanel(corner: 14) {
             VStack(alignment: .leading, spacing: 0) {
-                nightPanelLabel("COMPLETED · 已完成 · \(finished.count)")
+                nightPanelLabel("COMPLETED · 已完成 · \(nightFinished.count)")
                 ScrollView {
                     VStack(spacing: 0) {
-                        ForEach(Array(finished.enumerated()), id: \.element.id) { index, task in
+                        ForEach(Array(nightFinished.enumerated()), id: \.element.id) { index, task in
                             VStack(alignment: .leading, spacing: 0) {
                                 TaskRowView(task: task, level: 1, readOnly: true, showsRevert: true, showsRoleGlyph: false, onCard: true, showsFolio: true)
                                 if !collapseCards {
@@ -494,7 +545,7 @@ public struct DayPageView: View {
                             }
                             .padding(.vertical, 8)
                             .overlay(alignment: .bottom) {
-                                if index < finished.count - 1 {
+                                if index < nightFinished.count - 1 {
                                     Rectangle().fill(Theme.rule).frame(height: 1)
                                 }
                             }

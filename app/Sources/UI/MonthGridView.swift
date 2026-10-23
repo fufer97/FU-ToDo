@@ -45,7 +45,6 @@ public struct MonthGridView: View {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
                         .font(Theme.mono(Theme.isNight ? 9 : 8))
-                        .tracking(1)
                         .foregroundStyle(Theme.ink3)
                         .frame(width: cell)
                 }
@@ -90,6 +89,8 @@ struct DayCellView: View {
 
     @State private var dropHovering = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// 与表头同一把尺：格子尺寸随主题变，表头和数字永远同列宽。
+    private var cell: CGFloat { Theme.isNight ? 26 : 23 }
 
     private var isToday: Bool { dayKey == store.currentDay }
     private var isFuture: Bool { dayKey > store.currentDay }
@@ -121,7 +122,7 @@ struct DayCellView: View {
                     : (isFuture ? Theme.faint.opacity(0.75)
                         : (inMonth ? Theme.ink3 : Theme.faint.opacity(0.4)))
             )
-            .frame(width: 23, height: 23)
+            .frame(width: cell, height: cell)
             .background(alignment: .bottom) {
                 if hasContent {
                     Group {
@@ -140,11 +141,11 @@ struct DayCellView: View {
                 if isToday {
                     Circle()
                         .strokeBorder(Theme.accent, lineWidth: 1)
-                        .frame(width: 19, height: 19)
+                        .frame(width: cell - 4, height: cell - 4)
                 } else if dropHovering {
                     Circle()
                         .strokeBorder(Theme.accent, lineWidth: 1.4)
-                        .frame(width: 19, height: 19)
+                        .frame(width: cell - 4, height: cell - 4)
                 } else if isSelected {
                     Rectangle()
                         .fill(Theme.ink2)
@@ -171,7 +172,7 @@ struct DayCellView: View {
                 Text("\(dayNumber)")
                     .font(Theme.mono(11.5, .bold))
                     .foregroundStyle(Theme.fillInk)
-                    .frame(width: 21, height: 21)
+                    .frame(width: cell - 5, height: cell - 5)
                     .background(Theme.accent)
                     .clipShape(CutCornerShape(radius: 5))
             } else {
@@ -181,7 +182,7 @@ struct DayCellView: View {
                         isFuture ? Theme.faint.opacity(0.6)
                             : (inMonth ? Theme.ink2 : Theme.faint.opacity(0.3))
                     )
-                    .frame(width: 21, height: 21)
+                    .frame(width: cell - 5, height: cell - 5)
                     .background(alignment: .bottom) {
                         if hasContent {
                             Rectangle()
@@ -201,12 +202,12 @@ struct DayCellView: View {
                         } else if dropHovering {
                             CutCornerShape(radius: 4)
                                 .stroke(Theme.accent, lineWidth: 1.2)
-                                .frame(width: 19, height: 19)
+                                .frame(width: cell - 4, height: cell - 4)
                         }
                     }
             }
         }
-        .frame(width: 23, height: 23)
+        .frame(width: cell, height: cell)
         .animation(reduceMotion ? nil : Motion.quick, value: dropHovering)
         .animation(reduceMotion ? nil : Motion.quick, value: isSelected)
         .contentShape(Rectangle())
