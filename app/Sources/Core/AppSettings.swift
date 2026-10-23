@@ -1,13 +1,13 @@
 import Foundation
 import CoreGraphics
 
-/// 主题：4.0 起只有两套——排印日课（默认，纸与朱砂）与夜之城终端（深色）。
-/// 2.0 的三套「世界」（器物 / 标本室 / 蓝图 / 酸纸）已退役，旧数据自动落到日课。
+/// 主题：4.0 起只有两套——夜之城终端（默认，深色）与排印日课（纸与朱砂）。
+/// 2.0 的三套「世界」（器物 / 标本室 / 蓝图 / 酸纸）已退役，旧数据自动落到夜之城。
 public enum ThemeChoice: String, Codable, CaseIterable, Equatable {
     case rike    // 排印日课
-    case night   // 夜之城终端
+    case night   // 夜之城终端（默认）
 
-    public static var available: [ThemeChoice] { [.rike, .night] }
+    public static var available: [ThemeChoice] { [.night, .rike] }
 
     public var label: String {
         switch self {
@@ -30,9 +30,9 @@ public enum ThemeChoice: String, Codable, CaseIterable, Equatable {
         }
     }
 
-    /// 2.0 旧主题值 → 4.0 主题（全部落到日课）。
+    /// 2.0 旧主题值与未知值 → 4.0 默认（夜之城）。
     public static func migrate(_ raw: String) -> ThemeChoice {
-        ThemeChoice(rawValue: raw) ?? .rike
+        ThemeChoice(rawValue: raw) ?? .night
     }
 }
 
@@ -66,7 +66,7 @@ public struct AppSettings: Codable, Equatable {
     /// 完成 / 翻页时的轻音效与触感
     public var soundEnabled: Bool
     public init(
-        theme: ThemeChoice = .rike,
+        theme: ThemeChoice = .night,
         fontScale: FontScale = .medium,
         autoCheckUpdates: Bool = true,
         soundEnabled: Bool = true
@@ -77,12 +77,12 @@ public struct AppSettings: Codable, Equatable {
         self.soundEnabled = soundEnabled
     }
 
-    /// 容错解码：2.0 的旧主题值（atelier / herbarium / acid / blueprint）一律落到日课，不丢数据。
+    /// 容错解码：2.0 的旧主题值（atelier / herbarium / acid / blueprint）一律落到夜之城，不丢数据。
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         // 先按字符串读再迁移：直接 decode 枚举遇到旧值会抛错，导致整个数据文件读不进来。
         let rawTheme = try c.decodeIfPresent(String.self, forKey: .theme)
-        theme = rawTheme.map { ThemeChoice.migrate($0) } ?? .rike
+        theme = rawTheme.map { ThemeChoice.migrate($0) } ?? .night
         fontScale = try c.decodeIfPresent(FontScale.self, forKey: .fontScale) ?? .medium
         autoCheckUpdates = try c.decodeIfPresent(Bool.self, forKey: .autoCheckUpdates) ?? true
         soundEnabled = try c.decodeIfPresent(Bool.self, forKey: .soundEnabled) ?? true

@@ -386,7 +386,8 @@ public struct DoneSheetView: View {
     private var list: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                let items = store.doneTasks
+                // 只列顶层完成树（一棵树一行），子步骤不重复——和「今日完成」栏同一规则
+                let items = store.doneTasks.filter { $0.parentId == nil }
                 if items.isEmpty {
                     emptyState
                 } else {
@@ -437,40 +438,39 @@ public struct DoneSheetView: View {
     }
 }
 
+/// 已结束清单里的一行：登记纸语法——日期、事名、结束方式、恢复。不再画树线。
 private struct DoneRowView: View {
     @EnvironmentObject var store: TaskStore
     let task: Task
     @State private var hovering = false
 
     var body: some View {
-        let level = min(store.level(of: task), 3)
-        HStack(spacing: 0) {
-            TreeRails(level: level)
-            HStack(alignment: .center, spacing: 9) {
-                RoleGlyph(isMain: task.isMain, level: level)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(task.title)
-                        .font(Theme.titleFont(level))
-                        .foregroundStyle(Theme.doneInk)
-                        .strikethrough(true, color: Theme.doneInk)
-                        .lineLimit(1)
-                    Text("\(dateStamp(task.day))  /  \(task.doneKind == .ignored ? "结束时选择不做" : "勾选完成")  /  \(relativeText(task))")
-                        .font(Theme.mono(Theme.metaSize - 1.5))
-                        .tracking(0.8)
-                        .foregroundStyle(Theme.ink3)
-                }
-                Spacer(minLength: 12)
-                QuietAction(title: "恢复", tone: .accent) {
-                    store.revert(task.id)
-                }
-                .opacity(hovering ? 1 : 0.72)
-                .contextMenu {
-                    Button("恢复这条及其子步骤") { store.revertSubtree(task.id) }
-                }
-                .help("恢复这条并连带它上面的任务链；右键可以连同子步骤一起恢复")
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Text(dateStamp(task.day))
+                .font(Theme.mono(9.5))
+                .tracking(0.8)
+                .foregroundStyle(Theme.ink3)
+                .frame(width: 68, alignment: .leading)
+            Text(task.title)
+                .font(Theme.sans(Theme.mainSize))
+                .foregroundStyle(Theme.doneInk)
+                .strikethrough(true, color: Theme.doneInk.opacity(0.7))
+                .lineLimit(1)
+            Text(task.doneKind == .ignored ? "结束时选择不做" : "勾选完成")
+                .font(Theme.mono(9))
+                .tracking(0.5)
+                .foregroundStyle(Theme.ink3)
+            Spacer(minLength: 12)
+            QuietAction(title: "恢复", tone: .accent) {
+                store.revert(task.id)
             }
-            .padding(.vertical, 8)
+            .opacity(hovering ? 1 : 0.72)
+            .contextMenu {
+                Button("恢复这条及其子步骤") { store.revertSubtree(task.id) }
+            }
+            .help("恢复这条并连带它上面的任务链；右键可以连同子步骤一起恢复")
         }
+        .padding(.vertical, 8)
         .background(hovering ? Theme.ink.opacity(0.035) : Color.clear)
         .contentShape(Rectangle())
         .onHover { hovering = $0 }

@@ -287,6 +287,8 @@ struct RenderMain {
         let url = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("yrjy-shot-\(UUID().uuidString).json")
         let store = TaskStore(storeURL: url, today: DayKey.key())
+        // 4.0 起默认主题是夜之城；截图基线固定用日课，夜之城在各自的段落里显式切换。
+        store.updateSettings { $0.theme = .rike }
         if seeded {
             SampleData.populate(store)
             store.selectDay(store.currentDay)

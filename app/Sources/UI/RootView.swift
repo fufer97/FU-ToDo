@@ -41,7 +41,7 @@ public struct RootView: View {
                 HStack(spacing: 0) {
                     rail
                     DayPageView(day: store.selectedDay)
-                        .id(store.selectedDay)
+                        .id("\(store.selectedDay)-\(Theme.choice)")
                         .frame(maxWidth: 660)
                         .frame(maxHeight: .infinity)
                         .background(
@@ -160,6 +160,7 @@ public struct RootView: View {
                 HudButton("未完成", count: store.poolCount, action: { showPool = true })
                 HudButton("已结束", count: store.doneTasks.count, action: { showDone = true })
                 HudButton("年视图", action: { showYear = true })
+                HudButton("说明", action: { openWindow(id: "help") })
                 HudButton("设置", action: { openSettings() })
             }
             .padding(.horizontal, 24)
@@ -171,7 +172,7 @@ public struct RootView: View {
             HStack(spacing: 0) {
                 nightRail
                 DayPageView(day: store.selectedDay)
-                    .id(store.selectedDay)
+                    .id("\(store.selectedDay)-\(Theme.choice)")
                     .frame(maxWidth: .infinity)
                     .frame(maxHeight: .infinity)
                     .background(
@@ -228,11 +229,11 @@ public struct RootView: View {
             .tracking(2)
             .foregroundStyle(Theme.ink3)
         }
-        .padding(.leading, 32)
-        .padding(.trailing, 20)
+        .padding(.leading, 30)
+        .padding(.trailing, 24)
         .padding(.top, 30)
         .padding(.bottom, 28)
-        .frame(width: 264, alignment: .topLeading)
+        .frame(width: 242, alignment: .topLeading)
         .frame(maxHeight: .infinity, alignment: .top)
         .background(Theme.canvas)
         .overlay(alignment: .trailing) {

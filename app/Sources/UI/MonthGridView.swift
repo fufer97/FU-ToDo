@@ -13,7 +13,8 @@ public struct MonthGridView: View {
     public let onSelect: (String) -> Void
 
     private let weekdaySymbols = ["一", "二", "三", "四", "五", "六", "日"]
-    private let cell: CGFloat = 23
+    /// 夜之城的格子更大更清楚（终端读数），日课保持细小的页边注记。
+    private var cell: CGFloat { Theme.isNight ? 26 : 23 }
     private let rowGap: CGFloat = 8
 
     private var calendar: Calendar {
@@ -43,7 +44,7 @@ public struct MonthGridView: View {
             HStack(spacing: 0) {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
-                        .font(Theme.mono(8))
+                        .font(Theme.mono(Theme.isNight ? 9 : 8))
                         .tracking(1)
                         .foregroundStyle(Theme.ink3)
                         .frame(width: cell)
@@ -114,7 +115,7 @@ struct DayCellView: View {
     /// 日课格子：数字 + 墨点；今天＝朱砂圈。
     private var rikeCell: some View {
         Text("\(dayNumber)")
-            .font(Theme.mono(isToday ? 10.5 : 10, isToday ? .bold : .regular))
+            .font(Theme.mono(isToday ? 11.5 : (Theme.isNight ? 11 : 10), isToday ? .bold : .regular))
             .foregroundStyle(
                 isToday ? Theme.todayInk
                     : (isFuture ? Theme.faint.opacity(0.75)
@@ -168,14 +169,14 @@ struct DayCellView: View {
         Group {
             if isToday {
                 Text("\(dayNumber)")
-                    .font(Theme.mono(10.5, .bold))
+                    .font(Theme.mono(11.5, .bold))
                     .foregroundStyle(Theme.fillInk)
                     .frame(width: 21, height: 21)
                     .background(Theme.accent)
                     .clipShape(CutCornerShape(radius: 5))
             } else {
                 Text("\(dayNumber)")
-                    .font(Theme.mono(10.5))
+                    .font(Theme.mono(11))
                     .foregroundStyle(
                         isFuture ? Theme.faint.opacity(0.6)
                             : (inMonth ? Theme.ink2 : Theme.faint.opacity(0.3))

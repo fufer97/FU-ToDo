@@ -45,6 +45,17 @@ do {
     check("结束方式为勾选完成", s.task(goal.id)?.doneKind == .checked)
     check("完成后离开今日页", s.todayRoots.isEmpty)
     check("提示语说明连带数量", s.toast?.contains("连带 2 个子步骤") == true)
+
+    // 完成庆典：只给「主线」的勾选完成
+    let s2 = makeStore()
+    let m2 = s2.addTopLevel("今日主线")!
+    s2.setMain(m2.id)
+    _ = s2.addTopLevel("普通支线")!
+    s2.complete(s2.branches(on: s2.currentDay)[0].id)
+    check("完成支线不触发庆典", s2.celebratedMainId == nil)
+    s2.complete(m2.id)
+    check("完成主线触发庆典信号", s2.celebratedMainId == m2.id)
+
     s.undo()
     check("撤销后回到未完成", s.subtree(goal.id).allSatisfy { !$0.done })
     check("撤销后回到今日页", s.todayRoots.count == 1)
@@ -886,15 +897,15 @@ do {
         .write(to: legacy, atomically: true, encoding: .utf8)
     let old = TaskStore(storeURL: legacy)
     check("老数据文件缺字段也能读", !old.welcomeSeen && old.tasks.isEmpty)
-    check("老数据缺主题字段落到日课", old.settings.theme == .rike)
+    check("老数据缺主题字段落到夜之城", old.settings.theme == .night)
 
-    // 2.0 的旧主题值 → 4.0 的日课
+    // 2.0 的旧主题值 → 4.0 的夜之城
     let legacyTheme = URL(fileURLWithPath: NSTemporaryDirectory())
         .appendingPathComponent("yrjy-legacy-theme-\(UUID().uuidString).json")
     try? #"{"currentDay":"2026-10-08","tasks":[],"settings":{"theme":"atelier","fontScale":"large"}}"#
         .write(to: legacyTheme, atomically: true, encoding: .utf8)
     let oldTheme = TaskStore(storeURL: legacyTheme)
-    check("2.0 旧主题（器物）迁移到日课", oldTheme.settings.theme == .rike)
+    check("2.0 旧主题（器物）迁移到夜之城", oldTheme.settings.theme == .night)
     check("旧字号档位保留", oldTheme.settings.fontScale == .large)
     try? FileManager.default.removeItem(at: legacyTheme)
 

@@ -74,6 +74,8 @@ public final class TaskStore: ObservableObject {
 
     /// 从清单跳过来时，短暂高亮的那一条。
     @Published public var focusedTaskId: UUID?
+    /// 刚被完成的主线（触发「今日一件」的完成庆典）；UI 消费后清空。
+    @Published public var celebratedMainId: UUID?
 
     private var undoBuffer: [Task]?
     private var toastWorkItem: DispatchWorkItem?
@@ -577,6 +579,8 @@ public final class TaskStore: ObservableObject {
             tasks[i].doneKind = kind
             tasks[i].endedAt = now
         }
+        // 完成的是主线 → 广播给界面做「今日一件」的完成庆典
+        if target.isMain && kind == .checked { celebratedMainId = id }
         let extra = affected.count - 1
         let word = kind == .ignored ? "已结束" : "已完成"
         _ = target

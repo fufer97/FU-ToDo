@@ -26,6 +26,8 @@ public struct DayPageView: View {
     @State private var dragWatchdog: Timer?
     /// 夜之城下方的两栏宽度（按 1.35 : 1 分配，需要读到实际宽度）。
     @State private var logRowWidth: CGFloat = 0
+    /// 「今日一件」完成庆典正在展示的主线标题。
+    @State private var ceremonyTitle: String?
 
     private var listAnimation: Animation? { reduceMotion ? nil : Motion.spring }
 
@@ -107,6 +109,31 @@ public struct DayPageView: View {
                     if drag.draggingId == nil { session.finishByClickingAway(store: store) }
                 }
         )
+        .onChange(of: store.celebratedMainId) { _, newId in
+            guard let id = newId, let task = store.task(id) else {
+                store.celebratedMainId = nil
+                return
+            }
+            guard !reduceMotion else {
+                store.celebratedMainId = nil
+                return
+            }
+            ceremonyTitle = task.title
+            let title = task.title
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+                if ceremonyTitle == title { ceremonyTitle = nil }
+                store.celebratedMainId = nil
+            }
+        }
+        .overlay {
+            if let title = ceremonyTitle {
+                MainCeremonyOverlay(title: title) {
+                    ceremonyTitle = nil
+                    store.celebratedMainId = nil
+                }
+                .zIndex(30)
+            }
+        }
         .background(
             Button("新建支线") { inputFocused = .branch }
                 .keyboardShortcut("n", modifiers: [.command])
@@ -165,19 +192,26 @@ public struct DayPageView: View {
     }
 
     /// 夜之城：任务日志三面板——主线铺满在上，
-    /// 支线与已完成左右并排在下，底部状态行。面板铺满可用宽度，不居中悬浮。
+    /// 支线与已完成左右并排在下（1.35 : 1），底部状态行。
+    /// 面板高度固定，内容超出在面板内滚动。
     private var nightLayout: some View {
         VStack(alignment: .leading, spacing: 22) {
             nightMainPanel
+                .frame(height: 320)
             HStack(alignment: .top, spacing: 22) {
                 if finished.isEmpty {
                     nightSidePanel
+                        .frame(height: 280)
+                } else if logRowWidth < 100 {
+                    // 宽度还没量到（首帧/切换主题后重建）：先弹性布局，量到后按比例。
+                    nightSidePanel.frame(height: 280)
+                    nightDonePanel.frame(height: 280)
                 } else {
                     let usable = max(0, logRowWidth - 22)
                     nightSidePanel
-                        .frame(width: usable * 0.575, alignment: .topLeading)
+                        .frame(width: usable * 0.575, height: 280, alignment: .topLeading)
                     nightDonePanel
-                        .frame(width: usable * 0.425, alignment: .topLeading)
+                        .frame(width: usable * 0.425, height: 280, alignment: .topLeading)
                 }
             }
             .background(
@@ -309,11 +343,10 @@ public struct DayPageView: View {
                 writingLine(
                     text: $mainDraft,
                     placeholder: isToday ? "写下今天最重要的一件事" : "写下这一天最重要的事",
-                    prominent: true
-                ) {
-                    store.addMain(mainDraft, on: day)
-                    mainDraft = ""
-                }
+                    prominent: true,
+                    commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" },
+                    onTab: commitMainContinue
+                )
                 .padding(.top, 18)
                 if !roots.isEmpty {
                     Text("今天还没有主线")
@@ -329,47 +362,55 @@ public struct DayPageView: View {
     // MARK: 夜之城三面板
 
     /// 主线任务面板（22pt 大切角，铺满宽度）：黄标签 + JOB 码 + glitch 标题 + 目标列表。
+    /// 面板高度固定，目标多时在面板内滚动。
     @ViewBuilder
     private var nightMainPanel: some View {
         NightPanel(corner: 22) {
             VStack(alignment: .leading, spacing: 0) {
                 nightQuestHeader
                 if let goal = mainGoal {
-                    draggableCard(goal, at: 0, in: [goal]) {
+                    ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
-                            TaskRowView(task: goal, level: 1, isMain: true, showsRoleGlyph: false, onCard: true, showsFolio: false)
-                                .padding(.top, 12)
-                            if !collapseCards {
-                                objectivesLabel
-                                    .padding(.top, 14)
-                                TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
+                            draggableCard(goal, at: 0, in: [goal]) {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    TaskRowView(task: goal, level: 1, isMain: true, showsRoleGlyph: false, onCard: true, showsFolio: false)
+                                        .padding(.top, 12)
+                                    if !collapseCards {
+                                        objectivesLabel
+                                            .padding(.top, 14)
+                                        TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
+                                    }
+                                }
                             }
+                            rootDropZone
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    rootDropZone
+                    .frame(maxHeight: .infinity)
                 } else {
-                    writingLine(
-                        text: $mainDraft,
-                        placeholder: isToday ? "写下今天最重要的一件事" : "写下这一天最重要的事",
-                        prominent: true
-                    ) {
-                        store.addMain(mainDraft, on: day)
-                        mainDraft = ""
-                    }
-                    .padding(.top, 20)
-                    if !roots.isEmpty {
-                        Text("NO MAIN JOB · 今天还没有主线")
-                            .font(Theme.mono(9))
-                            .tracking(1.5)
-                            .foregroundStyle(Theme.ink3)
-                            .padding(.top, 10)
+                    ScrollView {
+                        writingLine(
+                            text: $mainDraft,
+                            placeholder: isToday ? "写下今天最重要的一件事" : "写下这一天最重要的事",
+                            prominent: true,
+                            commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" },
+                            onTab: commitMainContinue
+                        )
+                        .padding(.top, 16)
+                        if !roots.isEmpty {
+                            Text("NO MAIN JOB · 今天还没有主线")
+                                .font(Theme.mono(9))
+                                .tracking(1.5)
+                                .foregroundStyle(Theme.ink3)
+                                .padding(.top, 10)
+                        }
                     }
                 }
             }
         }
     }
 
-    /// 支线面板（14pt 切角）：菱形角色标 + 行间 hairline；整栏投放机械与日课同一套。
+    /// 支线面板（14pt 切角）：菱形角色标 + 行间 hairline；固定高度，超出内部滚动。
     private var nightSidePanel: some View {
         NightPanel(corner: 14) {
             VStack(alignment: .leading, spacing: 0) {
@@ -380,79 +421,88 @@ public struct DayPageView: View {
                         enabled: { store.canBecomeBranch($0.id, on: day) }
                     ))
 
-                VStack(spacing: 0) {
-                    ForEach(Array(branches.enumerated()), id: \.element.id) { index, task in
-                        draggableCard(task, at: index, in: branches) {
-                            VStack(alignment: .leading, spacing: 0) {
-                                TaskRowView(task: task, level: 1, showsRoleGlyph: true, onCard: true, showsFolio: true)
-                                if !collapseCards {
-                                    TaskSubtreeView(parentId: task.id, level: 2, showsRails: false, showsRoleGlyph: true, onCard: true)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(Array(branches.enumerated()), id: \.element.id) { index, task in
+                            draggableCard(task, at: index, in: branches) {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    TaskRowView(task: task, level: 1, showsRoleGlyph: true, onCard: true, showsFolio: true)
+                                    if !collapseCards {
+                                        TaskSubtreeView(parentId: task.id, level: 2, showsRails: false, showsRoleGlyph: true, onCard: true)
+                                    }
                                 }
-                            }
-                            .padding(.vertical, 9)
-                            .overlay(alignment: .bottom) {
-                                if index < branches.count - 1 {
-                                    Rectangle().fill(Theme.rule).frame(height: 1)
+                                .padding(.vertical, 9)
+                                .overlay(alignment: .bottom) {
+                                    if index < branches.count - 1 {
+                                        Rectangle().fill(Theme.rule).frame(height: 1)
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                .padding(.top, 2)
-                .coordinateSpace(name: "branchList")
-                .onPreferenceChange(CardFramePreference.self) { frames in
-                    guard drag.draggingId == nil || Date() < frameCaptureUntil else { return }
-                    if frames != liveFrames { liveFrames = frames }
-                }
-                .overlay(alignment: .topLeading) {
-                    if let insertAt = drag.insertIndex, !branches.isEmpty {
-                        BranchInsertionLine(
-                            index: insertAt,
-                            frames: frozenFrames,
-                            ids: branches.map(\.id),
-                            spacing: 0
-                        )
+                    .padding(.top, 2)
+                    .coordinateSpace(name: "branchList")
+                    .onPreferenceChange(CardFramePreference.self) { frames in
+                        guard drag.draggingId == nil || Date() < frameCaptureUntil else { return }
+                        if frames != liveFrames { liveFrames = frames }
                     }
+                    .overlay(alignment: .topLeading) {
+                        if let insertAt = drag.insertIndex, !branches.isEmpty {
+                            BranchInsertionLine(
+                                index: insertAt,
+                                frames: frozenFrames,
+                                ids: branches.map(\.id),
+                                spacing: 0
+                            )
+                        }
+                    }
+                    .onDrop(of: [UTType.text], delegate: BranchListDropDelegate(
+                        store: store,
+                        drag: drag,
+                        ids: { branches.map(\.id) },
+                        frames: { frozenFrames.isEmpty ? liveFrames : frozenFrames }
+                    ))
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .onDrop(of: [UTType.text], delegate: BranchListDropDelegate(
-                    store: store,
-                    drag: drag,
-                    ids: { branches.map(\.id) },
-                    frames: { frozenFrames.isEmpty ? liveFrames : frozenFrames }
-                ))
+                .frame(maxHeight: .infinity)
 
                 writingLine(
                     text: $branchDraft,
                     placeholder: "写一件支线",
-                    prominent: false
-                ) {
-                    store.addTopLevel(branchDraft, on: day)
-                    branchDraft = ""
-                }
+                    prominent: false,
+                    commit: { let b = store.addTopLevel(branchDraft, on: day); branchDraft = "" },
+                    onTab: commitBranchContinue
+                )
                 .padding(.top, 8)
             }
         }
     }
 
-    /// 已完成面板（窄列）：灰化 + 划线 + 黄色 ✓。
+    /// 已完成面板（窄列）：灰化 + 划线 + ✓；固定高度，超出内部滚动。
     private var nightDonePanel: some View {
         NightPanel(corner: 14) {
             VStack(alignment: .leading, spacing: 0) {
                 nightPanelLabel("COMPLETED · 已完成 · \(finished.count)")
-                ForEach(Array(finished.enumerated()), id: \.element.id) { index, task in
-                    VStack(alignment: .leading, spacing: 0) {
-                        TaskRowView(task: task, level: 1, readOnly: true, showsRevert: true, showsRoleGlyph: false, onCard: true, showsFolio: true)
-                        if !collapseCards {
-                            TaskSubtreeView(parentId: task.id, level: 2, readOnly: true, showsRevert: true, showsRails: false, showsRoleGlyph: false, onCard: true)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(Array(finished.enumerated()), id: \.element.id) { index, task in
+                            VStack(alignment: .leading, spacing: 0) {
+                                TaskRowView(task: task, level: 1, readOnly: true, showsRevert: true, showsRoleGlyph: false, onCard: true, showsFolio: true)
+                                if !collapseCards {
+                                    TaskSubtreeView(parentId: task.id, level: 2, readOnly: true, showsRevert: true, showsRails: false, showsRoleGlyph: false, onCard: true)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                            .overlay(alignment: .bottom) {
+                                if index < finished.count - 1 {
+                                    Rectangle().fill(Theme.rule).frame(height: 1)
+                                }
+                            }
                         }
                     }
-                    .padding(.vertical, 8)
-                    .overlay(alignment: .bottom) {
-                        if index < finished.count - 1 {
-                            Rectangle().fill(Theme.rule).frame(height: 1)
-                        }
-                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .frame(maxHeight: .infinity)
             }
         }
     }
@@ -571,11 +621,10 @@ public struct DayPageView: View {
             writingLine(
                 text: $branchDraft,
                 placeholder: "写一件支线",
-                prominent: false
-            ) {
-                store.addTopLevel(branchDraft, on: day)
-                branchDraft = ""
-            }
+                prominent: false,
+                commit: { let b = store.addTopLevel(branchDraft, on: day); branchDraft = "" },
+                onTab: commitBranchContinue
+            )
             .padding(.top, Theme.panelEnabled ? 14 : 6)
         }
     }
@@ -787,12 +836,14 @@ public struct DayPageView: View {
         return (index >= insertAt && index < draggedIndex) ? gap : 0
     }
 
-    /// 书写线（4.0）：主线用宋体大声部 + 朱砂下划线；支线是一条安静的幽灵行（⌘N 直达）。
+    /// 书写线（4.0）：主线用大声部 + 强调色下划线；支线是安静的幽灵行（⌘N 直达）。
+    /// 回车＝提交（同级继续写），Tab＝提交并把下一条写成它的下级（大纲编辑器语义）。
     private func writingLine(
         text: Binding<String>,
         placeholder: String,
         prominent: Bool,
-        commit: @escaping () -> Void
+        commit: @escaping () -> Void,
+        onTab: (() -> Void)? = nil
     ) -> some View {
         let field: InputField = prominent ? .main : .branch
         let active = inputFocused == field
@@ -809,6 +860,11 @@ public struct DayPageView: View {
                 .foregroundStyle(Theme.ink)
                 .focused($inputFocused, equals: field)
                 .onSubmit(commit)
+                .onKeyPress(.tab) {
+                    guard !text.wrappedValue.isEmpty, let onTab else { return .ignored }
+                    onTab()
+                    return .handled
+                }
             if prominent && !text.wrappedValue.isEmpty {
                 Button(action: commit) {
                     Text("写下来")
@@ -831,5 +887,96 @@ public struct DayPageView: View {
                 .frame(height: 1)
         }
         .animation(reduceMotion ? nil : Motion.quick, value: active)
+    }
+
+    /// 提交主线并直接开始写它的第一步（Tab）。
+    private var commitMainContinue: () -> Void {
+        {
+            let m = store.addMain(mainDraft, on: day)
+            mainDraft = ""
+            if let m { session.startCreate(store: store, at: m.id, mode: .child) }
+        }
+    }
+
+    /// 提交支线并直接开始写它的下级（Tab）。
+    private var commitBranchContinue: () -> Void {
+        {
+            let b = store.addTopLevel(branchDraft, on: day)
+            branchDraft = ""
+            if let b { session.startCreate(store: store, at: b.id, mode: .child) }
+        }
+    }
+}
+
+/// 「今日一件」的完成庆典：主线标题被一道强调色的横线划过，印章砸落。
+/// 日课＝朱砂「日」章；夜之城＝黄色切角 COMPLETE。点击任意处可提前关闭。
+struct MainCeremonyOverlay: View {
+    let title: String
+    let onClose: () -> Void
+
+    @State private var struck = false
+    @State private var stamped = false
+
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(Theme.canvas)
+                .opacity(0.93)
+                .contentShape(Rectangle())
+                .onTapGesture { onClose() }
+            VStack(spacing: 26) {
+                Text(title)
+                    .font(Theme.display(Theme.isNight ? 28 : 32))
+                    .tracking(1)
+                    .foregroundStyle(Theme.ink3)
+                    .padding(.horizontal, 6)
+                    .overlay(alignment: .leading) {
+                        GeometryReader { geo in
+                            Rectangle()
+                                .fill(Theme.accent)
+                                .frame(height: 3)
+                                .frame(width: struck ? geo.size.width : 0)
+                                .offset(y: geo.size.height / 2)
+                        }
+                    }
+                    .rotationEffect(.degrees(-0.5))
+
+                Group {
+                    if Theme.isNight {
+                        Text("COMPLETE")
+                            .font(Theme.display(19))
+                            .tracking(5)
+                            .foregroundStyle(Theme.fillInk)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 8)
+                            .background(Theme.accent)
+                            .clipShape(CutCornerShape(radius: 9))
+                    } else {
+                        ZStack {
+                            Circle().strokeBorder(Theme.accent, lineWidth: 2)
+                            Text("日")
+                                .font(Theme.display(28))
+                                .foregroundStyle(Theme.accent)
+                        }
+                        .frame(width: 68, height: 68)
+                    }
+                }
+                .scaleEffect(stamped ? 1 : 1.7)
+                .opacity(stamped ? 1 : 0)
+                .rotationEffect(.degrees(stamped ? -4 : 7))
+
+                Text("已完成 · 今日一件")
+                    .font(Theme.mono(11, .semibold))
+                    .tracking(4)
+                    .foregroundStyle(Theme.accent)
+                    .opacity(stamped ? 1 : 0)
+            }
+            .padding(36)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.55)) { struck = true }
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.6).delay(0.4)) { stamped = true }
+        }
+        .transition(.opacity)
     }
 }
