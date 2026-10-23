@@ -5,7 +5,7 @@
 ## 怎么跑起来
 
 ```bash
-cd "Documents/低精力计划App/app"
+cd fu-todo/app      # 进入本仓库的 app 目录
 
 ./build.sh          # 编译 + 跑业务规则自测 + 打包出 dist/FU ToDo.app
 ./build.sh run      # 上面全部做完，并启动应用

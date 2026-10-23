@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FU ToDo 4.0 · 一天一件，排成一页日课</title>
+<style>
+  :root{
+    --paper:#FAF9F5; --ink:#1A1A18; --ink2:#57524A; --ink3:#6E6960;
+    --hair:rgba(26,26,24,.14); --cinnabar:#C3402B; --night:#0C0D11;
+    --serif:Georgia,"Songti SC","STSong","Noto Serif SC",serif;
+    --sans:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;
+    --mono:"SF Mono",Menlo,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:auto}
+  body{
+    background:var(--paper);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;line-height:1.75;overflow-x:hidden;
+  }
+  ::selection{background:rgba(195,64,43,.18)}
+  .wrap{max-width:960px;margin:0 auto;padding:0 28px}
+  .narrow{max-width:720px;margin:0 auto;padding:0 28px}
+  img{display:block;width:100%;height:auto}
+
+  /* ── 顶栏 ─────────────────────────────── */
+  .bar{border-bottom:1px solid var(--hair);background:var(--paper);position:sticky;top:0;z-index:50}
+  .bar .in{max-width:960px;margin:0 auto;padding:14px 28px;display:flex;align-items:baseline;gap:16px}
+  .bar .logo{font-family:var(--serif);font-weight:600;font-size:17px;letter-spacing:1px}
+  .bar .logo em{font-style:normal;color:var(--cinnabar)}
+  .bar .meta{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:2px}
+  .bar .dl{margin-left:auto;font-size:12.5px;color:var(--ink2);text-decoration:none;border:1px solid var(--ink);
+    padding:5px 16px;letter-spacing:2px;transition:background .18s,color .18s}
+  .bar .dl:hover{background:var(--ink);color:var(--paper)}
+
+  /* ── 首屏 ─────────────────────────────── */
+  .hero{padding:72px 0 64px;position:relative}
+  .rule{height:3px;background:var(--ink)}
+  .hero .meta{font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:4px;margin-top:18px}
+  h1{font-family:var(--serif);font-weight:600;letter-spacing:1px;
+     font-size:clamp(38px,7.2vw,72px);line-height:1.28;margin-top:22px}
+  h1 .cinn{color:var(--cinnabar)}
+  .mask{display:block;overflow:hidden}
+  .mask>span{display:block}
+  .hero .sub{margin-top:26px;font-size:16.5px;color:var(--ink2);max-width:560px}
+  .hero .cta{margin-top:36px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  .btn-main{display:inline-block;background:var(--cinnabar);color:var(--paper);text-decoration:none;
+    font-size:15px;letter-spacing:3px;padding:13px 34px;transition:transform .15s}
+  .btn-main:hover{transform:translateY(-2px)}
+  .btn-ghost{display:inline-block;color:var(--ink2);text-decoration:none;font-size:13px;letter-spacing:2px;
+    border-bottom:1px solid var(--hair);padding-bottom:3px}
+  .hero-shot{margin-top:56px;position:relative;border:1px solid var(--hair)}
+  .hero-shot .cap{position:absolute;top:-9px;left:22px;background:var(--paper);padding:0 10px;
+    font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:2px}
+  .seal-f{position:absolute;right:6px;bottom:-26px;width:52px;height:52px;border:1.5px solid var(--cinnabar);
+    display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:22px;color:var(--cinnabar);
+    transform:rotate(-4deg);opacity:.9;pointer-events:none}
+
+  /* ── 章节 ─────────────────────────────── */
+  section.f{padding:96px 0 20px}
+  .fno{font-family:var(--serif);font-size:15px;color:var(--cinnabar);letter-spacing:6px}
+  .fno::after{content:"";display:block;width:44px;height:1px;background:var(--hair);margin-top:12px}
+  h2{font-family:var(--serif);font-weight:600;font-size:clamp(26px,4vw,38px);letter-spacing:1px;
+     line-height:1.4;margin-top:20px}
+  .lead{margin-top:18px;font-size:16px;color:var(--ink2);max-width:600px}
+  .lead b{color:var(--ink);font-weight:600}
+
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:44px 0 60px}
+  .duo .shot img{aspect-ratio:1440/900;object-fit:cover;object-position:top}
+  .shot{position:relative;border:1px solid var(--hair)}
+  .shot .tag{position:absolute;top:-9px;left:16px;background:var(--paper);padding:0 9px;
+    font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--ink3)}
+  .shot.before{filter:grayscale(.9) contrast(.92);opacity:.82}
+  .shot.after .tag{color:var(--cinnabar)}
+  @media(max-width:760px){.duo{grid-template-columns:1fr}}
+
+  .feat{display:grid;grid-template-columns:300px 1fr;gap:44px;align-items:start;padding:56px 0;border-top:1px solid var(--hair)}
+  .feat:first-of-type{border-top:none}
+  .feat .txt .fno{margin-bottom:0}
+  .feat h3{font-family:var(--serif);font-weight:600;font-size:24px;letter-spacing:1px;margin-top:16px}
+  .feat p{margin-top:14px;font-size:14.5px;color:var(--ink2)}
+  .feat p b{color:var(--ink);font-weight:600}
+  .shot.solo{margin-top:26px}
+  @media(max-width:760px){.feat{grid-template-columns:1fr;gap:18px}}
+
+  /* 密度月历演示（代码绘制） */
+  .minical{margin-top:26px;border:1px solid var(--hair);padding:20px 22px 16px;width:max-content}
+  .minical .wk{display:grid;grid-template-columns:repeat(7,26px);margin-bottom:10px}
+  .minical .wk span{font-family:var(--mono);font-size:9px;color:var(--ink3);text-align:center}
+  .minical .cells{display:grid;grid-template-columns:repeat(7,26px);row-gap:9px}
+  .minical .c{position:relative;height:24px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:10px;color:var(--ink3)}
+  .minical .c.has::after{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+    width:3.5px;height:3.5px;border-radius:50%;background:var(--ink3)}
+  .minical .c.today{color:var(--cinnabar);font-weight:700}
+  .minical .c.today::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:20px;height:20px;border:1px solid var(--cinnabar);border-radius:50%}
+  .minical .c.fu{opacity:.4}
+  @media(max-width:760px){.minical{transform:scale(.92);transform-origin:left top}}
+
+  /* ── 夜之城（章节转场：背景随滚动变色） ── */
+  .night{background:var(--night);color:#E8E6DF;padding:110px 0 90px;margin:80px 0}
+  .night .fno{color:var(--yellow,#FCEE0A)}
+  .night .fno::after{background:rgba(232,230,223,.2)}
+  .night .lead{color:#A8ACB4}
+  .night .lead b{color:#E8E6DF}
+  .night .shot{border-color:rgba(232,230,223,.18)}
+  .night .shot .tag{background:var(--night);color:#7A8088}
+  .chip{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#0C0D11;
+    background:#FCEE0A;padding:3px 12px;margin-top:20px;
+    clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+
+  /* ── 完成时刻（滚动驱动主叙事） ────────── */
+  .strike-scene{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative}
+  .strike-inner{text-align:center;padding:0 24px}
+  .strike-meta{font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:4px}
+  .strike-title{font-family:var(--serif);font-weight:600;font-size:clamp(28px,5vw,54px);
+    letter-spacing:1px;line-height:1.5;margin-top:26px;position:relative;display:inline-block}
+  .strike-title .line{position:absolute;left:-1%;top:54%;height:3px;width:0;background:var(--cinnabar);transform:rotate(-.6deg)}
+  .strike-title.done{color:var(--ink3)}
+  .strike-done{margin-top:30px;font-family:var(--mono);font-size:13px;color:var(--cinnabar);letter-spacing:6px;opacity:0}
+  .strike-seal{width:76px;height:76px;border:2px solid var(--cinnabar);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;margin:46px auto 0;
+    font-family:var(--serif);font-size:32px;color:var(--cinnabar);opacity:0}
+
+  /* ── 下载 ─────────────────────────────── */
+  .dl-sec{padding:110px 0 30px;text-align:center;border-top:1px solid var(--hair);margin-top:20px}
+  .dl-sec h2{margin-top:20px}
+  .dl-sec .btn-main{margin-top:38px;font-size:16px;padding:15px 44px}
+  .steps{display:flex;gap:0;justify-content:center;margin:46px auto 0;flex-wrap:wrap}
+  .steps .st{padding:0 26px;border-right:1px solid var(--hair)}
+  .steps .st:last-child{border-right:none}
+  .steps b{display:block;font-family:var(--serif);font-size:20px;color:var(--cinnabar)}
+  .steps span{font-size:13px;color:var(--ink2)}
+  .dl-meta{margin-top:40px;font-family:var(--mono);font-size:11.5px;color:var(--ink3);letter-spacing:1.5px;line-height:2.2}
+
+  footer{padding:70px 0 56px;text-align:center}
+  footer .tok{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:2px;line-height:2.2}
+  footer .seal-f2{width:38px;height:38px;border:1.5px solid var(--cinnabar);margin:0 auto 30px;
+    display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:var(--cinnabar);
+    transform:rotate(-4deg)}
+
+  /* ── 动效状态（仅在 JS 可用时应用初始隐藏态；遮罩用 CSS 变量驱动伪元素） ── */
+  .js .rv-line>span,.js .mask>span{transform:translateY(110%)}
+  .rv-img{overflow:hidden;position:relative}
+  .rv-img::after{content:"";position:absolute;inset:0;background:var(--paper);
+    transform:scaleY(var(--w,1));transform-origin:top;pointer-events:none}
+  .night .rv-img::after{background:var(--night)}
+  .js .rv-img img{transform:scale(1.08)}
+  .js .rv-fade{opacity:0;transform:translateY(14px)}
+  .js .rv-drop{opacity:0;transform:translateY(-18px)}
+  @media (prefers-reduced-motion:reduce){
+    .js .rv-line>span,.js .mask>span{transform:none}
+    .js .rv-img img{transform:none}
+    .rv-img::after{display:none}
+    .js .rv-fade,.js .rv-drop{opacity:1;transform:none}
+  .strike-title .line{width:101%}.strike-done{opacity:1}.strike-seal{opacity:1}
+    .strike-title{color:var(--ink3)}
+  }
+  /* ?static=1 的终态（长截图取证） */
+  html.static .strike-title .line{width:101%}
+  html.static .strike-done{opacity:1}
+  html.static .strike-seal{opacity:1}
+  html.static .strike-title{color:var(--ink3)}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="in">
+    <span class="logo">FU ToDo <em>4.0</em></span>
+    <span class="meta">排印日课</span>
+    <a class="dl" href="https://github.com/fufer97/FU-ToDo/releases/latest" target="_blank">下载</a>
+  </div>
+</div>
+
+<!-- ── 首屏 ─────────────────────────────── -->
+<header class="hero">
+  <div class="wrap">
+    <div class="rule"></div>
+    <div class="meta">FU TODO · VERSION 4.0 · 二〇二六年十月</div>
+    <h1>
+      <span class="mask"><span>一天一件，</span></span>
+      <span class="mask"><span>排成一页<span class="cinn">日课</span>。</span></span>
+    </h1>
+    <p class="sub rv-fade">每天只留一件最重要的事。4.0 把它重做成一页排好版的日课——主线是今天的标题，支线是注脚，月历是页边的密度表。零卡片、零阴影、零贴纸。</p>
+    <div class="cta rv-fade">
+      <a class="btn-main" href="https://github.com/fufer97/FU-ToDo/releases/latest" target="_blank">下载 4.0</a>
+      <a class="btn-ghost" href="#story">先看看它长什么样 ↓</a>
+    </div>
+    <div class="hero-shot rv-img">
+      <span class="cap">FU TODO 4.0 · 排印日课 · 主界面</span>
+      <img src="{{IMG_HERO}}" alt="FU ToDo 4.0 主界面：左侧月历刊眉栏，右侧是排好版的日页">
+    </div>
+    <div class="seal-f">日</div>
+  </div>
+</header>
+
+<!-- ── 为什么重做 ───────────────────────── -->
+<section class="f" id="story">
+  <div class="narrow">
+    <div class="fno rv-drop">〇一 · 为什么重做</div>
+    <h2><span class="mask"><span>我们把三套主题全删了</span></span></h2>
+    <p class="lead rv-fade">2.0 有三个「世界」：标本室、器物、蓝图。它们最终都成了<b>贴纸</b>——条码、修订章、LIVE 圆点，隐喻停在素材层，主线和支线长得一模一样。4.0 只留一页纸：<b>层级交给字号，重点交给留白，红色只出现在今天。</b></p>
+  </div>
+  <div class="wrap">
+    <div class="duo">
+      <div class="shot before rv-img"><span class="tag">2.0 · 标本室</span><img src="{{IMG_OLD}}" alt="2.0 的标本室主题界面"></div>
+      <div class="shot after rv-img"><span class="tag">4.0 · 排印日课</span><img src="{{IMG_HERO}}" alt="4.0 的排印日课界面"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 特性 ─────────────────────────────── -->
+<div class="wrap">
+
+  <div class="feat">
+    <div class="txt">
+      <div class="fno rv-drop">〇二</div>
+      <h3 class="rv-fade">主线即标题</h3>
+      <p class="rv-fade">一天里最重要的那件事，用 <b>40pt 的衬线标题</b>排进版心；支线是 15pt 的正文。字号即优先级——不用卡片、不用颜色，一眼知道今天该做什么。回车同级、Tab 下级，像大纲一样往下写。</p>
+    </div>
+    <div class="rv-img shot solo"><span class="tag">正在输入 · ↵ 同级 ⇥ 下级</span><img src="{{IMG_INPUT}}" alt="输入态：正在写一件支线"></div>
+  </div>
+
+  <div class="feat">
+    <div class="txt">
+      <div class="fno rv-drop">〇三</div>
+      <h3 class="rv-fade">不惩罚没做完</h3>
+      <p class="rv-fade">昨天的任务不会自动涌进今天。未完成清单是一张登记纸：<b>「2 天前」而不是「逾期」，「已结束」而不是「已放弃」</b>。想把哪件搬回今天，点一下「重新执行」，整棵子树一起回来。</p>
+    </div>
+    <div class="rv-img shot solo"><span class="tag">未完成清单 · 只列一级</span><img src="{{IMG_POOL}}" alt="未完成清单：按日期分组的登记纸"></div>
+  </div>
+
+  <div class="feat">
+    <div class="txt">
+      <div class="fno rv-drop">〇四</div>
+      <h3 class="rv-fade">月历只放密度</h3>
+      <p class="rv-fade">月历格子不再塞任务文字——<b>中文从不被拦腰截断</b>。有内容的日子只落一枚墨点，今天是唯一的朱砂圈，未来安安静静地淡着。整月一眼扫完，细节回到那一天。</p>
+      <div class="minical rv-fade">
+        <div class="wk"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+        <div class="cells">
+          <span class="c">29</span><span class="c">30</span><span class="c">1</span><span class="c">2</span><span class="c">3</span><span class="c">4</span><span class="c has">5</span>
+          <span class="c has">6</span><span class="c has">7</span><span class="c">8</span><span class="c has">9</span><span class="c">10</span><span class="c">11</span><span class="c has">12</span>
+          <span class="c">13</span><span class="c has">14</span><span class="c">15</span><span class="c has">16</span><span class="c">17</span><span class="c">18</span><span class="c has">19</span>
+          <span class="c has">20</span><span class="c has">21</span><span class="c has">22</span><span class="c has">23</span><span class="c today">24</span><span class="c fu">25</span><span class="c fu has">26</span>
+        </div>
+      </div>
+    </div>
+    <div class="rv-img shot solo" style="margin-top:0">
+      <span class="tag">页边编号 · 树的地址</span>
+      <div style="padding:34px 30px 30px;border-top:1px solid var(--hair);margin-top:0">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:3px">FOLIO · 编号定位系统</div>
+        <div style="font-family:var(--serif);font-size:22px;font-weight:600;margin-top:16px">每个任务都有一个可念出来的地址</div>
+        <div style="font-family:var(--mono);font-size:14px;margin-top:22px;line-height:2.3;color:var(--ink2)">
+          01 &nbsp;写方向说明文档<br>
+          01.1 &nbsp;└ 对比三版首屏的骨架差异<br>
+          02 &nbsp;出三版视觉方向首屏<br>
+          B-01 &nbsp;回复 B 站评论区的留言
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── 夜之城 ───────────────────────────── -->
+<section class="night" id="night">
+  <div class="wrap">
+    <div class="fno rv-drop">〇五 · 另一副机甲</div>
+    <h2 style="color:#E8E6DF"><span class="mask"><span>白天是纸，</span></span><span class="mask"><span>晚上可以是夜之城</span></span></h2>
+    <p class="lead rv-fade">主线＝<b>Main Job</b>，支线＝<b>Side Job</b>，未完成＝未结委托。切角面板、黄青洋红三色纪律、1px 套印——同一套结构，换一副机甲。主题系统保留，日课是默认，夜城是夜晚。</p>
+    <span class="chip rv-fade">NIGHT CITY TERMINAL · 夜之城终端</span>
+    <div class="rv-img shot solo" style="margin-top:40px"><span class="tag">D · 夜之城终端 · 主界面</span><img src="{{IMG_CYBER}}" alt="夜之城终端主题：切角面板与霓虹三色"></div>
+  </div>
+</section>
+
+<!-- ── 完成时刻（滚动驱动） ─────────────── -->
+<div class="strike-scene" id="strike">
+  <div class="strike-inner">
+    <div class="strike-meta">完成主线的那一刻</div>
+    <div class="strike-title" id="strikeTitle">定稿 FU ToDo 4.0 的方向<span class="line" id="strikeLine"></span></div>
+    <div class="strike-done" id="strikeDone">已完成 · 咔</div>
+    <div class="strike-seal" id="strikeSeal">日</div>
+  </div>
+</div>
+
+<!-- ── 下载 ─────────────────────────────── -->
+<section class="dl-sec" id="download">
+  <div class="narrow">
+    <div class="fno" style="display:inline-block">〇六 · 开始</div>
+    <h2><span class="mask"><span>把今天排成一页</span></span></h2>
+    <div class="rv-fade">
+      <a class="btn-main" href="https://github.com/fufer97/FU-ToDo/releases/latest" target="_blank">下载 FU ToDo 4.0</a>
+    </div>
+    <div class="steps rv-fade">
+      <div class="st"><b>一</b><span>双击 dmg 挂载</span></div>
+      <div class="st"><b>二</b><span>拖进「应用程序」</span></div>
+      <div class="st"><b>三</b><span>首次右键 → 打开</span></div>
+    </div>
+    <div class="dl-meta rv-fade">
+      MACOS 14+ · 免费 · 数据全部本地<br>
+      无账号 无云端 无广告<br>
+      POLYFORM NONCOMMERCIAL · © 2026 FUFU
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="seal-f2">日</div>
+  <div class="tok">
+    FU TODO · 排印日课<br>
+    纸 #FAF9F5 · 墨 #1A1A18 · 朱砂 #C3402B<br>
+    宋体声部 / 苹方正文 / 等宽数据
+  </div></footer>
+
+<script>
+/* ?static=1：跳过所有动画初始态（长截图取证 / 极端环境兜底），真实浏览不受影响 */
+if (!/[?&]static=1/.test(location.search)) document.documentElement.classList.add('js');
+</script>
+<script>{{GSAP}}</script>
+<script>{{ST}}</script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const STATIC = /[?&]static=1/.test(location.search);
+
+if (RM || STATIC) {
+  /* 减少动态效果 / 静态取证：静态终态由 CSS @media 与 .js 缺席保证，标题置为完成态 */
+  if (STATIC) document.documentElement.classList.add('static');
+  document.querySelectorAll('.strike-title').forEach(t=>t.classList.add('done'));
+} else {
+  /* 首屏：标题按行升起 → 文案与按钮 → 截图遮罩揭开（遮罩=伪元素 scaleY，用 CSS 变量驱动） */
+  const tl = gsap.timeline({defaults:{ease:'power3.out'}});
+  tl.to('.hero .mask > span',{y:0,duration:.9,stagger:.12,ease:'power4.out'},.1)
+    .to('.hero .rv-fade',{opacity:1,y:0,duration:.7,stagger:.12},'-=.5')
+    .to('.hero-shot',{'--w':0,duration:.95,ease:'power2.inOut'},'-=.4')
+    .to('.hero-shot img',{scale:1,duration:1.15,ease:'power2.out'},'<');
+
+  /* 区块按内容出场：滚动触发，一次性 */
+  document.querySelectorAll('.rv-fade').forEach(el=>{
+    gsap.to(el,{opacity:1,y:0,duration:.8,ease:'power3.out',
+      scrollTrigger:{trigger:el,start:'top 88%',once:true}});
+  });
+  document.querySelectorAll('.rv-drop').forEach(el=>{
+    gsap.to(el,{opacity:1,y:0,duration:.6,ease:'back.out(1.6)',
+      scrollTrigger:{trigger:el,start:'top 90%',once:true}});
+  });
+  document.querySelectorAll('section.f .mask > span, .night .mask > span, .dl-sec .mask > span').forEach(el=>{
+    gsap.to(el,{y:0,duration:.9,ease:'power4.out',
+      scrollTrigger:{trigger:el,start:'top 90%',once:true}});
+  });
+  /* 截图：遮罩揭开 + 1.08→1 回缩（后一张被前一张带出） */
+  document.querySelectorAll('.rv-img').forEach(box=>{
+    const img = box.querySelector('img');
+    const t2 = gsap.timeline({scrollTrigger:{trigger:box,start:'top 86%',once:true}});
+    t2.to(box,{'--w':0,duration:.85,ease:'power2.inOut'},0);
+    if (img) t2.to(img,{scale:1,duration:1.05,ease:'power2.out'},0);
+  });
+
+  /* 章节转场：进入夜之城，纸面渐变成夜（scrub，倒滚倒放；吸顶栏同步换色保对比度） */
+  const toNight = [
+    ['body',{backgroundColor:'#0C0D11'}],
+    ['.bar',{backgroundColor:'#0C0D11',borderColor:'rgba(232,230,223,.15)'}],
+    ['.bar .logo, .bar .meta, .bar .dl',{color:'#E8E6DF',borderColor:'rgba(232,230,223,.5)'}]
+  ];
+  toNight.forEach(([sel,vars])=>gsap.to(sel,{...vars,ease:'none',
+    scrollTrigger:{trigger:'#night',start:'top 70%',end:'top 15%',scrub:.6}}));
+  const toPaper = [
+    ['body',{backgroundColor:'#FAF9F5'}],
+    ['.bar',{backgroundColor:'#FAF9F5',borderColor:'rgba(26,26,24,.14)'}],
+    ['.bar .logo, .bar .meta, .bar .dl',{color:'#1A1A18',borderColor:'#1A1A18'}]
+  ];
+  toPaper.forEach(([sel,vars])=>gsap.to(sel,{...vars,ease:'none',
+    scrollTrigger:{trigger:'#night',start:'bottom 85%',end:'bottom 30%',scrub:.6}}));
+
+  /* 主叙事：完成时刻（scrub 1:1，可倒放）——朱砂线划过，印章砸落 */
+  const st = gsap.timeline({
+    scrollTrigger:{trigger:'#strike',start:'top top',end:'+=140%',scrub:1,pin:true}
+  });
+  st.to('#strikeLine',{width:'101%',duration:1,ease:'power1.inOut'})
+    .to('#strikeTitle',{color:'#6E6960',duration:.3},'-=.2')
+    .to('#strikeDone',{opacity:1,duration:.25},'-=.05')
+    .fromTo('#strikeSeal',{opacity:0,scale:1.7,rotate:8},{opacity:1,scale:1,rotate:-4,duration:.35,ease:'power4.in'},'-=.1');
+}
+</script>
+</body>
+</html>

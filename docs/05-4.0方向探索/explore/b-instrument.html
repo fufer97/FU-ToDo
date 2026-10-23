@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>制图台</title>
+<style>
+  :root{
+    --bg:#F7F8F7;
+    --ink:#22252A;
+    --ink2:#565D66;
+    --ink3:#6A7079;
+    --blue:#2B4A8B;
+    --orange:#E8590C;
+    --rule:rgba(34,37,42,.10);
+    --rule2:rgba(34,37,42,.26);
+    --sans:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;
+    --mono:"SF Mono",Menlo,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1440px;height:900px;overflow:hidden}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .frame{display:grid;grid-template-columns:560px 2px 1fr;height:900px}
+  .divider{background:var(--ink)}
+
+  /* ── 左：月历仪表盘 ─────────────────────── */
+  .board{padding:42px 44px 36px;display:flex;flex-direction:column}
+  .board .head{display:flex;align-items:baseline;gap:14px}
+  .board .head h1{font-size:20px;font-weight:600;letter-spacing:1px}
+  .board .head .ym{font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:2px}
+  .board .head .ctrl{margin-left:auto;display:flex;gap:8px}
+  .btn{font-family:var(--mono);font-size:11px;color:var(--ink2);border:1px solid var(--rule2);
+       height:26px;min-width:26px;display:inline-flex;align-items:center;justify-content:center;background:none}
+  .btn.wide{padding:0 12px}
+  .btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .month{margin-top:26px;border:1.5px solid var(--rule2);flex:1;display:flex;flex-direction:column}
+  .wkrow{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--rule2)}
+  .wkrow span{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:2px;text-align:center;line-height:28px}
+  .grid{flex:1;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(5,1fr)}
+  .cell{position:relative;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 12px}
+  .cell:nth-child(7n){border-right:none}
+  .cell .d{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .cell .marks{position:absolute;left:12px;bottom:10px;display:flex;align-items:center;gap:5px}
+  .cell .marks .m{width:8px;height:8px;background:var(--blue)}
+  .cell .marks .s{width:5px;height:5px;border-radius:50%;background:var(--ink3)}
+  .cell .marks .s-off{background:rgba(34,37,42,.22)}
+  .cell .warn{position:absolute;top:9px;right:10px;width:4px;height:4px;border-radius:50%;background:var(--orange)}
+  .cell.future .d{opacity:.38}
+  .cell.edge .d{opacity:.2}
+  .marks .hollow{width:6px;height:6px;border:1.2px solid rgba(34,37,42,.45);border-radius:50%;background:none}
+  .cell.today{box-shadow:inset 0 0 0 1.5px var(--orange)}
+  .cell.today .d{color:var(--orange);font-weight:700}
+  .cell.gone .marks .m{background:rgba(34,37,42,.30)}
+
+  .board .status{margin-top:18px;display:flex;gap:22px;font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  .board .status b{color:var(--ink2);font-weight:400}
+  .board .status .warnnum{color:var(--orange)}
+
+  /* ── 右：当日工作单 ─────────────────────── */
+  .sheet{padding:46px 56px 40px;display:flex;flex-direction:column}
+  .sheet .head{border-top:2.5px solid var(--ink);padding-top:16px;display:flex;align-items:baseline}
+  .sheet .head .form{font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:2.5px}
+  .sheet .head h1{margin:0 auto;font-size:21px;font-weight:600;letter-spacing:1px}
+  .sheet .head .pool{font-family:var(--mono);font-size:11px;color:var(--ink2);border:1px solid var(--rule2);
+       height:26px;padding:0 13px;display:inline-flex;align-items:center;gap:7px}
+  .sheet .head .pool i{font-style:normal;color:var(--orange)}
+
+  .block{margin-top:34px}
+  .lab{display:flex;align-items:center;gap:12px}
+  .lab .bar{width:3px;height:15px;background:var(--blue)}
+  .lab .bar.gray{background:var(--ink3)}
+  .lab span{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--ink3)}
+  .lab i{flex:1;height:1px;background:var(--rule)}
+
+  .main-row{display:flex;align-items:center;gap:16px;margin-top:22px}
+  .main-row .ring{width:20px;height:20px;border:1.5px solid var(--ink2);border-radius:50%}
+  .main-row h2{font-size:19px;font-weight:600;letter-spacing:.5px}
+
+  table.steps{width:100%;margin-top:14px;border-collapse:collapse}
+  table.steps td{border-bottom:1px solid var(--rule);height:39px;vertical-align:middle}
+  td.no{width:58px;text-align:right;font-family:var(--mono);font-size:10px;color:var(--ink3);padding-right:16px}
+  td.no.sub{padding-right:0;width:74px}
+  td.ring{width:30px}
+  .r{display:inline-block;border-radius:50%;border:1.2px solid var(--ink3)}
+  .r.s1{width:15px;height:15px}
+  .r.s0{width:13px;height:13px;border-color:rgba(34,37,42,.35)}
+  td.tt{font-size:14px;color:var(--ink)}
+  td.tt.dim2{padding-left:18px;font-size:13.5px;color:var(--ink2)}
+
+  .side{margin-top:12px}
+  .side .rowline{display:flex;align-items:center;gap:16px;height:42px;border-bottom:1px solid var(--rule)}
+  .side .no{width:58px;text-align:right;font-family:var(--mono);font-size:10px;color:var(--ink3)}
+  .side .r{width:16px;height:16px;border-radius:50%;border:1.2px solid var(--ink2)}
+  .side .t{font-size:14.5px}
+
+  .arch{margin-top:12px}
+  .arch .rowline{display:flex;align-items:center;gap:16px;height:34px}
+  .arch .dot{width:6px;height:6px;border-radius:50%;background:var(--blue);margin:0 5px}
+  .arch .t{font-size:13px;color:var(--ink3);text-decoration:line-through;text-decoration-color:rgba(34,37,42,.4)}
+  .arch .tm{font-family:var(--mono);font-size:10px;color:var(--ink3)}
+
+  .corner{margin-top:auto;text-align:right;font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="board">
+    <div class="head">
+      <h1>十月</h1><span class="ym">2026 / 10</span>
+      <div class="ctrl">
+        <button class="btn">‹</button><button class="btn">›</button><button class="btn wide active">今天</button>
+      </div>
+    </div>
+
+    <div class="month">
+      <div class="wkrow"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+      <div class="grid">
+        <div class="cell edge"><span class="d">29</span></div>
+        <div class="cell edge"><span class="d">30</span></div>
+        <div class="cell"><span class="d">1</span></div>
+        <div class="cell"><span class="d">2</span></div>
+        <div class="cell"><span class="d">3</span></div>
+        <div class="cell"><span class="d">4</span></div>
+        <div class="cell"><span class="d">5</span><div class="marks"><i class="s"></i><i class="s"></i></div></div>
+        <div class="cell"><span class="d">6</span><div class="marks"><i class="s"></i></div></div>
+        <div class="cell gone"><span class="d">7</span><div class="marks"><i class="m"></i></div></div>
+        <div class="cell"><span class="d">8</span></div>
+        <div class="cell"><span class="d">9</span><div class="marks"><i class="s"></i><i class="s"></i><i class="s"></i></div></div>
+        <div class="cell"><span class="d">10</span></div>
+        <div class="cell"><span class="d">11</span></div>
+        <div class="cell"><span class="d">12</span><div class="marks"><i class="s"></i><i class="s"></i></div></div>
+        <div class="cell"><span class="d">13</span></div>
+        <div class="cell"><span class="d">14</span><div class="marks"><i class="s"></i></div></div>
+        <div class="cell"><span class="d">15</span></div>
+        <div class="cell"><span class="d">16</span><div class="marks"><i class="s"></i><i class="s"></i></div></div>
+        <div class="cell"><span class="d">17</span></div>
+        <div class="cell"><span class="d">18</span></div>
+        <div class="cell"><span class="d">19</span><div class="marks"><i class="s"></i><i class="s"></i></div></div>
+        <div class="cell gone"><span class="d">20</span><div class="marks"><i class="m"></i></div></div>
+        <div class="cell"><span class="d">21</span><div class="marks"><i class="s"></i><i class="s"></i><i class="s"></i></div></div>
+        <div class="cell"><span class="d">22</span><i class="warn"></i><div class="marks"><i class="s"></i><i class="s"></i></div></div>
+        <div class="cell"><span class="d">23</span><div class="marks"><i class="s"></i><i class="s"></i></div></div>
+        <div class="cell today"><span class="d">24</span><div class="marks"><i class="m"></i><i class="s"></i><i class="s"></i><i class="s"></i></div></div>
+        <div class="cell future"><span class="d">25</span></div>
+        <div class="cell future"><span class="d">26</span><div class="marks"><i class="hollow"></i></div></div>
+        <div class="cell future"><span class="d">27</span></div>
+        <div class="cell future"><span class="d">28</span></div>
+        <div class="cell future"><span class="d">29</span></div>
+        <div class="cell future"><span class="d">30</span></div>
+        <div class="cell future"><span class="d">31</span></div>
+      </div>
+    </div>
+
+    <div class="status">
+      <span>未完成 <b class="warnnum">7</b></span>
+      <span>已结束 <b>23</b></span>
+      <span>年视图 ⌘Y</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="sheet">
+    <div class="head">
+      <span class="form">FORM 2026-297</span>
+      <h1>10 月 24 日 · 星期六</h1>
+      <span class="pool">未完成池 <i>7</i></span>
+    </div>
+
+    <div class="block">
+      <div class="lab"><i class="bar"></i><span>主线 MAIN</span><i></i></div>
+      <div class="main-row"><span class="ring"></span><h2>定稿 FU ToDo 4.0 的方向</h2></div>
+      <table class="steps">
+        <tr><td class="no">01</td><td class="ring"><span class="r s1"></span></td><td class="tt">写方向说明文档</td></tr>
+        <tr><td class="no sub">01.1</td><td class="ring"><span class="r s0"></span></td><td class="tt dim2">对比三版首屏的骨架差异</td></tr>
+        <tr><td class="no">02</td><td class="ring"><span class="r s1"></span></td><td class="tt">出三版视觉方向首屏</td></tr>
+        <tr><td class="no">03</td><td class="ring"><span class="r s1"></span></td><td class="tt">收敛视觉令牌：颜色、字体、间距</td></tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="lab"><i class="bar gray"></i><span>支线 SIDE</span><i></i></div>
+      <div class="side" style="margin-top:10px">
+        <div class="rowline"><span class="no">B-01</span><span class="r"></span><span class="t">回复 B 站评论区的留言</span></div>
+        <div class="rowline"><span class="no">B-02</span><span class="r"></span><span class="t">采购一周的菜</span></div>
+        <div class="rowline"><span class="no">B-03</span><span class="r"></span><span class="t">读《设计中的设计》第三章</span></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="lab"><i class="bar gray"></i><span>今日完成 ARCHIVE</span><i></i></div>
+      <div class="arch" style="margin-top:8px">
+        <div class="rowline"><span class="dot"></span><span class="t">晨跑 20 分钟</span><span class="tm">08:12</span></div>
+        <div class="rowline"><span class="dot"></span><span class="t">回复合作邮件</span><span class="tm">09:40</span></div>
+      </div>
+    </div>
+
+    <div class="corner">1440 × 900 · SHEET NO.297 · REV 4.0</div>
+  </div>
+
+</div>
+</body>
+</html>

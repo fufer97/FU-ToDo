@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>案头纸器</title>
+<style>
+  :root{
+    --desk:#EFEDE8;
+    --card:#FFFFFF;
+    --ink:#35322C;
+    --ink2:#6E6858;
+    --ink3:#756F62;
+    --green:#4A6B57;
+    --brass:#A88150;
+    --edge:#E4E0D6;
+    --sans:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;
+    --kai:"Kaiti SC","STKaiti","KaiTi",serif;
+    --mono:"SF Mono",Menlo,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1440px;height:900px;overflow:hidden}
+  body{font-family:var(--sans);background:var(--desk);color:var(--ink);-webkit-font-smoothing:antialiased;position:relative}
+  body::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E")}
+
+  /* ── 顶部周条 ───────────────────────────── */
+  .week{height:78px;display:flex;align-items:stretch;padding:0 44px;border-bottom:1px solid rgba(53,50,44,.07);position:relative;z-index:1}
+  .week .cap{width:130px;display:flex;flex-direction:column;justify-content:center}
+  .week .cap b{font-size:18px;font-weight:600}
+  .week .cap span{font-family:var(--mono);font-size:9.5px;color:var(--ink3);letter-spacing:2px;margin-top:3px}
+  .day{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:10px}
+  .day .w{font-family:var(--mono);font-size:9px;color:var(--ink3);letter-spacing:1px}
+  .day .d{font-size:16px;color:var(--ink2)}
+  .day.past .d{color:var(--ink3)}
+  .day.late{position:relative}
+  .day.late::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--brass);position:absolute;bottom:12px}
+  .day.today{background:var(--card);border:1px solid var(--edge);box-shadow:0 1px 2px rgba(53,50,44,.06),0 6px 16px rgba(53,50,44,.06);margin:10px 6px}
+  .day.today .d{color:var(--green);font-weight:700}
+  .day.today .w{color:var(--green)}
+  .day.future .d{opacity:.4}
+  .week .acts{width:250px;display:flex;align-items:center;justify-content:flex-end;gap:8px}
+  .pill{height:32px;padding:0 14px;border-radius:16px;background:var(--card);border:1px solid var(--edge);
+        display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;color:var(--ink2);
+        box-shadow:0 1px 2px rgba(53,50,44,.05)}
+  .pill i{font-style:normal;color:var(--green);font-weight:600}
+
+  /* ── 桌面 ──────────────────────────────── */
+  .desk{height:822px;display:flex;justify-content:center;align-items:flex-start;gap:46px;padding-top:52px;position:relative;z-index:1}
+
+  .main-card{width:620px;min-height:560px;background:var(--card);border-radius:12px;border:1px solid var(--edge);
+    box-shadow:0 1px 2px rgba(53,50,44,.05),0 18px 44px rgba(53,50,44,.09);padding:40px 46px 34px;position:relative}
+  .mc-head{display:flex;justify-content:space-between;align-items:baseline}
+  .mc-head .lab{font-family:var(--mono);font-size:10px;letter-spacing:3.5px;color:var(--green)}
+  .mc-head .dt{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:1.5px}
+  .main-card h2{font-family:var(--kai);font-size:28px;font-weight:500;line-height:1.45;margin-top:20px}
+  .mc-rule{border-bottom:1px dotted rgba(53,50,44,.25);margin:28px 0 26px}
+  .steps .row{display:flex;align-items:flex-start;gap:15px;margin-bottom:21px}
+  .steps .ring{flex:none;width:16px;height:16px;border:1.5px solid #C9C3B4;border-radius:50%;margin-top:3px}
+  .steps .row.l2{margin-left:31px}
+  .steps .row.l2 .ring{width:12px;height:12px;margin-top:5px;border-color:#D6D1C4}
+  .steps .t{font-size:15px;line-height:1.6}
+  .steps .row.l2 .t{font-size:14px;color:var(--ink2)}
+  .mc-add{margin-top:26px;font-size:12px;color:var(--ink3)}
+  .stamp{position:absolute;right:38px;bottom:34px;transform:rotate(-6deg);width:64px;height:64px;
+    border:1.5px solid var(--green);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--green);opacity:.28;font-family:var(--kai)}
+  .stamp b{font-size:15px;font-weight:500}
+  .stamp span{font-family:var(--mono);font-size:7px;letter-spacing:1px;margin-top:2px}
+
+  .stack-col{width:430px;display:flex;flex-direction:column;gap:22px;align-items:stretch}
+
+  .ticket{position:relative;background:var(--card);border-radius:10px;border:1px solid var(--edge);
+    box-shadow:0 1px 2px rgba(53,50,44,.04),0 10px 26px rgba(53,50,44,.06);padding:21px 24px 21px 58px;min-height:92px;
+    display:flex;flex-direction:column;justify-content:center}
+  .ticket::before,.ticket::after{content:"";position:absolute;left:34px;width:1px;border-left:1px dashed rgba(53,50,44,.18);top:10px;bottom:10px}
+  .ticket .punch{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--desk);border:1px solid var(--edge)}
+  .ticket .punch.l{left:-8px;transform:translateY(-50%)}
+  .ticket .punch.r{right:-8px;transform:translateY(-50%)}
+  .ticket .no{position:absolute;left:12px;top:50%;transform:translate(-50%,-50%) rotate(-90deg);
+    font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--ink3);white-space:nowrap}
+  .tk-main{display:flex;align-items:center;gap:13px}
+  .tk-main .ring{flex:none;width:18px;height:18px;border:1.5px solid #C9C3B4;border-radius:50%}
+  .tk-main .t{font-size:15px}
+  .tk-meta{margin-top:7px;font-family:var(--mono);font-size:9.5px;color:var(--ink3);letter-spacing:1px;padding-left:31px}
+
+  .done-stack{margin-top:10px;position:relative;height:150px}
+  .ghost{position:absolute;background:var(--card);border:1px solid var(--edge);border-radius:10px;left:0;right:0}
+  .g1{top:26px;transform:rotate(-2.4deg) translateX(-7px);height:120px}
+  .g2{top:13px;transform:rotate(1.6deg) translateX(9px);height:120px}
+  .done-card{position:absolute;top:0;left:0;right:0;background:var(--card);border:1px solid var(--edge);border-radius:10px;
+    box-shadow:0 1px 2px rgba(53,50,44,.05),0 10px 24px rgba(53,50,44,.07);padding:17px 22px}
+  .done-card .head{display:flex;align-items:center;gap:9px}
+  .done-card .ok{width:16px;height:16px;border-radius:50%;background:var(--brass);color:#fff;font-size:9px;
+    display:inline-flex;align-items:center;justify-content:center}
+  .done-card .head span{font-family:var(--mono);font-size:9.5px;letter-spacing:2.5px;color:var(--brass)}
+  .done-card .li{margin-top:11px;display:flex;align-items:baseline;gap:10px}
+  .done-card .li s{font-size:12.5px;color:var(--ink3);text-decoration-color:rgba(53,50,44,.45)}
+  .done-card .li em{font-style:normal;font-family:var(--mono);font-size:9px;color:var(--ink3)}
+</style>
+</head>
+<body>
+
+  <div class="week">
+    <div class="cap"><b>十月</b><span>2026 · W43</span></div>
+    <div class="day past"><span class="w">MON</span><span class="d">19</span></div>
+    <div class="day past"><span class="w">TUE</span><span class="d">20</span></div>
+    <div class="day past"><span class="w">WED</span><span class="d">21</span></div>
+    <div class="day past late"><span class="w">THU</span><span class="d">22</span></div>
+    <div class="day past"><span class="w">FRI</span><span class="d">23</span></div>
+    <div class="day today"><span class="w">SAT</span><span class="d">24</span></div>
+    <div class="day future"><span class="w">SUN</span><span class="d">25</span></div>
+    <div class="acts">
+      <span class="pill">未完成 <i>7</i></span>
+      <span class="pill">已结束 23</span>
+      <span class="pill">月历</span>
+    </div>
+  </div>
+
+  <div class="desk">
+
+    <div class="main-card">
+      <div class="mc-head">
+        <span class="lab">主线 · MAIN</span>
+        <span class="dt">10 · 24 SAT</span>
+      </div>
+      <h2>定稿 FU ToDo 4.0 的方向</h2>
+      <div class="mc-rule"></div>
+      <div class="steps">
+        <div class="row"><span class="ring"></span><span class="t">写方向说明文档</span></div>
+        <div class="row l2"><span class="ring"></span><span class="t">对比三版首屏的骨架差异</span></div>
+        <div class="row"><span class="ring"></span><span class="t">出三版视觉方向首屏</span></div>
+        <div class="row"><span class="ring"></span><span class="t">收敛视觉令牌：颜色、字体、间距</span></div>
+      </div>
+      <div class="mc-add">＋ 接一步</div>
+      <div class="stamp"><b>今日</b><span>SAT · 24</span></div>
+    </div>
+
+    <div class="stack-col">
+      <div class="ticket">
+        <span class="punch l"></span><span class="punch r"></span>
+        <span class="no">B-01</span>
+        <div class="tk-main"><span class="ring"></span><span class="t">回复 B 站评论区的留言</span></div>
+        <div class="tk-meta">今天 · 支线</div>
+      </div>
+      <div class="ticket">
+        <span class="punch l"></span><span class="punch r"></span>
+        <span class="no">B-02</span>
+        <div class="tk-main"><span class="ring"></span><span class="t">采购一周的菜</span></div>
+        <div class="tk-meta">今天 · 支线 · 傍晚</div>
+      </div>
+      <div class="ticket">
+        <span class="punch l"></span><span class="punch r"></span>
+        <span class="no">B-03</span>
+        <div class="tk-main"><span class="ring"></span><span class="t">读《设计中的设计》第三章</span></div>
+        <div class="tk-meta">来自 10 · 21 · 3 天前</div>
+      </div>
+
+      <div class="done-stack">
+        <div class="ghost g1"></div>
+        <div class="ghost g2"></div>
+        <div class="done-card">
+          <div class="head"><span class="ok">✓</span><span>今日完成 · 2</span></div>
+          <div class="li"><s>晨跑 20 分钟</s><em>08:12</em></div>
+          <div class="li"><s>回复合作邮件</s><em>09:40</em></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

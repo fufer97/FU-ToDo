@@ -9,3 +9,8 @@ app/.swiftpm/
 
 # 设计参考（本地素材，不入库）
 design-refs/
+
+# 4.0 方向探索的过程产物（截图取证 / 动效报告 / 2x 证据图，不入库）
+docs/05-4.0方向探索/rel-*/
+docs/05-4.0方向探索/shots/*@2x.png
+docs/05-4.0方向探索/shots/report.json

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>排印日课</title>
+<style>
+  :root{
+    --paper:#FAF9F5;
+    --ink:#1A1A18;
+    --ink2:#57524A;
+    --ink3:#6E6960;
+    --hair:rgba(26,26,24,.14);
+    --cinnabar:#C3402B;
+    --serif:"Songti SC","STSong","Noto Serif SC",serif;
+    --sans:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;
+    --mono:"SF Mono",Menlo,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1440px;height:900px;overflow:hidden}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .page{display:flex;height:100%}
+
+  /* ── 左侧刊眉栏 ─────────────────────────── */
+  .rail{width:196px;padding:64px 0 44px 48px;display:flex;flex-direction:column}
+  .yr{font-family:var(--mono);font-size:11px;letter-spacing:6px;color:var(--ink3)}
+  .month{font-family:var(--serif);font-size:30px;font-weight:600;margin-top:8px;letter-spacing:2px}
+  .mini{margin-top:36px;width:126px}
+  .mini .wk{display:grid;grid-template-columns:repeat(7,18px);margin-bottom:8px}
+  .mini .wk span{font-size:8px;color:var(--ink3);text-align:center;font-family:var(--mono)}
+  .mini .days{display:grid;grid-template-columns:repeat(7,18px);row-gap:7px}
+  .mini .days span{position:relative;font-family:var(--mono);font-size:9px;color:var(--ink3);text-align:center;line-height:18px}
+  .mini .days .has::after{content:"";position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:var(--ink3)}
+  .mini .days .today{color:var(--cinnabar);font-weight:700}
+  .mini .days .today::before{content:"";position:absolute;inset:-1px auto auto 50%;transform:translate(-50%,0);width:15px;height:15px;border:1px solid var(--cinnabar);border-radius:50%}
+  .mini .days .dim{opacity:.35}
+  .rail .nav{margin-top:auto;padding-top:22px;border-top:1px solid var(--hair)}
+  .rail .nav a{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink2);text-decoration:none;line-height:2.4}
+  .rail .nav a em{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--ink3)}
+
+  /* ── 中轴排印页 ─────────────────────────── */
+  .sheet{flex:1;display:flex;justify-content:center;padding:70px 60px 56px 0}
+  .col{width:660px;display:flex;flex-direction:column}
+
+  .dateline{border-top:3px solid var(--ink);padding-top:20px;display:flex;justify-content:space-between;align-items:flex-end}
+  .dateline h1{font-family:var(--serif);font-size:42px;font-weight:600;letter-spacing:2px;line-height:1}
+  .dateline .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink3);letter-spacing:1.5px;padding-bottom:5px}
+  .date-sub{border-bottom:1px solid var(--hair);margin-top:20px}
+
+  section{margin-top:46px}
+  .seclabel{display:flex;align-items:center;gap:16px}
+  .seclabel b{font-weight:400;font-size:12px;letter-spacing:10px;color:var(--ink2)}
+  .seclabel i{flex:1;height:1px;background:var(--hair)}
+
+  .main-head{display:flex;gap:20px;margin-top:30px;align-items:flex-start}
+  .main-head .mark{width:13px;height:13px;background:var(--cinnabar);flex:none;margin-top:15px}
+  .main-head h2{font-family:var(--serif);font-size:40px;font-weight:600;line-height:1.38;letter-spacing:1px}
+
+  .steps{margin:30px 0 0 33px;display:flex;flex-direction:column;gap:17px}
+  .row{display:flex;align-items:flex-start;gap:14px;font-size:15px;line-height:1.65}
+  .row .ring{flex:none;width:15px;height:15px;border:1.5px solid rgba(26,26,24,.42);border-radius:50%;margin-top:5px}
+  .row.l2{margin-left:38px}
+  .row.l2 .ring{width:11px;height:11px;margin-top:7px;border-color:rgba(26,26,24,.28)}
+  .row .t{flex:1}
+
+  .branches{margin-top:26px;display:flex;flex-direction:column;gap:19px}
+  .branches .row .ring{margin-top:4px}
+  .branches .done .t{text-decoration:line-through;text-decoration-color:rgba(26,26,24,.4);color:var(--ink3)}
+
+  .archive{margin-top:34px;display:flex;flex-direction:column;gap:13px}
+  .archive .row{font-size:13px;color:var(--ink3)}
+  .archive .row .t s{text-decoration-color:rgba(26,26,24,.35)}
+  .archive .row em{font-style:normal;font-family:var(--mono);font-size:10px;margin-left:12px}
+
+  .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end}
+  .foot .sig{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--ink3)}
+  .seal{width:30px;height:30px;border:1.5px solid var(--cinnabar);display:flex;align-items:center;justify-content:center;
+        font-family:var(--serif);font-size:13px;color:var(--cinnabar);transform:rotate(-4deg);opacity:.85}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <aside class="rail">
+    <div class="yr">2026</div>
+    <div class="month">十月</div>
+    <div class="mini">
+      <div class="wk"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+      <div class="days">
+        <span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span><span class="has">5</span>
+        <span class="has">6</span><span class="has">7</span><span>8</span><span class="has">9</span><span>10</span><span>11</span><span class="has">12</span>
+        <span>13</span><span class="has">14</span><span>15</span><span class="has">16</span><span>17</span><span>18</span><span class="has">19</span>
+        <span class="has">20</span><span class="has">21</span><span class="has">22</span><span class="has">23</span><span class="today">24</span><span>25</span><span>26</span>
+        <span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span><span class="dim">2</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="#">未完成 <em>7</em></a>
+      <a href="#">已结束 <em>23</em></a>
+      <a href="#">年视图</a>
+      <a href="#">设置</a>
+    </nav>
+  </aside>
+
+  <main class="sheet">
+    <div class="col">
+      <header class="dateline">
+        <h1>十月二十四日</h1>
+        <div class="meta">星期六 · 第 297 日</div>
+      </header>
+      <div class="date-sub"></div>
+
+      <section>
+        <div class="seclabel"><b>今日主线</b><i></i></div>
+        <div class="main-head">
+          <div class="mark"></div>
+          <h2>定稿 FU ToDo 4.0 的方向</h2>
+        </div>
+        <div class="steps">
+          <div class="row"><span class="ring"></span><span class="t">写方向说明文档</span></div>
+          <div class="row l2"><span class="ring"></span><span class="t">对比三版首屏的骨架差异</span></div>
+          <div class="row"><span class="ring"></span><span class="t">出三版视觉方向首屏</span></div>
+          <div class="row"><span class="ring"></span><span class="t">收敛视觉令牌：颜色、字体、间距</span></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="seclabel"><b>今日支线</b><i></i></div>
+        <div class="branches">
+          <div class="row"><span class="ring"></span><span class="t">回复 B 站评论区的留言</span></div>
+          <div class="row"><span class="ring"></span><span class="t">采购一周的菜</span></div>
+          <div class="row"><span class="ring"></span><span class="t">读《设计中的设计》第三章</span></div>
+        </div>
+      </section>
+
+      <section style="margin-top:58px">
+        <div class="seclabel"><b>今日完成</b><i></i></div>
+        <div class="archive">
+          <div class="row"><span class="t"><s>晨跑 20 分钟</s></span><em>08:12</em></div>
+          <div class="row"><span class="t"><s>回复合作邮件</s></span><em>09:40</em></div>
+        </div>
+      </section>
+
+      <div class="foot">
+        <div class="sig">FU TODO · 四版方向 · 排印日课</div>
+        <div class="seal">日</div>
+      </div>
+    </div>
+  </main>
+
+</div>
+</body>
+</html>
