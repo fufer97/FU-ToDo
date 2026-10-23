@@ -1,45 +1,39 @@
 import SwiftUI
 import Core
 
-/// 完成印章：同一个完成动作，在每套主题里盖自己的章。
+/// 完成印章（4.0）：日课盖一枚朱砂「日」章；夜之城落一块黄色切角 DONE。
 struct CompletionStamp: View {
     let style: CardStyle
     let date: String
 
     var body: some View {
         content
-            .rotationEffect(.degrees(-7))
-            .shadow(color: Theme.ink.opacity(0.18), radius: 0, x: 3, y: 4)
+            .rotationEffect(.degrees(style == .rike ? -6 : -3))
+            .shadow(color: Theme.ink.opacity(0.16), radius: 0, x: 2, y: 3)
     }
 
     @ViewBuilder
     private var content: some View {
         switch style {
-        case .atelier:
-            Text("已交付")
-                .font(Theme.display(13))
-                .foregroundStyle(Theme.canvas)
-                .padding(.horizontal, 12).padding(.vertical, 6)
-                .background(Circle().fill(Theme.stamp))
-        case .herbarium:
-            Text("DRIED & MOUNTED · \(date)")
-                .font(Theme.mono(7)).tracking(0.6)
-                .foregroundStyle(Theme.stamp)
-                .padding(.horizontal, 10).padding(.vertical, 6)
-                .overlay(Rectangle().strokeBorder(Theme.stamp, lineWidth: 1.1))
-        case .acid:
-            Text("DONE")
-                .font(.system(size: 16, weight: .black))
-                .foregroundStyle(Theme.cardBackground)
-                .padding(.horizontal, 10).padding(.vertical, 3)
-                .background(Rectangle().fill(Theme.stamp))
-                .rotationEffect(.degrees(-4))
-        case .blueprint:
-            Text("REV. A")
-                .font(.system(size: 15, weight: .black))
-                .foregroundStyle(Theme.stamp)
-                .padding(.horizontal, 8).padding(.vertical, 3)
-                .overlay(Rectangle().strokeBorder(Theme.stamp, lineWidth: 1.2))
+        case .rike:
+            ZStack {
+                Circle()
+                    .strokeBorder(Theme.stamp, lineWidth: 1.6)
+                Text("日")
+                    .font(Theme.display(14))
+                    .foregroundStyle(Theme.stamp)
+            }
+            .frame(width: 34, height: 34)
+            .opacity(0.9)
+        case .night:
+            Text("DONE · \(date)")
+                .font(Theme.mono(8, .bold))
+                .tracking(1.2)
+                .foregroundStyle(Theme.fillInk)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 3)
+                .background(Theme.stamp)
+                .clipShape(CutCornerShape(radius: 5))
         }
     }
 }

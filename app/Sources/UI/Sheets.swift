@@ -79,8 +79,7 @@ struct TagCloseButton: View {
     }
 }
 
-/// 卡片物种的小印章：用 card 令牌当一枚纸质小标签，压在标题右侧。
-/// acid 主题里它是黑底荧光黄（一张贴纸），其它主题里是各色纸片。
+/// 卡片物种的小印章：4.0 已去掉贴纸语言，保留一个安静的小标签。
 struct SheetStamp: View {
     let text: String
 
@@ -88,12 +87,11 @@ struct SheetStamp: View {
         Text(text)
             .font(Theme.mono(8.5, .semibold))
             .tracking(1.6)
-            .foregroundStyle(Theme.cardInk)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(Theme.cardBackground)
-            .overlay(Rectangle().strokeBorder(Theme.cardBorder, lineWidth: 0.8))
-            .rotationEffect(.degrees(-2))
+            .foregroundStyle(Theme.ink3)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(Theme.rule).frame(height: 1)
+            }
+            .padding(.bottom, 2)
     }
 }
 
@@ -133,18 +131,18 @@ public struct PoolSheetView: View {
 
     private var masthead: some View {
         HStack(alignment: .bottom, spacing: 12) {
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text("未完成清单")
-                    .font(Theme.display(38))
-                    .tracking(Theme.displayTracking(38))
+                    .font(Theme.display(30))
+                    .tracking(2)
                     .foregroundStyle(Theme.ink)
-                Text("POOL · 只收今天以前的一级任务")
-                    .font(Theme.mono(9))
-                    .tracking(1.5)
+                Text("只收今天之前的一级任务 · 不自动结转")
+                    .font(Theme.sans(11))
+                    .tracking(1)
                     .foregroundStyle(Theme.ink3)
             }
             Spacer(minLength: 12)
-            SheetStamp(text: "POOL")
+            SheetStamp(text: "登记纸")
                 .padding(.bottom, 5)
         }
         .padding(.horizontal, 24)
@@ -153,14 +151,14 @@ public struct PoolSheetView: View {
     }
 
     private var scopeRow: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 22) {
             ForEach(PoolRange.allCases, id: \.self) { range in
-                RangeChip(range: range, selected: store.range == range) {
+                RangeTab(range: range, selected: store.range == range) {
                     store.range = range
                 }
             }
             Spacer(minLength: 12)
-            Text("SORT / DESC")
+            Text("按日期倒序")
                 .font(Theme.mono(8))
                 .tracking(1.4)
                 .foregroundStyle(Theme.ink3)
@@ -169,18 +167,27 @@ public struct PoolSheetView: View {
         .padding(.vertical, 11)
     }
 
+    /// 按天分组：同一天的事排在同一个日期组头下，先看上下文再决定。
+    private var groupedPool: [(day: String, items: [Task])] {
+        let items = store.poolTasks()
+        var order: [String] = []
+        var groups: [String: [Task]] = [:]
+        for item in items {
+            if groups[item.day] == nil { order.append(item.day) }
+            groups[item.day, default: []].append(item)
+        }
+        return order.map { ($0, groups[$0] ?? []) }
+    }
+
     private var list: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                let items = store.poolTasks()
-                if items.isEmpty {
+                let groups = groupedPool
+                if groups.isEmpty {
                     emptyState
                 } else {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, task in
-                        PoolRowView(task: task, onClose: onClose)
-                        if index < items.count - 1 {
-                            Hairline()
-                        }
+                    ForEach(Array(groups.enumerated()), id: \.element.day) { groupIndex, group in
+                        PoolDayGroup(day: group.day, items: group.items, baseIndex: folioBase(before: groupIndex), onClose: onClose)
                     }
                 }
             }
@@ -190,6 +197,11 @@ public struct PoolSheetView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .animation(Motion.spring, value: store.tasks)
         }
+    }
+
+    /// 每组的 A-01 编号从 1 连续编到当前组为止。
+    private func folioBase(before groupIndex: Int) -> Int {
+        groupedPool.prefix(groupIndex).reduce(0) { $0 + $1.items.count }
     }
 
     private var emptyState: some View {
@@ -237,42 +249,81 @@ func relativeText(_ task: Task) -> String {
     return "\(days) 天前"
 }
 
-/// 未完成清单里的一行：与日页用同一套层级语法（缩进 + 树线 + 字重字色）。
+/// 未完成清单的日期组：衬线日期头 + 「N 天前 · M 件」，条目带 A-01 编号。
+private struct PoolDayGroup: View {
+    @EnvironmentObject var store: TaskStore
+    let day: String
+    let items: [Task]
+    let baseIndex: Int
+    let onClose: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 14) {
+                Text(DayKey.cnLabel(for: day))
+                    .font(Theme.display(16))
+                    .tracking(1)
+                    .foregroundStyle(Theme.ink)
+                Text("\(poolAgeText) · \(items.count) 件")
+                    .font(Theme.mono(9.5))
+                    .tracking(1)
+                    .foregroundStyle(Theme.ink3)
+                Spacer(minLength: 0)
+            }
+            .padding(.top, 24)
+            .padding(.bottom, 4)
+            Rectangle().fill(Theme.rule).frame(height: 1)
+
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, task in
+                PoolRowView(task: task, folio: String(format: "A-%02d", baseIndex + index + 1), onClose: onClose)
+            }
+        }
+    }
+
+    private var poolAgeText: String {
+        let days = DayKey.daysBetween(day, DayKey.key())
+        if days == 1 { return "1 天前" }
+        return "\(days) 天前"
+    }
+}
+
+/// 未完成清单里的一行：登记纸语法——编号、事名、动作，没有逾期与红色警告。
 private struct PoolRowView: View {
     @EnvironmentObject var store: TaskStore
     let task: Task
+    let folio: String
     let onClose: () -> Void
     @State private var hovering = false
 
     var body: some View {
-        let level = min(store.level(of: task), 3)
-        HStack(spacing: 0) {
-            TreeRails(level: level)
-            HStack(alignment: .center, spacing: 9) {
-                RoleGlyph(isMain: task.isMain, level: level)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(task.title)
-                        .font(Theme.titleFont(level))
-                        .foregroundStyle(Theme.titleColor(level))
-                        .lineLimit(1)
-                    Text("\(dateStamp(task.day))  /  \(relativeText(task))")
-                        .font(Theme.mono(Theme.metaSize - 1.5))
-                        .tracking(0.8)
-                        .foregroundStyle(Theme.ink3)
-                }
-                Spacer(minLength: 12)
-                HStack(spacing: 2) {
-                    QuietAction(title: "跳转", tone: .plain) {
-                        store.jumpTo(task.id)
-                        onClose()
-                    }
-                    QuietAction(title: "结束", tone: .accent) { store.ignore(task.id) }
-                    QuietAction(title: "重新执行", tone: .plain) { store.reexecute(task.id) }
-                }
-                .opacity(hovering ? 1 : 0.72)
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Text(folio)
+                .font(Theme.mono(Theme.folioSize))
+                .foregroundStyle(Theme.ink3)
+                .frame(width: 36, alignment: .leading)
+            Text(task.title)
+                .font(Theme.sans(Theme.mainSize))
+                .foregroundStyle(Theme.ink)
+                .lineLimit(1)
+            let steps = store.subtree(task.id).count - 1
+            if steps > 0 {
+                Text("\(steps) 步")
+                    .font(Theme.mono(9.5))
+                    .foregroundStyle(Theme.ink3)
+                    .frame(minWidth: 40, alignment: .leading)
             }
-            .padding(.vertical, 8)
+            Spacer(minLength: 12)
+            HStack(spacing: 2) {
+                QuietAction(title: "跳转", tone: .plain) {
+                    store.jumpTo(task.id)
+                    onClose()
+                }
+                QuietAction(title: "结束", tone: .plain) { store.ignore(task.id) }
+                QuietAction(title: "重新执行", tone: .accent) { store.reexecute(task.id) }
+            }
+            .opacity(hovering ? 1 : 0.72)
         }
+        .padding(.vertical, 8)
         .background(hovering ? Theme.ink.opacity(0.035) : Color.clear)
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
@@ -313,18 +364,18 @@ public struct DoneSheetView: View {
 
     private var masthead: some View {
         HStack(alignment: .bottom, spacing: 12) {
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text("已结束清单")
-                    .font(Theme.display(38))
-                    .tracking(Theme.displayTracking(38))
+                    .font(Theme.display(30))
+                    .tracking(2)
                     .foregroundStyle(Theme.ink)
-                Text("ARCHIVE · 完成与结束都在这里")
-                    .font(Theme.mono(9))
-                    .tracking(1.5)
+                Text("完成与结束都在这里 · 随时可以恢复")
+                    .font(Theme.sans(11))
+                    .tracking(1)
                     .foregroundStyle(Theme.ink3)
             }
             Spacer(minLength: 12)
-            SheetStamp(text: "ARCHIVE")
+            SheetStamp(text: "归档")
                 .padding(.bottom, 5)
         }
         .padding(.horizontal, 24)
@@ -428,8 +479,8 @@ private struct DoneRowView: View {
 
 // MARK: - 复用小组件
 
-/// 范围选择：选中的那枚是一张小卡片（card 令牌），没选中的只有一圈细线。
-struct RangeChip: View {
+/// 范围选择（4.0）：文字标签 + 下划线，选中的那枚落墨。
+struct RangeTab: View {
     let range: PoolRange
     let selected: Bool
     let action: () -> Void
@@ -437,31 +488,20 @@ struct RangeChip: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
-                if selected {
-                    Rectangle()
-                        .fill(Theme.cardInk.opacity(0.75))
-                        .frame(width: 4, height: 4)
+            Text(range.label)
+                .font(Theme.sans(12, selected ? .medium : .regular))
+                .tracking(0.6)
+                .foregroundStyle(selected ? Theme.ink : (hovering ? Theme.ink : Theme.ink3))
+                .overlay(alignment: .bottom) {
+                    if selected {
+                        Rectangle().fill(Theme.ink).frame(height: 1).offset(y: 3)
+                    }
                 }
-                Text(range.label)
-                    .font(Theme.sans(Theme.controlSize, selected ? .semibold : .regular))
-                    .tracking(0.4)
-                    .foregroundStyle(selected ? Theme.cardInk : (hovering ? Theme.ink : Theme.ink3))
-            }
-            .padding(.horizontal, 11)
-            .padding(.vertical, 5)
-            .background(selected ? Theme.cardBackground : Color.clear)
-            .overlay(
-                Rectangle().strokeBorder(borderColor, lineWidth: selected ? 0.9 : 0.8)
-            )
+                .padding(.bottom, 3)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
-    }
-
-    private var borderColor: Color {
-        if selected { return Theme.cardBorder }
-        return hovering ? Theme.accent.opacity(0.6) : Theme.rule
     }
 }
 

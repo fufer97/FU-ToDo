@@ -75,7 +75,7 @@ public struct SettingsView: View {
             ForEach(ThemeChoice.available, id: \.self) { theme in
                 themeRow(theme)
             }
-            Text("每个主题有自己的配色、字体和卡片样式；切换后立即生效。")
+            Text("日课是纸，夜之城是夜晚；切换后立即生效（夜之城会切换系统深浅色外观）。")
                 .font(Theme.sans(10.5))
                 .foregroundStyle(Theme.ink3)
         }
@@ -150,34 +150,26 @@ public struct SettingsView: View {
 
     private func themeCanvas(_ t: ThemeChoice) -> Color {
         switch t {
-        case .atelier: return Color(.sRGB, red: 0.949, green: 0.937, blue: 0.902, opacity: 1)
-        case .herbarium: return Color(.sRGB, red: 0.914, green: 0.898, blue: 0.839, opacity: 1)
-        case .acid: return Color(.sRGB, red: 0.090, green: 0.227, blue: 0.169, opacity: 1)
-        case .blueprint: return Color(.sRGB, red: 0.902, green: 0.922, blue: 0.902, opacity: 1)
+        case .rike: return Color(.sRGB, red: 0.980, green: 0.976, blue: 0.961, opacity: 1)
+        case .night: return Color(.sRGB, red: 0.047, green: 0.051, blue: 0.067, opacity: 1)
         }
     }
     private func themeInk(_ t: ThemeChoice) -> Color {
         switch t {
-        case .atelier: return Color(.sRGB, red: 0.110, green: 0.165, blue: 0.133, opacity: 1)
-        case .herbarium: return Color(.sRGB, red: 0.110, green: 0.141, blue: 0.114, opacity: 1)
-        case .acid: return Color(.sRGB, red: 0.949, green: 0.941, blue: 0.894, opacity: 1)
-        case .blueprint: return Color(.sRGB, red: 0.137, green: 0.286, blue: 0.420, opacity: 1)
+        case .rike: return Color(.sRGB, red: 0.102, green: 0.102, blue: 0.094, opacity: 1)
+        case .night: return Color(.sRGB, red: 0.910, green: 0.902, blue: 0.875, opacity: 1)
         }
     }
     private func themeFill(_ t: ThemeChoice) -> Color {
         switch t {
-        case .atelier: return Color(.sRGB, red: 0.137, green: 0.227, blue: 0.180, opacity: 1)
-        case .herbarium: return Color(.sRGB, red: 0.875, green: 0.894, blue: 0.827, opacity: 1)
-        case .acid: return Color(.sRGB, red: 0.949, green: 0.941, blue: 0.894, opacity: 1)
-        case .blueprint: return Color(.sRGB, red: 0.137, green: 0.286, blue: 0.420, opacity: 1)
+        case .rike: return Color(.sRGB, red: 0.765, green: 0.251, blue: 0.169, opacity: 1)
+        case .night: return Color(.sRGB, red: 0.988, green: 0.933, blue: 0.039, opacity: 1)
         }
     }
     private func themeCard(_ t: ThemeChoice) -> Color {
         switch t {
-        case .atelier: return Color(.sRGB, red: 0.984, green: 0.973, blue: 0.941, opacity: 1)
-        case .herbarium: return Color(.sRGB, red: 0.875, green: 0.894, blue: 0.827, opacity: 1)
-        case .acid: return Color(.sRGB, red: 0.949, green: 0.941, blue: 0.894, opacity: 1)
-        case .blueprint: return Color(.sRGB, red: 0.969, green: 0.973, blue: 0.953, opacity: 1)
+        case .rike: return Color(.sRGB, red: 0.980, green: 0.976, blue: 0.961, opacity: 1)
+        case .night: return Color(.sRGB, red: 0.075, green: 0.082, blue: 0.106, opacity: 1)
         }
     }
 

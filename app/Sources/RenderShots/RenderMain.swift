@@ -37,65 +37,6 @@ struct RenderMain {
             return
         }
 
-        // --cards：卡片家族（同一任务在四个浅色主题里的四种印刷品）
-        if CommandLine.arguments.contains("--cards") {
-            render(CardFamilyBoard(), size: CGSize(width: 1400, height: 1000),
-                   to: outDir.appendingPathComponent("v7-card-family.png"))
-            return
-        }
-
-        // --specimen：标本卡组件样张（Herbarium 风格的浅色版）
-        if CommandLine.arguments.contains("--specimen") {
-            render(SpecimenBoard(), size: CGSize(width: 1200, height: 760),
-                   to: outDir.appendingPathComponent("v6-specimen-card.png"))
-            return
-        }
-
-        // --themes：四套主题（器物 / 档案 / 天文台 / 酸纸），同一结构不同世界
-        if CommandLine.arguments.contains("--themes") {
-            for t in SpreadTheme.all {
-                render(ThemeSpread(theme: t), size: CGSize(width: 1200, height: 760),
-                       to: outDir.appendingPathComponent("v5-theme-\(t.id).png"))
-            }
-            return
-        }
-
-        // --radical：整窗色域 + 满高日页（工坊 / 档案）
-        if CommandLine.arguments.contains("--radical") {
-            render(RadicalSpread(night: false), size: CGSize(width: 1200, height: 760),
-                   to: outDir.appendingPathComponent("v4-spread-day.png"))
-            render(RadicalSpread(night: true), size: CGSize(width: 1200, height: 760),
-                   to: outDir.appendingPathComponent("v4-spread-night.png"))
-            render(RadicalSpread(night: false, mosaic: true), size: CGSize(width: 1200, height: 760),
-                   to: outDir.appendingPathComponent("v4-mosaic-day.png"))
-            render(RadicalSpread(night: true, mosaic: true), size: CGSize(width: 1200, height: 760),
-                   to: outDir.appendingPathComponent("v4-mosaic-night.png"))
-            return
-        }
-
-        // --frames：三张风格帧（标本室 / 酸纸 / 工坊），只用于选方向
-        if CommandLine.arguments.contains("--frames") {
-            render(FrameArchive(), size: CGSize(width: 900, height: 560),
-                   to: outDir.appendingPathComponent("style-A-archive.png"))
-            render(FrameAcid(), size: CGSize(width: 900, height: 560),
-                   to: outDir.appendingPathComponent("style-B-acid.png"))
-            render(FrameAtelier(), size: CGSize(width: 900, height: 560),
-                   to: outDir.appendingPathComponent("style-C-atelier.png"))
-            return
-        }
-
-        // --tokens：设计校准 A/B（画布 / 夜航），不写正式 shots
-        if CommandLine.arguments.contains("--tokens") {
-            render(TokenSheetView(dark: false), size: CGSize(width: 1400, height: 1000),
-                   to: outDir.appendingPathComponent("00-tokens-light.png"))
-            render(TokenSheetView(dark: true), size: CGSize(width: 1400, height: 1000),
-                   to: outDir.appendingPathComponent("00-tokens-dark.png"))
-            render(ConceptMainV2(dark: false), size: CGSize(width: 1200, height: 760),
-                   to: outDir.appendingPathComponent("00-concept-main-light.png"))
-            render(ConceptMainV2(dark: true), size: CGSize(width: 1200, height: 760),
-                   to: outDir.appendingPathComponent("00-concept-main-dark.png"))
-            return
-        }
         let empty = makeStore(seeded: false)
 
         render(
@@ -136,16 +77,16 @@ struct RenderMain {
             to: outDir.appendingPathComponent("09-settings-full.png")
         )
 
-        // 器物主题
+        // 夜之城主题（4.0 第二主题）
         seeded.updateSettings {
-            $0.theme = .atelier
+            $0.theme = .night
             $0.fontScale = .medium
         }
         Theme.apply(seeded.settings)
         render(
             RootView().environmentObject(seeded).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
-            to: outDir.appendingPathComponent("07-main-atelier.png")
+            to: outDir.appendingPathComponent("07-main-night.png")
         )
 
         // 只有支线、没有主线的状态
@@ -303,19 +244,19 @@ struct RenderMain {
         cardView("19-card-expanded.png") { _ in }
         _ = cardA
 
-        // 预设生效检查：墨蓝（冷纸 + 靛蓝）
+        // 预设生效检查：夜之城（深色第二主题）
         let presetStore = makeStore(seeded: true)
-        presetStore.updateSettings { $0.theme = .blueprint }
+        presetStore.updateSettings { $0.theme = .night }
         Theme.apply(presetStore.settings)
-        print("蓝图主题：\(presetStore.settings.theme)")
+        print("夜之城主题：\(presetStore.settings.theme)")
         render(
             RootView().environmentObject(presetStore).environmentObject(Updater()),
             size: CGSize(width: 1200, height: 760),
-            to: outDir.appendingPathComponent("20-main-blueprint.png")
+            to: outDir.appendingPathComponent("20-main-night-pool.png")
         )
 
-        // 首次引导（固定标本室主题）
-        seeded.updateSettings { $0.theme = .herbarium; $0.fontScale = .medium }
+        // 首次引导（日课主题）
+        seeded.updateSettings { $0.theme = .rike; $0.fontScale = .medium }
         Theme.apply(seeded.settings)
         render(
             WelcomeSheet(onOpenHelp: {}, onClose: {})
@@ -333,7 +274,7 @@ struct RenderMain {
 
         // 恢复默认，避免影响后续
         seeded.updateSettings {
-            $0.theme = .herbarium
+            $0.theme = .rike
             $0.fontScale = .medium
         }
         Theme.apply(seeded.settings)
@@ -410,7 +351,7 @@ struct RenderMain {
                              cal.redComponent * 255, cal.greenComponent * 255, cal.blueComponent * 255))
             }
             panelPixel("切换前（暖纸）")
-            themeStore.updateSettings { $0.theme = .blueprint }
+            themeStore.updateSettings { $0.theme = .night }
             panelPixel("切到墨蓝后")
             window.orderOut(nil)
         }

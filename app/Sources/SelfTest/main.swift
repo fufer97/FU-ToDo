@@ -187,12 +187,12 @@ do {
     let s = TaskStore(storeURL: url, today: "2026-10-08")
     _ = s.addTopLevel("设置测试任务")
     s.updateSettings {
-        $0.theme = .blueprint
+        $0.theme = .night
         $0.fontScale = .large
     }
     let reloaded = TaskStore(storeURL: url, today: "2026-10-08")
     check("设置随数据一起落盘", reloaded.settings == s.settings)
-    check("主题持久化", reloaded.settings.theme == .blueprint)
+    check("主题持久化", reloaded.settings.theme == .night)
     check("字号持久化", reloaded.settings.fontScale == .large)
 
     let backup = try s.exportData()
@@ -886,12 +886,49 @@ do {
         .write(to: legacy, atomically: true, encoding: .utf8)
     let old = TaskStore(storeURL: legacy)
     check("老数据文件缺字段也能读", !old.welcomeSeen && old.tasks.isEmpty)
-    check("老数据默认落到标本室主题", old.settings.theme == .herbarium)
+    check("老数据缺主题字段落到日课", old.settings.theme == .rike)
+
+    // 2.0 的旧主题值 → 4.0 的日课
+    let legacyTheme = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appendingPathComponent("yrjy-legacy-theme-\(UUID().uuidString).json")
+    try? #"{"currentDay":"2026-10-08","tasks":[],"settings":{"theme":"atelier","fontScale":"large"}}"#
+        .write(to: legacyTheme, atomically: true, encoding: .utf8)
+    let oldTheme = TaskStore(storeURL: legacyTheme)
+    check("2.0 旧主题（器物）迁移到日课", oldTheme.settings.theme == .rike)
+    check("旧字号档位保留", oldTheme.settings.fontScale == .large)
+    try? FileManager.default.removeItem(at: legacyTheme)
+
     try? FileManager.default.removeItem(at: url)
     try? FileManager.default.removeItem(at: legacy)
 }
 
-print("\n二十九、检查更新：版本号比较")
+print("\n二十九、页边编号（folio）")
+do {
+    let s = makeStore()
+    let main = s.addTopLevel("主线", on: "2026-10-08")!
+    s.setMain(main.id)
+    let step1 = s.addChild(of: main.id, title: "步骤一")!
+    let deep = s.addChild(of: step1.id, title: "步骤一之一")!
+    _ = s.addChild(of: main.id, title: "步骤二")
+    let b1 = s.addTopLevel("支线一", on: "2026-10-08")!
+    _ = s.addChild(of: b1.id, title: "支线一的子步骤")
+    _ = s.addTopLevel("支线二", on: "2026-10-08")
+
+    check("主线本身不编号", s.folio(of: s.task(main.id)!) == "")
+    check("主线步骤按 01 起", s.folio(of: step1) == "01")
+    check("三级是 01.1", s.folio(of: deep) == "01.1")
+    check("第二个步骤是 02", s.folio(of: s.children(of: main.id)[1]) == "02")
+    check("支线用 B-01", s.folio(of: b1) == "B-01")
+    check("支线子步骤是 B-01.1", s.folio(of: s.children(of: b1.id)[0]) == "B-01.1")
+    check("第二条支线是 B-02", s.folio(of: s.branches(on: "2026-10-08")[1]) == "B-02")
+
+    // 移动后编号自动变化（派生，不落盘）
+    let b2 = s.branches(on: "2026-10-08")[1]
+    s.moveRootToBranchIndex(b2.id, 0)
+    check("移动后编号跟着变", s.folio(of: b2) == "B-01" && s.folio(of: b1) == "B-02")
+}
+
+print("\n三十、检查更新：版本号比较")
 MainActor.assumeIsolated {
     check("0.4 比 0.3 新", Updater.isNewer("0.4", than: "0.3"))
     check("0.3 不比 0.3 新", !Updater.isNewer("0.3", than: "0.3"))

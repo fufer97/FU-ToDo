@@ -1,7 +1,8 @@
 import SwiftUI
 import Core
 
-/// 主界面：左边报头 + 色块月历，右边是当天的一整页。
+/// 主界面（4.0 排印日课）：左边一条刊眉栏（年、月、密度月历、导航），
+/// 右边是中轴上的一页日课。
 public struct RootView: View {
     @EnvironmentObject var store: TaskStore
     @EnvironmentObject var updater: Updater
@@ -35,36 +36,21 @@ public struct RootView: View {
     public var body: some View {
         ZStack(alignment: .bottom) {
             HStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    masthead
-                    MonthGridView(anchor: anchor, drag: drag) { day in
-                        store.selectDay(day)
-                        if let date = DayKey.date(from: day),
-                           !Calendar(identifier: .gregorian).isDate(date, equalTo: anchor, toGranularity: .month) {
-                            anchor = date
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 18)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                rail
+                DayPageView(day: store.selectedDay)
+                    .id(store.selectedDay)
+                    .frame(maxWidth: 660)
+                    .frame(maxHeight: .infinity)
                     .background(
                         Theme.canvas
                             .contentShape(Rectangle())
                             .onTapGesture { session.finishByClickingAway(store: store) }
                     )
-                    .animation(motion, value: store.selectedDay)
-                }
-                .frame(maxWidth: .infinity)
-                .background(Theme.canvas)
-
-                DayPageView(day: store.selectedDay)
-                    .id(store.selectedDay)
-                    .frame(width: 460)
-                    .frame(maxHeight: .infinity)
                     .transition(.asymmetric(
                         insertion: .offset(x: 26).combined(with: .opacity),
                         removal: .offset(x: -26).combined(with: .opacity)
                     ))
+                    .frame(maxWidth: .infinity)
             }
             .background(Theme.canvas)
 
@@ -113,8 +99,12 @@ public struct RootView: View {
         }
         .tint(Theme.accent)
         .background(
-            Button("年视图") { showYear.toggle() }
-                .keyboardShortcut("y", modifiers: [.command])
+            Group {
+                Button("年视图") { showYear.toggle() }
+                    .keyboardShortcut("y", modifiers: [.command])
+                Button("说明") { openWindow(id: "help") }
+                    .keyboardShortcut("/", modifiers: [.command])
+            }
             .opacity(0)
             .frame(width: 0, height: 0)
             .accessibilityHidden(true)
@@ -133,38 +123,102 @@ public struct RootView: View {
         }
     }
 
-    private var masthead: some View {
-        HStack(alignment: .bottom, spacing: 14) {
+    // MARK: 刊眉栏
+
+    private var rail: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(yearName)
+                .font(Theme.mono(11))
+                .tracking(6)
+                .foregroundStyle(Theme.ink3)
+            Text(monthName)
+                .font(Theme.display(Theme.monthDisplaySize))
+                .tracking(1)
+                .foregroundStyle(Theme.ink)
+                .padding(.top, 8)
+
+            HStack(spacing: 14) {
+                Button { shiftMonth(-1) } label: { railNav("‹ 上月") }
+                Button { goToday() } label: {
+                    railNav("今天", active: store.selectedDay == store.currentDay)
+                }
+                Button { shiftMonth(1) } label: { railNav("下月 ›") }
+            }
+            .padding(.top, 14)
+
+            MonthGridView(anchor: anchor, drag: drag) { day in
+                store.selectDay(day)
+                if let date = DayKey.date(from: day),
+                   !Calendar(identifier: .gregorian).isDate(date, equalTo: anchor, toGranularity: .month) {
+                    anchor = date
+                }
+            }
+            .padding(.top, 28)
+
+            Spacer(minLength: 24)
+
             VStack(alignment: .leading, spacing: 0) {
-                Text(yearName).font(Theme.mono(9)).tracking(2.6).foregroundStyle(Theme.ink3)
-                Text(monthName)
-                    .font(Theme.display(Theme.monthDisplaySize))
-                    .tracking(Theme.displayTracking(Theme.monthDisplaySize))
-                    .foregroundStyle(Theme.ink)
+                railDivider
+                railNavLink("未完成", count: store.poolCount) { showPool = true }
+                railNavLink("已结束", count: store.doneTasks.count) { showDone = true }
+                railNavLink("年视图", key: "⌘Y") { showYear = true }
+                railNavLink("说明", key: "⌘/") { openWindow(id: "help") }
+                railNavLink("设置", key: "⌘,") { openSettings() }
             }
-            HStack(spacing: 4) {
-                IconButton(systemName: "chevron.left", help: "上个月") { shiftMonth(-1) }
-                IconButton(systemName: "chevron.right", help: "下个月") { shiftMonth(1) }
-            }
-            .padding(.bottom, 10)
-            TextButton("今天") { goToday() }
-                .padding(.bottom, 6)
-
-            Spacer()
-
-            HStack(spacing: 8) {
-                TextButton("未完成", badge: store.poolCount) { showPool = true }
-                TextButton("已结束", badge: store.doneTasks.count) { showDone = true }
-                TextButton("年") { showYear = true }
-                TextButton("说明") { openWindow(id: "help") }
-                TextButton("设置") { openSettings() }
-            }
-            .padding(.bottom, 4)
-            .padding(.bottom, 4)
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 16)
-        .padding(.bottom, 10)
+        .padding(.leading, 48)
+        .padding(.trailing, 24)
+        .padding(.top, 56)
+        .padding(.bottom, 40)
+        .frame(width: 252, alignment: .topLeading)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Theme.canvas)
+    }
+
+    private var railDivider: some View {
+        Rectangle().fill(Theme.rule).frame(height: 1)
+            .padding(.bottom, 12)
+    }
+
+    private func railNav(_ title: String, active: Bool = false) -> some View {
+        Text(title)
+            .font(Theme.mono(10))
+            .tracking(1)
+            .foregroundStyle(active ? Theme.ink : Theme.ink2)
+            .overlay(alignment: .bottom) {
+                if active {
+                    Rectangle().fill(Theme.ink).frame(height: 1).offset(y: 2)
+                }
+            }
+            .contentShape(Rectangle())
+    }
+
+    private func railNavLink(
+        _ title: String,
+        count: Int? = nil,
+        key: String? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(Theme.sans(12))
+                    .foregroundStyle(Theme.ink2)
+                Spacer()
+                if let count {
+                    Text("\(count)")
+                        .font(Theme.mono(10))
+                        .foregroundStyle(Theme.ink3)
+                } else if let key {
+                    Text(key)
+                        .font(Theme.mono(9))
+                        .foregroundStyle(Theme.faint)
+                }
+            }
+            .frame(height: 30)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func shiftMonth(_ delta: Int) {

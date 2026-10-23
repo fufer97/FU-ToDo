@@ -49,6 +49,23 @@ public enum DayKey {
         return shortFormatter.string(from: d)
     }
 
+    /// 中文数字（1–39）：四、十二、二十四……
+    public static func cnNumber(_ n: Int) -> String {
+        let digits = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
+        if n < 10 { return digits[n] }
+        if n == 10 { return "十" }
+        if n < 20 { return "十" + digits[n - 10] }
+        if n % 10 == 0 { return digits[n / 10] + "十" }
+        return digits[n / 10] + "十" + digits[n % 10]
+    }
+
+    /// 「十月二十四日」（中文数字日期，用于刊头与清单的日期组头）。
+    public static func cnLabel(for key: String) -> String {
+        guard let d = date(from: key) else { return key }
+        let cal = Calendar(identifier: .gregorian)
+        return "\(cnNumber(cal.component(.month, from: d)))月\(cnNumber(cal.component(.day, from: d)))日"
+    }
+
     /// from 到 to 相差的天数（to - from），用于未完成池的本周 / 本月筛选。
     public static func daysBetween(_ from: String, _ to: String) -> Int {
         guard let a = date(from: from), let b = date(from: to) else { return 0 }

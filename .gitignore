@@ -14,3 +14,6 @@ design-refs/
 docs/05-4.0方向探索/rel-*/
 docs/05-4.0方向探索/shots/*@2x.png
 docs/05-4.0方向探索/shots/report.json
+
+# 4.0 渲染验收的完整截图集（最终引用图在 app/shots/）
+app/shots-4.0/

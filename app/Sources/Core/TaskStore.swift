@@ -318,6 +318,57 @@ public final class TaskStore: ObservableObject {
         return chain
     }
 
+    // MARK: - 页边编号（folio）
+
+    /// 任务的顶层祖先。
+    public func rootTask(of task: Task) -> Task? {
+        var current = task
+        var guardCount = 0
+        while let parentID = current.parentId, guardCount < 32 {
+            guard let parent = self.task(parentID) else { break }
+            current = parent
+            guardCount += 1
+        }
+        return current
+    }
+
+    /// 从顶层（不含顶层自身）到任务的同级序号链，1 开始。
+    private func siblingChain(of task: Task) -> [Int] {
+        var chain: [Int] = []
+        var current: Task? = task
+        var guardCount = 0
+        while let node = current, let parentID = node.parentId, guardCount < 32 {
+            guard let parent = self.task(parentID) else { break }
+            let index = (children(of: parentID).firstIndex(where: { $0.id == node.id }) ?? -1) + 1
+            chain.insert(max(1, index), at: 0)
+            current = parent
+            guardCount += 1
+        }
+        return chain
+    }
+
+    /// 页边编号：主线的子树用纯数字链（01 / 01.1 / 02…），主线本身不编号；
+    /// 其余顶层任务（支线，含已结束的）用 B-01、B-01.1…。
+    /// 编号是派生的：任务移动后自动变化，不落盘。
+    public func folio(of task: Task) -> String {
+        let chain = siblingChain(of: task)
+        guard let root = rootTask(of: task) else { return "" }
+        if root.isMain {
+            return formatChain(chain)
+        }
+        let others = roots().filter { $0.day == root.day && !$0.isMain }
+        let branchIndex = (others.firstIndex(where: { $0.id == root.id }) ?? 0) + 1
+        let prefix = String(format: "B-%02d", branchIndex)
+        // 支线下面的层级一律一位（B-01.1、B-01.2）——前缀已经带过两位了。
+        return chain.isEmpty ? prefix : prefix + "." + chain.map(String.init).joined(separator: ".")
+    }
+
+    /// 首级两位（01），其余一位（01.1）。
+    private func formatChain(_ chain: [Int]) -> String {
+        guard let first = chain.first else { return "" }
+        return ([String(format: "%02d", first)] + chain.dropFirst().map(String.init)).joined(separator: ".")
+    }
+
     public var poolCount: Int {
         poolTasks().count
     }

@@ -2,13 +2,18 @@ import SwiftUI
 import UniformTypeIdentifiers
 import Core
 
-/// 某一天的一整页：今日主线、今日支线、今日完成，全部画在主题日页上。
+/// 某一天的一整页（4.0 排印日课）：刊头线、大日期、主线即标题、页边编号、hairline 分栏。
+/// 拖拽机械与 2.0 完全一致（落点、让位、看门狗），换的只是排版。
 public struct DayPageView: View {
     @EnvironmentObject var store: TaskStore
 
     public let day: String
     @State private var mainDraft = ""
     @State private var branchDraft = ""
+
+    private enum InputField: Hashable { case main, branch }
+    @FocusState private var inputFocused: InputField?
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var session: InputSession
     @EnvironmentObject private var drag: DragController
@@ -22,6 +27,9 @@ public struct DayPageView: View {
 
     private var listAnimation: Animation? { reduceMotion ? nil : Motion.spring }
 
+    /// 卡片（拖拽单元）之间的垂直空隙：日课在纸上留白更大。
+    private var cardGap: CGFloat { Theme.panelEnabled ? 18 : 26 }
+
     public init(day: String) {
         self.day = day
     }
@@ -32,7 +40,6 @@ public struct DayPageView: View {
     private var mainGoal: Task? { store.mainGoal(on: day) }
     private var branches: [Task] { store.branches(on: day) }
     private var finished: [Task] { store.doneTasks(on: day) }
-    private var doneCount: Int { store.doneCount(on: day) }
 
     private var weekdayName: String {
         guard let date = DayKey.date(from: day) else { return "" }
@@ -40,38 +47,34 @@ public struct DayPageView: View {
         return ["日", "一", "二", "三", "四", "五", "六"][max(0, min(6, w - 1))]
     }
 
-    private var monthNumber: Int {
-        guard let date = DayKey.date(from: day) else { return 1 }
-        return Calendar(identifier: .gregorian).component(.month, from: date)
+    private var dayOfYear: Int {
+        guard let date = DayKey.date(from: day) else { return 0 }
+        let cal = Calendar(identifier: .gregorian)
+        let start = cal.dateInterval(of: .year, for: date)?.start ?? date
+        return (cal.dateComponents([.day], from: start, to: cal.startOfDay(for: date)).day ?? 0) + 1
     }
 
-    private var dayNumber: String {
-        guard let date = DayKey.date(from: day) else { return "" }
-        return String(Calendar(identifier: .gregorian).component(.day, from: date))
-    }
-
-    private var weekdayEN: String {
-        ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"][
-            max(0, min(6, Calendar(identifier: .gregorian).component(.weekday, from: DayKey.date(from: day) ?? Date()) - 1))
-        ]
-    }
+    /// 「十月二十四日」
+    private var cnDate: String { DayKey.cnLabel(for: day) }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
-            Rectangle().fill(Theme.dayRule).frame(height: 0.8).padding(.horizontal, 22)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     mainSection
-                    sectionDivider
+                    sectionGap
+                    // 主线子树较长时，支线区容易贴上来：主线之后再多给一口气
+                    Spacer().frame(height: Theme.panelEnabled ? 10 : 16)
                     branchSection
                     if !finished.isEmpty {
-                        sectionDivider
+                        sectionGap
                         doneSection
                     }
                 }
-                .padding(.horizontal, 22)
-                .padding(.bottom, 22)
+                .padding(.horizontal, 26)
+                .padding(.top, 34)
+                .padding(.bottom, 26)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -108,11 +111,13 @@ public struct DayPageView: View {
                     if drag.draggingId == nil { session.finishByClickingAway(store: store) }
                 }
         )
-        .overlay(alignment: .leading) {
-            if Theme.choice == .blueprint {
-                Rectangle().fill(Theme.rule).frame(width: 0.8)
-            }
-        }
+        .background(
+            Button("新建支线") { inputFocused = .branch }
+                .keyboardShortcut("n", modifiers: [.command])
+                .opacity(0)
+                .frame(width: 0, height: 0)
+                .accessibilityHidden(true)
+        )
     }
 
     private func startDragWatchdog() {
@@ -129,59 +134,48 @@ public struct DayPageView: View {
 
     // MARK: 骨架
 
-    private var sectionDivider: some View {
-        Rectangle().fill(Theme.dayRule).frame(height: 0.8)
-            .padding(.top, 18).padding(.bottom, 14)
+    /// 分栏之间的空隙：一整行 breathing。
+    private var sectionGap: some View {
+        Spacer().frame(height: Theme.panelEnabled ? 26 : 42)
     }
 
+    /// 刊头：3pt 墨线 + 宋体日期 + 星期与年内日序。今天没有 LIVE、没有大数字。
     private var header: some View {
         VStack(alignment: .leading, spacing: 0) {
+            Rectangle().fill(Theme.ink).frame(height: 3)
             HStack(alignment: .firstTextBaseline) {
-                Text("\(weekdayEN)  /  \(monthNumber).\(dayNumber)")
-                    .font(Theme.mono(8.5)).tracking(2.2)
-                    .foregroundStyle(Theme.dayInk3)
+                Text(cnDate)
+                    .font(Theme.display(Theme.dateDisplaySize))
+                    .tracking(2)
+                    .foregroundStyle(isFuture ? Theme.ink3 : Theme.ink)
                 Spacer()
-                if isToday {
-                    Text("●  LIVE").font(Theme.mono(8)).tracking(1.6)
-                        .foregroundStyle(Theme.dayInk)
-                } else {
-                    Button {
-                        store.selectDay(store.currentDay)
-                    } label: {
-                        Text("回到今天").font(Theme.mono(8.5)).tracking(1).foregroundStyle(Theme.dayInk2)
+                VStack(alignment: .trailing, spacing: 6) {
+                    Text("星期\(weekdayName) · 第 \(dayOfYear) 日")
+                        .font(Theme.mono(Theme.metaSize))
+                        .tracking(1.5)
+                        .foregroundStyle(Theme.ink3)
+                    if !isToday {
+                        Button {
+                            store.selectDay(store.currentDay)
+                        } label: {
+                            Text("回到今天")
+                                .font(Theme.mono(9.5))
+                                .tracking(1)
+                                .foregroundStyle(Theme.ink2)
+                                .overlay(alignment: .bottom) {
+                                    Rectangle().fill(Theme.hairline).frame(height: 1).offset(y: 2)
+                                }
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 22).padding(.top, 22)
-
-            Text(dayNumber)
-                .font(Theme.display(Theme.dateDisplaySize))
-                .tracking(Theme.displayTracking(Theme.dateDisplaySize))
-                .foregroundStyle(isFuture ? Theme.dayInk3 : Theme.dayInk)
-                .padding(.horizontal, 18)
-                .padding(.top, -2)
-
-            HStack(spacing: 10) {
-                Text("\(monthNumber) 月 · 星期\(weekdayName)")
-                    .font(Theme.mono(9.5)).tracking(2)
-                    .foregroundStyle(Theme.dayInk2)
-                Rectangle().fill(Theme.dayRule).frame(width: 18, height: 0.7)
-                Text(countText)
-                    .font(Theme.mono(8.5)).tracking(0.6)
-                    .foregroundStyle(Theme.dayInk3)
-            }
-            .padding(.horizontal, 22)
-            .padding(.top, 2)
-            .padding(.bottom, 14)
+            .padding(.top, 20)
+            Rectangle().fill(Theme.dayRule).frame(height: 1).padding(.top, 20)
         }
-    }
-
-    private var countText: String {
-        let total = store.taskCount(on: day)
-        if total == 0 { return "还没有写下任何事" }
-        if doneCount > 0 { return "\(total) 件事 · \(doneCount) 件已完成" }
-        return "\(total) 件事"
+        .padding(.horizontal, 26)
+        .padding(.top, 44)
     }
 
     // MARK: 三栏
@@ -199,9 +193,11 @@ public struct DayPageView: View {
             if let goal = mainGoal {
                 draggableCard(goal, at: 0, in: [goal]) {
                     TaskCardChrome(task: goal, style: Theme.cardStyle, completed: goal.done) {
-                        TaskRowView(task: goal, level: 1, isMain: true, showsRoleGlyph: false, onCard: true)
+                        TaskRowView(task: goal, level: 1, isMain: true, showsRoleGlyph: false, onCard: true, showsFolio: false)
+                            .padding(.top, Theme.panelEnabled ? 0 : 16)
                         if !collapseCards {
                             TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
+                                .padding(.top, Theme.panelEnabled ? 0 : 10)
                         }
                     }
                 }
@@ -210,21 +206,21 @@ public struct DayPageView: View {
                 writingLine(
                     text: $mainDraft,
                     placeholder: isToday ? "写下今天最重要的一件事" : "写下这一天最重要的事",
-                    prominent: true,
-                    icon: "square.and.pencil"
+                    prominent: true
                 ) {
                     store.addMain(mainDraft, on: day)
                     mainDraft = ""
                 }
+                .padding(.top, 18)
                 if !roots.isEmpty {
                     Text("今天还没有主线")
-                        .font(Theme.mono(8.5)).tracking(1)
-                        .foregroundStyle(Theme.dayInk3)
-                        .padding(.top, 8)
+                        .font(Theme.sans(10.5))
+                        .tracking(1)
+                        .foregroundStyle(Theme.ink3)
+                        .padding(.top, 10)
                 }
             }
         }
-        .padding(.top, 16)
     }
 
     private var branchSection: some View {
@@ -237,18 +233,19 @@ public struct DayPageView: View {
                 action: { store.unsetMain($0) },
                 enabled: { store.canBecomeBranch($0.id, on: day) }
             )
-            VStack(spacing: 10) {
+            VStack(spacing: cardGap) {
                 ForEach(Array(branches.enumerated()), id: \.element.id) { index, task in
                     draggableCard(task, at: index, in: branches) {
                         TaskCardChrome(task: task, style: Theme.cardStyle, completed: task.done) {
-                            TaskRowView(task: task, level: 1, showsRoleGlyph: false, onCard: true)
+                            TaskRowView(task: task, level: 1, showsRoleGlyph: false, onCard: true, showsFolio: true)
                             if !collapseCards {
-                                TaskSubtreeView(parentId: task.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
+                                TaskSubtreeView(parentId: task.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true, showsFolio: true)
                             }
                         }
                     }
                 }
             }
+            .padding(.top, 22)
             .coordinateSpace(name: "branchList")
             .onPreferenceChange(CardFramePreference.self) { frames in
                 guard drag.draggingId == nil || Date() < frameCaptureUntil else { return }
@@ -260,7 +257,7 @@ public struct DayPageView: View {
                         index: insertAt,
                         frames: frozenFrames,
                         ids: branches.map(\.id),
-                        spacing: 10
+                        spacing: cardGap
                     )
                 }
             }
@@ -270,19 +267,16 @@ public struct DayPageView: View {
                 ids: { branches.map(\.id) },
                 frames: { frozenFrames.isEmpty ? liveFrames : frozenFrames }
             ))
-            .padding(.top, 2)
 
             writingLine(
                 text: $branchDraft,
-                placeholder: "添加一件次要的事",
-                prominent: false,
-                icon: "plus",
-                onCard: false
+                placeholder: "写一件支线",
+                prominent: false
             ) {
                 store.addTopLevel(branchDraft, on: day)
                 branchDraft = ""
             }
-            .padding(.top, 10)
+            .padding(.top, Theme.panelEnabled ? 14 : 6)
         }
     }
 
@@ -297,18 +291,18 @@ public struct DayPageView: View {
                     binding: nil,
                     action: { store.complete($0) }
                 )
-                VStack(spacing: 10) {
+                VStack(spacing: cardGap) {
                     ForEach(finished) { task in
                         TaskCardChrome(task: task, style: Theme.cardStyle, completed: true) {
-                            TaskRowView(task: task, level: 1, readOnly: true, showsRevert: true, showsRoleGlyph: false, onCard: true)
+                            TaskRowView(task: task, level: 1, readOnly: true, showsRevert: true, showsRoleGlyph: false, onCard: true, showsFolio: true)
                             if !collapseCards {
-                                TaskSubtreeView(parentId: task.id, level: 2, readOnly: true, showsRevert: true, showsRails: false, showsRoleGlyph: false, onCard: true)
+                                TaskSubtreeView(parentId: task.id, level: 2, readOnly: true, showsRevert: true, showsRails: false, showsRoleGlyph: false, onCard: true, showsFolio: true)
                             }
                         }
                     }
                 }
+                .padding(.top, 14)
             }
-            .padding(.bottom, 8)
         }
     }
 
@@ -324,28 +318,27 @@ public struct DayPageView: View {
         let dragged = drag.draggingId.flatMap { store.task($0) }
         let relevant = dragged.map { enabled?($0) ?? true } ?? true
         let dragging = drag.draggingId != nil && relevant
-        return HStack(alignment: .firstTextBaseline, spacing: 8) {
+        return HStack(alignment: .firstTextBaseline, spacing: 16) {
             Text(title)
-                .font(Theme.mono(9, .semibold))
-                .tracking(2.0)
-                .foregroundStyle(targeted ? Theme.dayInk : Theme.dayInk3)
+                .font(Theme.sans(Theme.sectionSize, .medium))
+                .tracking(8)
+                .foregroundStyle(targeted ? Theme.ink : Theme.ink2)
             if let note {
-                Text(note).font(Theme.mono(8)).foregroundStyle(Theme.dayInk3)
+                Text(note).font(Theme.sans(10)).foregroundStyle(Theme.ink3)
             }
-            Rectangle().fill(Theme.dayRule).frame(height: 0.7).padding(.top, 2)
+            Rectangle().fill(Theme.dayRule).frame(height: 1)
             if dragging, let hint {
                 Text(targeted ? "松手就落在这里" : hint)
-                    .font(Theme.mono(7.5)).tracking(0.6)
-                    .foregroundStyle(targeted ? Theme.dayInk : Theme.dayInk3)
+                    .font(Theme.sans(10))
+                    .foregroundStyle(targeted ? Theme.ink : Theme.ink3)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .background(targeted ? Theme.dayInk.opacity(0.08) : Color.clear)
+        .padding(.vertical, 6)
+        .background(targeted ? Theme.accentSoft.opacity(0.6) : Color.clear)
         .overlay(
             Rectangle().strokeBorder(
-                targeted ? Theme.dayInk.opacity(0.45) : Color.clear,
-                style: StrokeStyle(lineWidth: 0.8, dash: [3, 3])
+                targeted ? Theme.accent.opacity(0.5) : Color.clear,
+                style: StrokeStyle(lineWidth: 1, dash: [3, 3])
             )
         )
         .contentShape(Rectangle())
@@ -424,7 +417,7 @@ public struct DayPageView: View {
                 return 0
             }()
             return Rectangle()
-                .fill(Theme.dayInk)
+                .fill(Theme.accent)
                 .frame(height: 1.6)
                 .offset(y: y)
                 .allowsHitTesting(false)
@@ -487,47 +480,56 @@ public struct DayPageView: View {
               let draggedIndex = list.firstIndex(where: { $0.id == draggedId })
         else { return 0 }
 
-        let gap = (cardHeights[draggedId] ?? 0) + 10
+        let gap = (cardHeights[draggedId] ?? 0) + cardGap
         if draggedIndex < insertAt {
             return (index > draggedIndex && index < insertAt) ? -gap : 0
         }
         return (index >= insertAt && index < draggedIndex) ? gap : 0
     }
 
-    /// 书写线：主线是页面上的第一行，支线是一条安静的输入行。
+    /// 书写线（4.0）：主线用宋体大声部 + 朱砂下划线；支线是一条安静的幽灵行（⌘N 直达）。
     private func writingLine(
         text: Binding<String>,
         placeholder: String,
         prominent: Bool,
-        icon: String,
-        onCard: Bool = false,
         commit: @escaping () -> Void
     ) -> some View {
-        let ink = onCard ? Theme.cardInk : Theme.dayInk
-        return HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: prominent ? 12 : 10, weight: .medium))
-                .foregroundStyle(ink.opacity(prominent ? 0.9 : 0.45))
-                .frame(width: 16)
+        let field: InputField = prominent ? .main : .branch
+        let active = inputFocused == field
+        return HStack(alignment: .center, spacing: 12) {
+            Circle()
+                .strokeBorder(
+                    prominent ? Theme.accent.opacity(0.55) : Theme.control.opacity(0.5),
+                    style: StrokeStyle(lineWidth: 1.3, dash: prominent ? [] : [2.5, 2.5])
+                )
+                .frame(width: prominent ? 16 : 14, height: prominent ? 16 : 14)
             TextField(placeholder, text: text)
                 .textFieldStyle(.plain)
-                .font(Theme.display(prominent ? 18 : 13))
-                .foregroundStyle(ink)
+                .font(prominent ? Theme.display(19) : Theme.sans(13.5))
+                .foregroundStyle(Theme.ink)
+                .focused($inputFocused, equals: field)
                 .onSubmit(commit)
-            if !text.wrappedValue.isEmpty {
+            if prominent && !text.wrappedValue.isEmpty {
                 Button(action: commit) {
                     Text("写下来")
-                        .font(Theme.mono(8.5, .semibold)).tracking(1)
-                        .foregroundStyle(ink)
+                        .font(Theme.sans(10.5, .semibold))
+                        .tracking(1)
+                        .foregroundStyle(Theme.accent)
                 }
                 .buttonStyle(.plain)
             }
+            if !prominent && text.wrappedValue.isEmpty && !active {
+                Text("⌘N")
+                    .font(Theme.mono(9))
+                    .foregroundStyle(Theme.faint)
+            }
         }
-        .padding(.horizontal, 14)
         .padding(.vertical, prominent ? 12 : 9)
-        .background(prominent ? ink.opacity(0.05) : Color.clear)
         .overlay(alignment: .bottom) {
-            Rectangle().fill(Theme.dayRule).frame(height: 0.8)
+            Rectangle()
+                .fill(active ? Theme.accent : Theme.dayRule)
+                .frame(height: 1)
         }
+        .animation(reduceMotion ? nil : Motion.quick, value: active)
     }
 }

@@ -185,6 +185,8 @@ public struct TaskRowView: View {
     public let showsRoleGlyph: Bool
     /// 是否画在主题卡片上：卡片上的行要用卡片墨色，而不是页面墨色。
     public let onCard: Bool
+    /// 页边编号：任务树的地址（01 / 01.1 / B-01），排在行首的固定列里。
+    public let showsFolio: Bool
 
     @State private var hovering = false
     @State private var rowWidth: CGFloat = 0
@@ -201,7 +203,8 @@ public struct TaskRowView: View {
         showsRevert: Bool = false,
         showsRails: Bool = true,
         showsRoleGlyph: Bool = true,
-        onCard: Bool = false
+        onCard: Bool = false,
+        showsFolio: Bool = false
     ) {
         self.task = task
         self.level = level
@@ -212,6 +215,7 @@ public struct TaskRowView: View {
         self.showsRails = showsRails
         self.showsRoleGlyph = showsRoleGlyph
         self.onCard = onCard
+        self.showsFolio = showsFolio
     }
 
     private var ci: Color { onCard ? Theme.cardInk : Theme.ink }
@@ -219,12 +223,15 @@ public struct TaskRowView: View {
     private var ci3: Color { onCard ? Theme.cardInk.opacity(0.46) : Theme.ink3 }
     private var cdone: Color { onCard ? Theme.cardInk.opacity(0.45) : Theme.doneInk }
     private var crule: Color { onCard ? Theme.cardInk.opacity(0.20) : Theme.hairline }
-    private var csoft: Color { onCard ? Theme.cardInk.opacity(0.10) : Theme.accentSoft }
+    /// 投放区与焦点底色：一律用主题强调色的浅底（日课＝朱砂淡、夜城＝黄淡）。
+    private var csoft: Color { Theme.accentSoft }
     private var caccent: Color { onCard ? Theme.cardInk : Theme.accent }
 
     private var spring: Animation? { reduceMotion ? nil : Motion.spring }
     private var quick: Animation? { reduceMotion ? nil : Motion.quick }
-    private var rowHeight: CGFloat { Theme.rowHeight(level) }
+    private var rowHeight: CGFloat { Theme.rowHeight(level, isMain: isMain) }
+    /// 页边编号的固定列宽：空编号也占位，整树的编号才对得齐。
+    private var folioColumn: CGFloat { 44 * Theme.fontScale }
 
     /// 一级任务就是一张卡片，"再加一条同级"＝在「今日支线」里加一张卡片，
     /// 所以一级行（主线与支线都一样）不给「＋同级」，只给「＋下级」。
@@ -241,6 +248,14 @@ public struct TaskRowView: View {
     public var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
+                if showsFolio {
+                    Text(store.folio(of: task))
+                        .font(Theme.mono(Theme.folioSize))
+                        .foregroundStyle(ci3)
+                        .frame(width: folioColumn, alignment: .trailing)
+                        .padding(.trailing, 10)
+                        .help("页边编号：任务的地址")
+                }
                 if showsRails {
                     TreeRails(level: level, color: onCard ? Theme.cardInk.opacity(0.18) : nil)
                 } else {
@@ -571,6 +586,7 @@ public struct TaskSubtreeView: View {
     public let showsRails: Bool
     public let showsRoleGlyph: Bool
     public let onCard: Bool
+    public let showsFolio: Bool
 
     public init(
         parentId: UUID,
@@ -579,7 +595,8 @@ public struct TaskSubtreeView: View {
         showsRevert: Bool = false,
         showsRails: Bool = true,
         showsRoleGlyph: Bool = true,
-        onCard: Bool = false
+        onCard: Bool = false,
+        showsFolio: Bool = false
     ) {
         self.parentId = parentId
         self.level = level
@@ -588,6 +605,7 @@ public struct TaskSubtreeView: View {
         self.showsRails = showsRails
         self.showsRoleGlyph = showsRoleGlyph
         self.onCard = onCard
+        self.showsFolio = showsFolio
     }
 
     public var body: some View {
@@ -599,7 +617,8 @@ public struct TaskSubtreeView: View {
                 showsRevert: showsRevert,
                 showsRails: showsRails,
                 showsRoleGlyph: showsRoleGlyph,
-                onCard: onCard
+                onCard: onCard,
+                showsFolio: showsFolio
             )
             TaskSubtreeView(
                 parentId: child.id,
@@ -608,7 +627,8 @@ public struct TaskSubtreeView: View {
                 showsRevert: showsRevert,
                 showsRails: showsRails,
                 showsRoleGlyph: showsRoleGlyph,
-                onCard: onCard
+                onCard: onCard,
+                showsFolio: showsFolio
             )
         }
     }
