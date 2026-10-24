@@ -219,11 +219,13 @@ public struct RootView: View {
             }
             .padding(.top, 24)
 
-            Spacer(minLength: 16)
-
+            // 数据雨紧跟月历下方，不沉底；剩余空间留给底部状态行
             DataRain()
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 12)
+                .padding(.top, 22)
+                .padding(.bottom, 14)
+
+            Spacer(minLength: 16)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("SYS OK · 数据全部本地")
