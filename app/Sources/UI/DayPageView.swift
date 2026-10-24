@@ -201,10 +201,9 @@ public struct DayPageView: View {
     /// 支线与已完成左右并排（1.35 : 1，支线长于完成），底部状态行。
     /// 整页不滚动；面板内部各自滚动。
     private var nightLayout: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 14) {
             nightMainPanel
-                .frame(height: 280)
-            HStack(alignment: .top, spacing: 22) {
+            HStack(alignment: .top, spacing: 20) {
                 nightSidePanel
                     .frame(maxWidth: .infinity)
                 if !nightFinished.isEmpty {
@@ -222,9 +221,9 @@ public struct DayPageView: View {
             )
             nightStatus
         }
-        .padding(.horizontal, 34)
-        .padding(.top, 28)
-        .padding(.bottom, 6)
+        .padding(.horizontal, 28)
+        .padding(.top, 20)
+        .padding(.bottom, 8)
     }
 
     /// 当天的主线（含已完成）：优先进行中的那条；只有全部完成时才显示完成态主线。
