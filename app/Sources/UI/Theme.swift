@@ -218,10 +218,19 @@ public enum Theme {
 
     public static func rowHeight(_ level: Int, isMain: Bool = false) -> CGFloat {
         let base: CGFloat
-        switch level {
-        case 1: base = isMain ? 54 : 38
-        case 2: base = 32
-        default: base = 28
+        if Theme.isNight {
+            // 夜之城面板空间固定，行距更紧凑，保证主线放得下 4 行目标
+            switch level {
+            case 1: base = isMain ? 50 : 34
+            case 2: base = 28
+            default: base = 26
+            }
+        } else {
+            switch level {
+            case 1: base = isMain ? 54 : 38
+            case 2: base = 32
+            default: base = 28
+            }
         }
         return (base * fontScale).rounded()
     }

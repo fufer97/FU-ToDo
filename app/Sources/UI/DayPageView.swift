@@ -199,7 +199,7 @@ public struct DayPageView: View {
     private var nightLayout: some View {
         VStack(alignment: .leading, spacing: 20) {
             nightMainPanel
-                .frame(height: 232)
+                .frame(height: 280)
             HStack(alignment: .top, spacing: 22) {
                 nightSidePanel
                     .frame(maxHeight: .infinity)
@@ -410,7 +410,7 @@ public struct DayPageView: View {
                                     text: $mainDraft,
                                     placeholder: "写一条新的主线",
                                     prominent: true,
-                                    commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" },
+                                    commit: commitMainContinue,
                                     onTab: commitMainContinue
                                 )
                                 .padding(.top, 16)
@@ -482,7 +482,7 @@ public struct DayPageView: View {
                                         TaskSubtreeView(parentId: task.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
                                     }
                                 }
-                                .padding(.vertical, 9)
+                                .padding(.vertical, 6)
                                 .overlay(alignment: .bottom) {
                                     if index < branches.count - 1 {
                                         Rectangle().fill(Theme.rule).frame(height: 1)
@@ -521,7 +521,7 @@ public struct DayPageView: View {
                     text: $branchDraft,
                     placeholder: "写一件支线",
                     prominent: false,
-                    commit: { let b = store.addTopLevel(branchDraft, on: day); branchDraft = "" },
+                    commit: commitBranchEnter,
                     onTab: commitBranchContinue
                 )
                 .padding(.top, 8)
@@ -673,7 +673,7 @@ public struct DayPageView: View {
                 text: $branchDraft,
                 placeholder: "写一件支线",
                 prominent: false,
-                commit: { let b = store.addTopLevel(branchDraft, on: day); branchDraft = "" },
+                commit: commitBranchEnter,
                 onTab: commitBranchContinue
             )
             .padding(.top, Theme.panelEnabled ? 14 : 6)
@@ -946,6 +946,15 @@ public struct DayPageView: View {
             let m = store.addMain(mainDraft, on: day)
             mainDraft = ""
             if let m { session.startCreate(store: store, at: m.id, mode: .child) }
+        }
+    }
+
+    /// 回车：提交支线，锚点跟到这条——继续回车＝再写一条支线（同级），Tab＝写它的下级。
+    private var commitBranchEnter: () -> Void {
+        {
+            let b = store.addTopLevel(branchDraft, on: day)
+            branchDraft = ""
+            if let b { session.startCreate(store: store, at: b.id, mode: .sibling) }
         }
     }
 

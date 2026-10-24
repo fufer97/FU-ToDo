@@ -239,11 +239,14 @@ public struct TaskRowView: View {
     private var quick: Animation? { reduceMotion ? nil : Motion.quick }
     private var rowHeight: CGFloat { Theme.rowHeight(level, isMain: isMain) }
     /// 页边编号的固定列宽：空编号也占位，整树的编号才对得齐。
-    private var folioColumn: CGFloat { 44 * Theme.fontScale }
+    private var folioColumn: CGFloat { 40 * Theme.fontScale }
 
     /// 一级任务就是一张卡片，"再加一条同级"＝在「今日支线」里加一张卡片，
-    /// 所以一级行（主线与支线都一样）不给「＋同级」，只给「＋下级」。
-    private var canAddSibling: Bool { level != 1 }
+    /// 所以一级行不给「＋同级」按钮；但键盘连续创建仍支持同级（回车）与下级（Tab）。
+    private var showsSiblingButton: Bool { level != 1 }
+
+    /// 连续创建的默认续写模式：回车＝同级（一级的同级就是新支线），Tab 改下级。
+    private var continueMode: InputSession.Mode { .sibling }
 
     private var isEditingThis: Bool { session.isEditing && session.targetId == task.id }
     private var isCreatingUnderThis: Bool { session.isCreating && session.targetId == task.id }
@@ -260,20 +263,20 @@ public struct TaskRowView: View {
     public var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                if showsFolio {
-                    Text(store.folio(of: task))
-                        .font(Theme.mono(Theme.folioSize))
-                        .foregroundStyle(ci3)
-                        .frame(width: folioColumn, alignment: .trailing)
-                        .padding(.trailing, 10)
-                        .help("页边编号：任务的地址")
-                }
                 if showsRails {
                     TreeRails(level: level, color: onCard ? Theme.cardInk.opacity(0.18) : nil)
                 } else {
                     Spacer().frame(width: CGFloat(Theme.railCount(level)) * Theme.indentStep)
                 }
                 HStack(alignment: .center, spacing: 8) {
+                    if showsFolio {
+                        // 编号是行内元素（跟缩进走，原型语义）：编号 → 勾选框 → 文字
+                        Text(store.folio(of: task))
+                            .font(Theme.mono(Theme.folioSize))
+                            .foregroundStyle(ci3)
+                            .frame(width: folioColumn, alignment: .trailing)
+                            .help("页边编号：任务的地址")
+                    }
                     if showsRoleGlyph {
                         RoleGlyph(isMain: task.isMain, level: level)
                     }
@@ -488,10 +491,6 @@ public struct TaskRowView: View {
         }
     }
 
-    private var continueMode: InputSession.Mode {
-        canAddSibling ? .sibling : .child
-    }
-
     /// 整行点击进入编辑（按钮、圆环、把手的点击优先于这里）。
     private func beginEdit() {
         guard !readOnly, !isEditingThis else { return }
@@ -528,7 +527,7 @@ public struct TaskRowView: View {
 
             Group {
                 if hovering {
-                    if canAddSibling {
+                    if showsSiblingButton {
                         addButton("同级", mode: .sibling)
                     }
                     addButton("下级", mode: .child)
@@ -537,7 +536,7 @@ public struct TaskRowView: View {
                     }
                 } else {
                     Button {
-                        session.startCreate(store: store, at: task.id, mode: canAddSibling ? .sibling : .child)
+                        session.startCreate(store: store, at: task.id, mode: .child)
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 10, weight: .semibold))
@@ -590,7 +589,6 @@ public struct TaskRowView: View {
                 .onSubmit { session.commit(store: store, editContinue: continueMode) }
                 .onExitCommand { session.close() }
                 .onKeyPress(.tab) {
-                    guard canAddSibling else { return .ignored }
                     session.toggleMode()
                     return .handled
                 }
