@@ -379,86 +379,112 @@ public struct HudButton: View {
     }
 }
 
-/// 线框植物（夜之城左栏装饰）：双线茎、交替叶、放射花瓣、故障色块。
-/// 全部细描边、低透明度，只是终端背景里的一个电子标本，不参与交互。
-public struct WireframeFlora: View {
-    var size: CGSize
 
-    public init(size: CGSize = CGSize(width: 196, height: 218)) {
-        self.size = size
+/// 数据雨（夜之城左栏装饰）：字符流从月历底下缓缓落下。
+/// 列与月历 26pt 网格对齐（天然居中）；三层景深，一列黄色信标，其余青色。
+/// 极慢、低调、不参与交互；「减少动态效果」时静止。
+public struct DataRain: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private struct Column {
+        let x: CGFloat
+        let layer: Int      // 0 远 / 1 中 / 2 近
+        let yellow: Bool
+        let chars: [Character]
+        let phase: CGFloat
+        let speedJitter: CGFloat
     }
 
-    /// 二次贝塞尔取点。
-    private func quad(_ p0: CGPoint, _ c: CGPoint, _ p1: CGPoint, _ t: CGFloat) -> CGPoint {
-        let u = 1 - t
-        return CGPoint(
-            x: u * u * p0.x + 2 * u * t * c.x + t * t * p1.x,
-            y: u * u * p0.y + 2 * u * t * c.y + t * t * p1.y
-        )
-    }
+    private static let glyphPool = Array("サケン7F2ミ9A1Bソ3D6ン4E8カ5C0テ7M2ワ9F4")
+    private static let columns: [Column] = {
+        let xs: [CGFloat] = [13, 39, 65, 91, 117, 143, 169]
+        // 层：0 远 / 1 中 / 2 近；黄信标在第三列
+        let layers = [2, 1, 2, 0, 1, 2, 0]
+        let yellowIndex = 2
+        var out: [Column] = []
+        for (i, x) in xs.enumerated() {
+            let start = (i * 3) % DataRain.glyphPool.count
+            let head = Array(DataRain.glyphPool[start...])
+            let tail = Array(DataRain.glyphPool.prefix(2))
+            let col = Column(
+                x: x,
+                layer: layers[i],
+                yellow: i == yellowIndex,
+                chars: head + tail,
+                phase: CGFloat(i) * 47.0,
+                speedJitter: 0.9 + CGFloat((i * 37) % 5) * 0.05
+            )
+            out.append(col)
+        }
+        return out
+    }()
+
+    private func layerSpeed(_ layer: Int) -> CGFloat { [7, 10.5, 14][layer] }
+    private func layerBase(_ layer: Int) -> CGFloat { [0.38, 0.62, 1.0][layer] }
+
+    public init() {}
 
     public var body: some View {
-        Canvas { ctx, canvas in
-            let w = canvas.width, h = canvas.height
-            let base = CGPoint(x: w * 0.60, y: h)
-            let ctrl = CGPoint(x: w * 0.52, y: h * 0.58)
-            let top = CGPoint(x: w * 0.46, y: h * 0.30)
-
-            // 茎：双线（黄为主，青为衬）
-            var stem = Path()
-            stem.move(to: base)
-            stem.addQuadCurve(to: top, control: ctrl)
-            ctx.stroke(stem, with: .color(Theme.accent.opacity(0.5)), lineWidth: 2)
-            var stem2 = Path()
-            stem2.move(to: CGPoint(x: base.x + 3.5, y: base.y))
-            stem2.addQuadCurve(to: CGPoint(x: top.x + 3.5, y: top.y), control: CGPoint(x: ctrl.x + 3.5, y: ctrl.y))
-            ctx.stroke(stem2, with: .color(Theme.signal.opacity(0.28)), lineWidth: 0.8)
-
-            // 叶：沿茎交替，椭圆描边 + 中脉
-            let leafTs: [CGFloat] = [0.20, 0.38, 0.56, 0.74]
-            for (i, t) in leafTs.enumerated() {
-                let p = quad(base, ctrl, top, t)
-                let side: CGFloat = i % 2 == 0 ? -1 : 1
-                let len: CGFloat = 56 - CGFloat(i) * 7
-                let angle = side * (0.42 + CGFloat(i % 2) * 0.1)
-                let leafRect = CGRect(x: side < 0 ? -len : 0, y: -4.5, width: len, height: 9)
-                var leaf = Path()
-                leaf.addEllipse(in: leafRect)
-                var tf = CGAffineTransform(translationX: p.x, y: p.y).rotated(by: angle)
-                leaf = leaf.applying(tf)
-                ctx.stroke(leaf, with: .color(Theme.ink2.opacity(0.55)), lineWidth: 1)
-                var rib = Path()
-                rib.move(to: p)
-                rib.addLine(to: CGPoint(x: p.x + cos(angle) * len * side, y: p.y + sin(angle) * len * side))
-                ctx.stroke(rib, with: .color(Theme.ink3.opacity(0.35)), lineWidth: 0.7)
-            }
-
-            // 花头：放射细长花瓣 + 中心圆簇
-            let petalCount = 12
-            for i in 0..<petalCount {
-                let a = CGFloat(i) / CGFloat(petalCount) * 2 * .pi
-                let len: CGFloat = i % 3 == 0 ? 40 : (i % 3 == 1 ? 32 : 36)
-                var petal = Path()
-                petal.addEllipse(in: CGRect(x: 0, y: -3.2, width: len, height: 6.4))
-                let tf = CGAffineTransform(translationX: top.x, y: top.y).rotated(by: a)
-                ctx.stroke(petal.applying(tf), with: .color(i % 4 == 2 ? Theme.signal.opacity(0.30) : Theme.ink2.opacity(0.5)), lineWidth: 0.9)
-            }
-            for offset in [CGPoint(x: -3, y: -2), CGPoint(x: 3, y: -1), CGPoint(x: 0, y: 3), CGPoint(x: 1, y: -4)] {
-                let r: CGFloat = 4.5
-                let c = CGPoint(x: top.x + offset.x, y: top.y + offset.y)
-                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)), with: .color(Theme.ink3.opacity(0.5)), lineWidth: 0.8)
-            }
-
-            // 故障色块：茎上的两条灰条
-            for (barIndex, barT) in [CGFloat(0.30), CGFloat(0.68)].enumerated() {
-                let p = quad(base, ctrl, top, barT)
-                let bw: CGFloat = barIndex == 0 ? 26 : 15
-                ctx.fill(Path(CGRect(x: p.x + 4, y: p.y - 3.5, width: bw, height: 7)), with: .color(Theme.ink2.opacity(0.28)))
+        TimelineView(.animation(minimumInterval: 1.0 / 15.0)) { timeline in
+            Canvas { ctx, size in
+                let t: CGFloat = reduceMotion
+                    ? 37.0
+                    : CGFloat(timeline.date.timeIntervalSinceReferenceDate)
+                draw(&ctx, size: size, t: t)
             }
         }
-        .frame(width: size.width, height: size.height)
-        .rotationEffect(.degrees(-2))
+        .frame(width: 182, height: 196)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private func draw(_ ctx: inout GraphicsContext, size: CGSize, t: CGFloat) {
+        let lineHeight: CGFloat = 14
+        let pad: CGFloat = 40                       // 图案上下各留一段循环缓冲
+
+        for col in Self.columns {
+            let period = size.height + pad * 2
+            let offset = ((t * layerSpeed(col.layer) * col.speedJitter + col.phase)
+                .truncatingRemainder(dividingBy: period) + period)
+                .truncatingRemainder(dividingBy: period)
+            let count = Int(ceil(period / lineHeight))
+            let color = col.yellow ? Theme.accent : Theme.signal
+            var headY: CGFloat = -.infinity
+
+            for i in 0..<count {
+                let y = (CGFloat(i) * lineHeight + offset)
+                    .truncatingRemainder(dividingBy: period) - pad
+                guard y > -lineHeight, y < size.height + lineHeight else { continue }
+                headY = max(headY, y)
+                // 亮度：越接近底部（雨头方向）越亮
+                let u = min(max(y / size.height, 0), 1)
+                let b = pow(u, 1.7)
+                let opacity = layerBase(col.layer) * (0.14 + 0.86 * b)
+                let ch = String(col.chars[i % col.chars.count])
+                ctx.draw(
+                    Text(ch).font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(color.opacity(opacity)),
+                    at: CGPoint(x: col.x, y: y)
+                )
+            }
+
+            // 雨头加亮
+            if headY > 0, headY < size.height {
+                let u = min(max(headY / size.height, 0), 1)
+                let head = String(col.chars[Int((t * 2).rounded()) % col.chars.count])
+                ctx.draw(
+                    Text(head).font(.system(size: 10.5, weight: .semibold, design: .monospaced))
+                        .foregroundColor(color.opacity(0.25 + 0.65 * u)),
+                    at: CGPoint(x: col.x, y: headY)
+                )
+            }
+        }
+
+        // 终端读出
+        ctx.draw(
+            Text("STREAM // OK").font(.system(size: 7, design: .monospaced))
+                .foregroundColor(Theme.ink3.opacity(0.75)),
+            at: CGPoint(x: 34, y: size.height - 5)
+        )
     }
 }

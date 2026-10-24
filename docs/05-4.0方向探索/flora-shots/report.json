@@ -1,0 +1,32 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1560x1500",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "smallText",
+        "label": "正文小于 13px",
+        "count": 10,
+        "examples": [
+          "div.desc「字符流从月历底部落下：青色为主、一列黄色、明暗两」（11.5px）",
+          "div.sys「SYS OK · 数据全部本地 NO CLOUD」（8.5px）",
+          "div.desc「指纹涡纹 + 四角取景括号 + 一条青色扫描线。」（11.5px）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 25,
+        "examples": [
+          "span.dim「28」（2.17:1）",
+          "span.dim「29」（2.17:1）",
+          "span.dim「30」（2.17:1）"
+        ]
+      }
+    ]
+  }
+]

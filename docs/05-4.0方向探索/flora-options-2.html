@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>左栏装饰 · 第二轮五案</title>
+<style>
+  :root{
+    --bg:#0C0D11; --text:#E8E6DF; --text2:#A8ACB4; --text3:#7A8088;
+    --yellow:#FCEE0A; --cyan:#3AE0E6; --magenta:#FF3A6C;
+    --mono:"SF Mono",Menlo,monospace;
+    --sans:-apple-system,"PingFang SC",sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#060709;color:var(--text);font-family:var(--sans);padding:44px 40px 60px}
+  h1{font-size:20px;font-weight:600;letter-spacing:1px}
+  .sub{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:2px;margin-top:8px}
+  .row{display:flex;gap:24px;margin-top:34px;align-items:flex-start;flex-wrap:wrap}
+  .card{background:var(--bg);border:1px solid rgba(232,230,223,.10);padding:22px 22px 18px;position:relative}
+  .card .tag{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--yellow);margin-bottom:4px}
+  .card .name{font-size:14px;font-weight:600;margin-bottom:2px}
+  .card .desc{font-size:11.5px;color:var(--text3);line-height:1.7;margin-bottom:14px;max-width:250px}
+  .rail{width:252px;background:var(--bg);position:relative;overflow:hidden;
+    padding:28px 24px 24px 28px;border:1px solid rgba(232,230,223,.07)}
+  .rail::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+  .rail .mon{display:flex;align-items:baseline;gap:10px}
+  .rail .mon b{font-size:19px;font-weight:700;letter-spacing:2px}
+  .rail .mon span{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px}
+  .rail .nav{display:flex;gap:12px;margin-top:12px;font-family:var(--mono);font-size:8.5px;color:var(--text2);letter-spacing:1px}
+  .rail .nav .on{color:var(--cyan)}
+  .cal{margin-top:16px;display:grid;grid-template-columns:repeat(7,20px);row-gap:6px;position:relative;z-index:1}
+  .cal span{font-family:var(--mono);font-size:9px;color:var(--text2);text-align:center;height:20px;line-height:20px;position:relative}
+  .cal span.dim{color:rgba(232,230,223,.28)}
+  .cal span.tick::after{content:"";position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:7px;height:2px;background:var(--cyan);opacity:.8}
+  .cal span.today{background:var(--yellow);color:#0C0D11;font-weight:700;
+    clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)}
+  .deco{position:relative;z-index:1}
+  .rail .sys{margin-top:12px;font-family:var(--mono);font-size:8.5px;color:var(--text3);letter-spacing:2px;line-height:1.9;position:relative;z-index:1}
+</style>
+</head>
+<body>
+<h1>左栏空档 · 第二轮五案</h1>
+<div class="sub">B（路网）/ C（监视器）/ D（雷达）继续备选 · 本页五个新方向 · 全部可落 SwiftUI Canvas，E/G/I 可加极慢动效</div>
+
+<div class="row">
+
+  <!-- ═══ E 数据雨 ═══ -->
+  <div class="card">
+    <div class="tag">方案 E</div>
+    <div class="name">数据雨</div>
+    <div class="desc">字符流从月历底部落下：青色为主、一列黄色、明暗两层做景深。应用里可让整片雨极慢下移循环。</div>
+    <div class="rail">
+      <div class="mon"><b>十月</b><span>2026 / 10</span></div>
+      <div class="nav"><span>‹ 上月</span><span class="on">今天</span><span>下月 ›</span></div>
+      <div class="cal">
+        <span class="dim">28</span><span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span>
+        <span>5</span><span class="tick">6</span><span>7</span><span>8</span><span class="tick">9</span><span>10</span><span>11</span>
+        <span>12</span><span>13</span><span class="tick">14</span><span>15</span><span class="tick">16</span><span>17</span><span>18</span>
+        <span>19</span><span class="tick">20</span><span class="tick">21</span><span class="tick">22</span><span class="tick">23</span><span class="today">24</span><span class="dim">25</span>
+        <span class="dim">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span>
+      </div>
+      <div class="deco">
+        <svg width="204" height="200" viewBox="0 0 210 205" fill="none" font-family="Menlo" font-size="10">
+          <!-- 远层（暗、细） -->
+          <g fill="#3AE0E6" opacity=".14">
+            <text x="26" y="30">ア</text><text x="26" y="44">3</text><text x="26" y="58">F</text><text x="26" y="72">せ</text>
+            <text x="74" y="24">9</text><text x="74" y="38">カ</text><text x="74" y="52">2</text>
+            <text x="122" y="34">D</text><text x="122" y="48">ソ</text><text x="122" y="62">7</text><text x="122" y="76">1</text>
+            <text x="170" y="28">5</text><text x="170" y="42">ミ</text><text x="170" y="56">A</text><text x="170" y="70">8</text>
+          </g>
+          <!-- 中层 -->
+          <g fill="#3AE0E6" opacity=".34">
+            <text x="50" y="40">7</text><text x="50" y="54">タ</text><text x="50" y="68">B</text><text x="50" y="82">4</text><text x="50" y="96">ん</text>
+            <text x="98" y="30">F</text><text x="98" y="44">6</text><text x="98" y="58">ケ</text><text x="98" y="72">2</text>
+            <text x="146" y="38">1</text><text x="146" y="52">ナ</text><text x="146" y="66">8</text><text x="146" y="80">C</text>
+            <text x="194" y="44">3</text><text x="194" y="58">え</text>
+          </g>
+          <!-- 近层：亮头 + 渐隐尾 -->
+          <g>
+            <text x="26" y="118" fill="#3AE0E6" opacity=".85">ケ</text>
+            <text x="26" y="104" fill="#3AE0E6" opacity=".5">7</text>
+            <text x="26" y="90" fill="#3AE0E6" opacity=".28">サ</text>
+            <text x="26" y="76" fill="#3AE0E6" opacity=".15">2</text>
+          </g>
+          <g>
+            <text x="74" y="150" fill="#FCEE0A" opacity=".9">サ</text>
+            <text x="74" y="136" fill="#FCEE0A" opacity=".5">A</text>
+            <text x="74" y="122" fill="#3AE0E6" opacity=".3">9</text>
+            <text x="74" y="108" fill="#3AE0E6" opacity=".16">F</text>
+            <text x="74" y="94" fill="#3AE0E6" opacity=".1">1</text>
+          </g>
+          <g>
+            <text x="122" y="128" fill="#3AE0E6" opacity=".85">3</text>
+            <text x="122" y="114" fill="#3AE0E6" opacity=".5">み</text>
+            <text x="122" y="100" fill="#3AE0E6" opacity=".26">D</text>
+          </g>
+          <g>
+            <text x="170" y="162" fill="#3AE0E6" opacity=".8">8</text>
+            <text x="170" y="148" fill="#3AE0E6" opacity=".48">ン</text>
+            <text x="170" y="134" fill="#3AE0E6" opacity=".26">4</text>
+            <text x="170" y="120" fill="#3AE0E6" opacity=".14">B</text>
+          </g>
+          <g>
+            <text x="194" y="182" fill="#3AE0E6" opacity=".75">C</text>
+            <text x="194" y="168" fill="#3AE0E6" opacity=".4">6</text>
+          </g>
+          <text x="16" y="198" font-size="7" fill="#7A8088" letter-spacing="1.5" opacity=".8">STREAM // OK</text>
+        </svg>
+      </div>
+      <div class="sys">SYS OK · 数据全部本地<br>NO CLOUD · NO ADS</div>
+    </div>
+  </div>
+
+  <!-- ═══ F 生物识别 ═══ -->
+  <div class="card">
+    <div class="tag">方案 F</div>
+    <div class="name">生物识别</div>
+    <div class="desc">指纹涡纹 + 四角取景括号 + 一条青色扫描线。赛博朋克的身份校验瞬间，四个角括号只在扫描线经过时亮。</div>
+    <div class="rail">
+      <div class="mon"><b>十月</b><span>2026 / 10</span></div>
+      <div class="nav"><span>‹ 上月</span><span class="on">今天</span><span>下月 ›</span></div>
+      <div class="cal">
+        <span class="dim">28</span><span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span>
+        <span>5</span><span class="tick">6</span><span>7</span><span>8</span><span class="tick">9</span><span>10</span><span>11</span>
+        <span>12</span><span>13</span><span class="tick">14</span><span>15</span><span class="tick">16</span><span>17</span><span>18</span>
+        <span>19</span><span class="tick">20</span><span class="tick">21</span><span class="tick">22</span><span class="tick">23</span><span class="today">24</span><span class="dim">25</span>
+        <span class="dim">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span>
+      </div>
+      <div class="deco">
+        <svg width="204" height="200" viewBox="0 0 210 205" fill="none">
+          <!-- 指纹涡纹：同心弧段，断口让它像真指纹 -->
+          <g stroke="#A8ACB4" stroke-opacity=".4" stroke-width="1">
+            <path d="M105 52 C142 52 158 78 158 104 C158 118 150 128 140 130"/>
+            <path d="M105 64 C134 64 148 84 148 104 C148 116 142 124 134 126"/>
+            <path d="M105 76 C126 76 138 90 138 104 C138 112 134 118 128 120"/>
+            <path d="M105 88 C118 88 128 96 128 105 C128 111 125 115 121 116"/>
+            <path d="M68 104 C68 78 84 52 105 52"/>
+            <path d="M62 104 C62 74 80 64 92 62"/>
+            <path d="M72 104 C72 82 86 76 96 74"/>
+            <path d="M82 104 C82 90 92 86 100 86"/>
+            <path d="M92 104 C92 98 96 96 102 96 L108 96 C112 96 114 99 114 104 C114 110 110 114 104 114 C99 114 96 111 96 106"/>
+            <path d="M70 122 C76 134 88 142 100 143"/>
+            <path d="M62 130 C70 146 86 156 104 156"/>
+            <path d="M60 96 C60 70 78 46 104 44"/>
+            <path d="M148 84 C142 68 128 56 112 54"/>
+          </g>
+          <!-- 中心断纹（黄，唯一强调） -->
+          <path d="M104 100 C110 100 112 104 111 108" stroke="#FCEE0A" stroke-opacity=".85" stroke-width="1.2"/>
+          <!-- 扫描线 -->
+          <path d="M52 96 L158 96" stroke="#3AE0E6" stroke-opacity=".55" stroke-width="1"/>
+          <path d="M52 96 L158 96" stroke="#3AE0E6" stroke-opacity=".12" stroke-width="7"/>
+          <!-- 四角括号 -->
+          <g stroke="#3AE0E6" stroke-opacity=".8" stroke-width="1.4">
+            <path d="M40 44 L40 30 L56 30"/><path d="M154 30 L170 30 L170 44"/>
+            <path d="M170 152 L170 166 L154 166"/><path d="M56 166 L40 166 L40 152"/>
+          </g>
+          <!-- 读数 -->
+          <text x="52" y="192" font-family="Menlo" font-size="7.5" fill="#7A8088" letter-spacing="1.5">ID VERIFY // 87%</text>
+        </svg>
+      </div>
+      <div class="sys">SYS OK · 数据全部本地<br>NO CLOUD · NO ADS</div>
+    </div>
+  </div>
+
+  <!-- ═══ G 频谱柱 ═══ -->
+  <div class="card">
+    <div class="tag">方案 G</div>
+    <div class="name">频谱柱</div>
+    <div class="desc">频谱分析仪：一排柱 + 灰色峰值帽，一柱黄、两柱青。应用里可以让柱高缓慢呼吸、峰值帽缓降。</div>
+    <div class="rail">
+      <div class="mon"><b>十月</b><span>2026 / 10</span></div>
+      <div class="nav"><span>‹ 上月</span><span class="on">今天</span><span>下月 ›</span></div>
+      <div class="cal">
+        <span class="dim">28</span><span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span>
+        <span>5</span><span class="tick">6</span><span>7</span><span>8</span><span class="tick">9</span><span>10</span><span>11</span>
+        <span>12</span><span>13</span><span class="tick">14</span><span>15</span><span class="tick">16</span><span>17</span><span>18</span>
+        <span>19</span><span class="tick">20</span><span class="tick">21</span><span class="tick">22</span><span class="tick">23</span><span class="today">24</span><span class="dim">25</span>
+        <span class="dim">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span>
+      </div>
+      <div class="deco">
+        <svg width="204" height="200" viewBox="0 0 210 205" fill="none">
+          <!-- 切角外框 -->
+          <path d="M10 8 L202 8 L202 192 L192 204 L10 204 Z" stroke="#A8ACB4" stroke-opacity=".25" stroke-width="1"/>
+          <!-- 横向刻度线 -->
+          <g stroke="#A8ACB4" stroke-opacity=".10" stroke-width=".6">
+            <path d="M10 52 L202 52 M10 96 L202 96 M10 140 L202 140"/>
+          </g>
+          <!-- dB 标签 -->
+          <g font-family="Menlo" font-size="6.5" fill="#7A8088">
+            <text x="14" y="50">-6</text><text x="14" y="94">-12</text><text x="14" y="138">-24</text>
+          </g>
+          <!-- 柱：底部 y=188 -->
+          <g>
+            <rect x="30" y="118" width="7" height="70" fill="#A8ACB4" opacity=".55"/>
+            <rect x="42" y="88"  width="7" height="100" fill="#A8ACB4" opacity=".55"/>
+            <rect x="54" y="132" width="7" height="56" fill="#A8ACB4" opacity=".55"/>
+            <rect x="66" y="60"  width="7" height="128" fill="#FCEE0A" opacity=".9"/>
+            <rect x="78" y="104" width="7" height="84" fill="#A8ACB4" opacity=".55"/>
+            <rect x="90" y="72"  width="7" height="116" fill="#3AE0E6" opacity=".8"/>
+            <rect x="102" y="126" width="7" height="62" fill="#A8ACB4" opacity=".55"/>
+            <rect x="114" y="92"  width="7" height="96" fill="#A8ACB4" opacity=".55"/>
+            <rect x="126" y="140" width="7" height="48" fill="#3AE0E6" opacity=".8"/>
+            <rect x="138" y="78"  width="7" height="110" fill="#A8ACB4" opacity=".55"/>
+            <rect x="150" y="110" width="7" height="78" fill="#A8ACB4" opacity=".55"/>
+            <rect x="162" y="150" width="7" height="38" fill="#A8ACB4" opacity=".55"/>
+            <rect x="174" y="98"  width="7" height="90" fill="#A8ACB4" opacity=".55"/>
+          </g>
+          <!-- 峰值帽 -->
+          <g stroke="#A8ACB4" stroke-opacity=".5" stroke-width="1.4">
+            <path d="M29 112 L38 112 M41 80 L50 80 M53 126 L62 126 M65 52 L74 52 M77 96 L86 96"/>
+            <path d="M89 64 L98 64 M101 120 L110 120 M113 86 L122 86 M125 134 L134 134 M137 72 L146 72"/>
+            <path d="M149 104 L158 104 M161 144 L170 144 M173 92 L182 92"/>
+          </g>
+          <!-- 基线 -->
+          <path d="M10 188 L202 188" stroke="#A8ACB4" stroke-opacity=".4" stroke-width=".8"/>
+          <text x="150" y="200" font-family="Menlo" font-size="7" fill="#7A8088" letter-spacing="1.5">CH-01 // -12dB</text>
+        </svg>
+      </div>
+      <div class="sys">SYS OK · 数据全部本地<br>NO CLOUD · NO ADS</div>
+    </div>
+  </div>
+
+  <!-- ═══ H 星图 ═══ -->
+  <div class="card">
+    <div class="tag">方案 H</div>
+    <div class="name">星图</div>
+    <div class="desc">一片夜的坐标纸：散星、虚线连成星座、一颗黄星带脉冲圈。微缩的「今晚」——和 DAY 297 的年历叙事接上。</div>
+    <div class="rail">
+      <div class="mon"><b>十月</b><span>2026 / 10</span></div>
+      <div class="nav"><span>‹ 上月</span><span class="on">今天</span><span>下月 ›</span></div>
+      <div class="cal">
+        <span class="dim">28</span><span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span>
+        <span>5</span><span class="tick">6</span><span>7</span><span>8</span><span class="tick">9</span><span>10</span><span>11</span>
+        <span>12</span><span>13</span><span class="tick">14</span><span>15</span><span class="tick">16</span><span>17</span><span>18</span>
+        <span>19</span><span class="tick">20</span><span class="tick">21</span><span class="tick">22</span><span class="tick">23</span><span class="today">24</span><span class="dim">25</span>
+        <span class="dim">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span>
+      </div>
+      <div class="deco">
+        <svg width="204" height="200" viewBox="0 0 210 205" fill="none">
+          <!-- 坐标框 + 刻度 -->
+          <path d="M10 8 L202 8 L202 192 L192 204 L10 204 Z" stroke="#A8ACB4" stroke-opacity=".22" stroke-width="1"/>
+          <g stroke="#A8ACB4" stroke-opacity=".28" stroke-width=".7">
+            <path d="M10 30 L18 30 M10 64 L18 64 M10 98 L18 98 M10 132 L18 132 M10 166 L18 166"/>
+            <path d="M40 8 L40 16 M74 8 L74 16 M108 8 L108 16 M142 8 L142 16 M176 8 L176 16"/>
+          </g>
+          <!-- 星云底晕 -->
+          <circle cx="130" cy="120" r="58" fill="#3AE0E6" opacity=".045"/>
+          <circle cx="70" cy="70" r="40" fill="#A8ACB4" opacity=".04"/>
+          <!-- 星座连线（虚线） -->
+          <g stroke="#A8ACB4" stroke-opacity=".35" stroke-width=".8" stroke-dasharray="2 4">
+            <path d="M38 60 L74 92 L112 78 L146 108 L128 152 L84 168"/>
+            <path d="M146 108 L182 84"/>
+          </g>
+          <!-- 散星 -->
+          <g fill="#A8ACB4">
+            <circle cx="52" cy="40" r="1.3" opacity=".6"/><circle cx="96" cy="34" r="1" opacity=".5"/>
+            <circle cx="160" cy="52" r="1.4" opacity=".6"/><circle cx="188" cy="128" r="1.1" opacity=".5"/>
+            <circle cx="58" cy="140" r="1.2" opacity=".55"/><circle cx="150" cy="176" r="1.1" opacity=".5"/>
+            <circle cx="30" cy="110" r="1.3" opacity=".6"/><circle cx="108" cy="188" r="1" opacity=".45"/>
+            <circle cx="90" cy="120" r="1.2" opacity=".55"/><circle cx="196" cy="34" r="1.2" opacity=".5"/>
+          </g>
+          <!-- 四芒星（青两颗） -->
+          <g stroke="#3AE0E6" stroke-opacity=".8" stroke-width="1">
+            <path d="M74 88 L74 96 M70 92 L78 92"/>
+            <path d="M182 80 L182 90 M177 85 L187 85"/>
+          </g>
+          <!-- 主星（黄）+ 脉冲圈 -->
+          <g stroke="#FCEE0A" stroke-width="1.2">
+            <path d="M128 148 L128 160 M122 154 L134 154"/>
+          </g>
+          <circle cx="128" cy="154" r="9" stroke="#FCEE0A" stroke-opacity=".35" stroke-width=".8"/>
+          <circle cx="128" cy="154" r="2" fill="#FCEE0A"/>
+          <!-- 读数 -->
+          <text x="16" y="198" font-family="Menlo" font-size="7" fill="#7A8088" letter-spacing="1.5">RA 04h // DEC -18°</text>
+        </svg>
+      </div>
+      <div class="sys">SYS OK · 数据全部本地<br>NO CLOUD · NO ADS</div>
+    </div>
+  </div>
+
+  <!-- ═══ I 夜之城天际线 ═══ -->
+  <div class="card">
+    <div class="tag">方案 I</div>
+    <div class="name">夜之城天际线</div>
+    <div class="desc">楼群剪影 + 零星的窗灯 + 天线信标 + 低雾。整个产品的名字就叫夜之城——这是它的名片。</div>
+    <div class="rail">
+      <div class="mon"><b>十月</b><span>2026 / 10</span></div>
+      <div class="nav"><span>‹ 上月</span><span class="on">今天</span><span>下月 ›</span></div>
+      <div class="cal">
+        <span class="dim">28</span><span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span>
+        <span>5</span><span class="tick">6</span><span>7</span><span>8</span><span class="tick">9</span><span>10</span><span>11</span>
+        <span>12</span><span>13</span><span class="tick">14</span><span>15</span><span class="tick">16</span><span>17</span><span>18</span>
+        <span>19</span><span class="tick">20</span><span class="tick">21</span><span class="tick">22</span><span class="tick">23</span><span class="today">24</span><span class="dim">25</span>
+        <span class="dim">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span>
+      </div>
+      <div class="deco">
+        <svg width="204" height="200" viewBox="0 0 210 205" fill="none">
+          <!-- 远层楼群（更暗） -->
+          <g fill="#A8ACB4" opacity=".10">
+            <rect x="14" y="96" width="26" height="86"/><rect x="74" y="82" width="20" height="100"/>
+            <rect x="128" y="90" width="30" height="92"/><rect x="182" y="100" width="20" height="82"/>
+          </g>
+          <!-- 中层楼群（描边） -->
+          <g stroke="#A8ACB4" stroke-opacity=".45" stroke-width="1" fill="none">
+            <path d="M40 182 L40 60 L74 60 L74 182"/>
+            <path d="M94 182 L94 46 L126 46 L126 182"/>
+            <path d="M158 182 L158 72 L188 72 L188 182"/>
+          </g>
+          <!-- 天线（最高楼） -->
+          <path d="M110 46 L110 24" stroke="#A8ACB4" stroke-opacity=".5" stroke-width="1"/>
+          <circle cx="110" cy="21" r="2.2" fill="#FF3A6C" opacity=".85"/>
+          <!-- 窗灯：零星黄与青 -->
+          <g fill="#FCEE0A" opacity=".85">
+            <rect x="46" y="72" width="3" height="4"/><rect x="58" y="88" width="3" height="4"/>
+            <rect x="46" y="118" width="3" height="4"/><rect x="66" y="104" width="3" height="4"/>
+            <rect x="102" y="58" width="3" height="4"/><rect x="114" y="76" width="3" height="4"/>
+            <rect x="102" y="112" width="3" height="4"/><rect x="166" y="86" width="3" height="4"/>
+            <rect x="178" y="120" width="3" height="4"/>
+          </g>
+          <g fill="#3AE0E6" opacity=".7">
+            <rect x="52" y="96" width="3" height="4"/><rect x="108" y="94" width="3" height="4"/>
+            <rect x="170" y="100" width="3" height="4"/><rect x="62" y="140" width="3" height="4"/>
+          </g>
+          <!-- 楼体横向细节线 -->
+          <g stroke="#A8ACB4" stroke-opacity=".18" stroke-width=".7">
+            <path d="M40 84 L74 84 M40 108 L74 108 M40 132 L74 132 M40 156 L74 156"/>
+            <path d="M94 70 L126 70 M94 94 L126 94 M94 118 L126 118 M94 142 L126 142"/>
+            <path d="M158 96 L188 96 M158 120 L188 120 M158 144 L188 144"/>
+          </g>
+          <!-- 低雾两道 -->
+          <rect x="10" y="158" width="192" height="8" fill="#A8ACB4" opacity=".07"/>
+          <rect x="10" y="172" width="192" height="6" fill="#A8ACB4" opacity=".05"/>
+          <!-- 地平线 + 地面刻度 -->
+          <path d="M10 182 L202 182" stroke="#A8ACB4" stroke-opacity=".4" stroke-width=".8"/>
+          <g stroke="#A8ACB4" stroke-opacity=".25" stroke-width=".7">
+            <path d="M30 192 L52 192 M84 192 L110 192 M142 192 L168 192"/>
+          </g>
+          <text x="16" y="200" font-family="Menlo" font-size="7" fill="#7A8088" letter-spacing="1.5">NC SKYLINE // 02:47</text>
+        </svg>
+      </div>
+      <div class="sys">SYS OK · 数据全部本地<br>NO CLOUD · NO ADS</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

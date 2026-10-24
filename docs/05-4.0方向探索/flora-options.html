@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>左栏装饰 · 四个方案</title>
+<style>
+  :root{
+    --bg:#0C0D11; --panel:#13151B; --line:rgba(232,230,223,.14);
+    --text:#E8E6DF; --text2:#A8ACB4; --text3:#7A8088;
+    --yellow:#FCEE0A; --cyan:#3AE0E6; --magenta:#FF3A6C;
+    --mono:"SF Mono",Menlo,monospace;
+    --sans:-apple-system,"PingFang SC",sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#060709;color:var(--text);font-family:var(--sans);padding:44px 40px 60px}
+  h1{font-size:20px;font-weight:600;letter-spacing:1px}
+  .sub{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:2px;margin-top:8px}
+  .row{display:flex;gap:26px;margin-top:34px;align-items:flex-start}
+  .card{background:var(--bg);border:1px solid rgba(232,230,223,.10);padding:22px 22px 18px;position:relative}
+  .card .tag{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--yellow);margin-bottom:4px}
+  .card .name{font-size:14px;font-weight:600;margin-bottom:2px}
+  .card .desc{font-size:11.5px;color:var(--text3);line-height:1.7;margin-bottom:14px;max-width:250px}
+  /* 左栏语境 mock */
+  .rail{width:252px;background:var(--bg);position:relative;overflow:hidden;
+    padding:28px 24px 24px 28px;border:1px solid rgba(232,230,223,.07)}
+  .rail::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+  .rail .mon{display:flex;align-items:baseline;gap:10px}
+  .rail .mon b{font-size:19px;font-weight:700;letter-spacing:2px}
+  .rail .mon span{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px}
+  .rail .nav{display:flex;gap:12px;margin-top:12px;font-family:var(--mono);font-size:8.5px;color:var(--text2);letter-spacing:1px}
+  .rail .nav .on{color:var(--cyan)}
+  .cal{margin-top:16px;display:grid;grid-template-columns:repeat(7,20px);row-gap:6px;position:relative;z-index:1}
+  .cal span{font-family:var(--mono);font-size:9px;color:var(--text2);text-align:center;height:20px;line-height:20px;position:relative}
+  .cal span.dim{color:rgba(232,230,223,.28)}
+  .cal span.tick::after{content:"";position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:7px;height:2px;background:var(--cyan);opacity:.8}
+  .cal span.today{background:var(--yellow);color:#0C0D11;font-weight:700;
+    clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)}
+  .deco{position:relative;z-index:1}
+  .rail .sys{margin-top:12px;font-family:var(--mono);font-size:8.5px;color:var(--text3);letter-spacing:2px;line-height:1.9;position:relative;z-index:1}
+</style>
+</head>
+<body>
+<h1>左栏空档 · 装饰方案对比</h1>
+<div class="sub">NIGHT CITY TERMINAL · 左栏月历以下、SYS OK 以上 · 全部可落成 SwiftUI Canvas，A/C/D 可加极慢动效</div>
+
+<div class="row">
+
+  <!-- ═══ A 电子标本 ═══ -->
+  <div class="card">
+    <div class="tag">方案 A</div>
+    <div class="name">电子标本 · 线框植物</div>
+    <div class="desc">按你给的那张线框花重画：花瓣带雕版阴影线、S 形双线茎、叶脉中脉、故障色块。终端里的一份扫描标本。</div>
+    <div class="rail">
+      <div class="mon"><b>十月</b><span>2026 / 10</span></div>
+      <div class="nav"><span>‹ 上月</span><span class="on">今天</span><span>下月 ›</span></div>
+      <div class="cal">
+        <span class="dim">28</span><span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span>
+        <span>5</span><span class="tick">6</span><span>7</span><span>8</span><span class="tick">9</span><span>10</span><span>11</span>
+        <span>12</span><span>13</span><span class="tick">14</span><span>15</span><span class="tick">16</span><span>17</span><span>18</span>
+        <span>19</span><span class="tick">20</span><span class="tick">21</span><span class="tick">22</span><span class="tick">23</span><span class="today">24</span><span class="dim">25</span>
+        <span class="dim">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span>
+      </div>
+      <div class="deco">
+        <svg width="204" height="212" viewBox="0 0 210 220" fill="none">
+          <!-- 茎：黄主 + 青衬 -->
+          <path d="M128 216 Q112 128 98 64" stroke="#FCEE0A" stroke-opacity=".48" stroke-width="2"/>
+          <path d="M131.5 216 Q115.5 128 101.5 64" stroke="#3AE0E6" stroke-opacity=".26" stroke-width=".8"/>
+          <!-- 叶 4 片：椭圆描边 + 中脉 + 侧脉 -->
+          <g stroke="#A8ACB4" stroke-opacity=".6" stroke-width="1">
+            <ellipse cx="70" cy="150" rx="27" ry="5.5" transform="rotate(-24 70 150)"/>
+            <ellipse cx="152" cy="128" rx="24" ry="5" transform="rotate(22 152 128)"/>
+            <ellipse cx="72" cy="102" rx="21" ry="4.5" transform="rotate(-26 72 102)"/>
+            <ellipse cx="146" cy="84" rx="18" ry="4" transform="rotate(24 146 84)"/>
+          </g>
+          <g stroke="#7A8088" stroke-opacity=".45" stroke-width=".7">
+            <path d="M96 158 L46 140"/><path d="M118 124 L166 110"/>
+            <path d="M94 98 L52 84"/><path d="M116 80 L158 68"/>
+          </g>
+          <!-- 花头：14 瓣，部分带雕版阴影线 -->
+          <g stroke="#A8ACB4" stroke-opacity=".55" stroke-width=".9">
+            <ellipse cx="98" cy="30" rx="3.4" ry="19" transform="rotate(0 98 48)"/>
+            <ellipse cx="110" cy="34" rx="3.4" ry="17" transform="rotate(26 98 48)"/>
+            <ellipse cx="118" cy="43" rx="3.4" ry="18" transform="rotate(52 98 48)"/>
+            <ellipse cx="121" cy="55" rx="3.4" ry="16" transform="rotate(78 98 48)"/>
+            <ellipse cx="117" cy="66" rx="3.4" ry="18" transform="rotate(104 98 48)"/>
+            <ellipse cx="108" cy="74" rx="3.4" ry="17" transform="rotate(130 98 48)"/>
+            <ellipse cx="96" cy="77" rx="3.4" ry="19" transform="rotate(156 98 48)"/>
+            <ellipse cx="85" cy="73" rx="3.4" ry="17" transform="rotate(182 98 48)"/>
+            <ellipse cx="77" cy="64" rx="3.4" ry="18" transform="rotate(208 98 48)"/>
+            <ellipse cx="74" cy="52" rx="3.4" ry="16" transform="rotate(234 98 48)"/>
+            <ellipse cx="79" cy="40" rx="3.4" ry="18" transform="rotate(260 98 48)"/>
+            <ellipse cx="88" cy="32" rx="3.4" ry="17" transform="rotate(286 98 48)"/>
+          </g>
+          <g stroke="#3AE0E6" stroke-opacity=".3" stroke-width=".8">
+            <ellipse cx="103" cy="30" rx="3" ry="18" transform="rotate(13 98 48)"/>
+            <ellipse cx="120" cy="49" rx="3" ry="17" transform="rotate(65 98 48)"/>
+            <ellipse cx="112" cy="71" rx="3" ry="18" transform="rotate(117 98 48)"/>
+            <ellipse cx="81" cy="69" rx="3" ry="17" transform="rotate(195 98 48)"/>
+            <ellipse cx="76" cy="46" rx="3" ry="17" transform="rotate(247 98 48)"/>
+          </g>
+          <!-- 雕版阴影线：四片花瓣内加排线 -->
+          <g stroke="#7A8088" stroke-opacity=".4" stroke-width=".5">
+            <path d="M95 34 L100 44 M93 40 L99 50"/>
+            <path d="M112 62 L120 56 M108 66 L117 61"/>
+            <path d="M78 42 L84 50 M82 38 L87 46"/>
+            <path d="M88 72 L94 64 M84 74 L89 66"/>
+          </g>
+          <!-- 中心圆簇 -->
+          <g stroke="#7A8088" stroke-opacity=".55" stroke-width=".8">
+            <circle cx="95" cy="46" r="4.5"/><circle cx="102" cy="48" r="4"/><circle cx="97" cy="53" r="4.5"/><circle cx="99" cy="43" r="3.5"/>
+          </g>
+          <!-- 故障色块 -->
+          <rect x="118" y="164" width="26" height="7" fill="#A8ACB4" opacity=".26"/>
+          <rect x="106" y="96" width="15" height="6" fill="#A8ACB4" opacity=".22"/>
+          <!-- 地面刻度 -->
+          <g stroke="#7A8088" stroke-opacity=".4" stroke-width=".8">
+            <path d="M110 216 L146 216 M116 220 L138 220"/>
+          </g>
+        </svg>
+      </div>
+      <div class="sys">SYS OK · 数据全部本地<br>NO CLOUD · NO ADS</div>
+    </div>
+  </div>
+
+  <!-- ═══ B 夜之城路网 ═══ -->
+  <div class="card">
+    <div class="tag">方案 B</div>
+    <div class="name">夜之城路网</div>
+    <div class="desc">一小块城市地图：街区路网、一条黄色主动线（今天走过的路）、三个任务坐标点。地图本身就是任务隐喻。</div>
+    <div class="rail">
+      <div class="mon"><b>十月</b><span>2026 / 10</span></div>
+      <div class="nav"><span>‹ 上月</span><span class="on">今天</span><span>下月 ›</span></div>
+      <div class="cal">
+        <span class="dim">28</span><span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span>
+        <span>5</span><span class="tick">6</span><span>7</span><span>8</span><span class="tick">9</span><span>10</span><span>11</span>
+        <span>12</span><span>13</span><span class="tick">14</span><span>15</span><span class="tick">16</span><span>17</span><span>18</span>
+        <span>19</span><span class="tick">20</span><span class="tick">21</span><span class="tick">22</span><span class="tick">23</span><span class="today">24</span><span class="dim">25</span>
+        <span class="dim">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span>
+      </div>
+      <div class="deco">
+        <svg width="204" height="212" viewBox="0 0 210 220" fill="none">
+          <!-- 切角外框 -->
+          <path d="M10 8 L202 8 L202 200 L192 212 L10 212 Z" stroke="#A8ACB4" stroke-opacity=".25" stroke-width="1"/>
+          <!-- 街区路网：不规则网格 -->
+          <g stroke="#A8ACB4" stroke-opacity=".22" stroke-width=".8">
+            <path d="M34 8 L34 212"/><path d="M62 8 L62 168"/><path d="M96 8 L96 212"/><path d="M132 8 L132 190"/><path d="M166 8 L166 212"/>
+            <path d="M10 40 L202 40"/><path d="M10 74 L202 74"/><path d="M10 108 L202 108"/><path d="M10 142 L202 142"/><path d="M10 178 L202 178"/>
+            <!-- 斜向大道 -->
+            <path d="M10 190 L202 52" stroke-opacity=".28" stroke-width="1.4"/>
+          </g>
+          <!-- 街区微块（少量实心，做地图质感） -->
+          <g fill="#A8ACB4" opacity=".10">
+            <rect x="38" y="44" width="20" height="26"/><rect x="100" y="78" width="28" height="26"/>
+            <rect x="136" y="146" width="26" height="28"/><rect x="66" y="112" width="26" height="26"/>
+          </g>
+          <!-- 黄色主动线：今天的路 -->
+          <path d="M20 200 L62 168 L96 178 L132 108 L166 96 L192 60" stroke="#FCEE0A" stroke-opacity=".16" stroke-width="6" stroke-linecap="round"/>
+          <path d="M20 200 L62 168 L96 178 L132 108 L166 96 L192 60" stroke="#FCEE0A" stroke-opacity=".85" stroke-width="2" stroke-linecap="round"/>
+          <!-- 坐标点：过去（灰）/ 现在（黄）/ 未来（青空心） -->
+          <rect x="58" y="164" width="8" height="8" fill="#7A8088" transform="rotate(45 62 168)"/>
+          <rect x="128" y="104" width="8" height="8" fill="#FCEE0A" transform="rotate(45 132 108)"/>
+          <rect x="188" y="56" width="8" height="8" stroke="#3AE0E6" stroke-width="1.2" transform="rotate(45 192 60)"/>
+          <!-- 微标签 -->
+          <text x="16" y="32" font-family="Menlo" font-size="7" fill="#7A8088" letter-spacing="1">NC-04</text>
+          <text x="140" y="204" font-family="Menlo" font-size="7" fill="#7A8088" letter-spacing="1">DAY 297</text>
+          <!-- 现在点的脉冲圈 -->
+          <circle cx="132" cy="108" r="10" stroke="#FCEE0A" stroke-opacity=".35" stroke-width=".8"/>
+        </svg>
+      </div>
+      <div class="sys">SYS OK · 数据全部本地<br>NO CLOUD · NO ADS</div>
+    </div>
+  </div>
+
+  <!-- ═══ C 信号监视器 ═══ -->
+  <div class="card">
+    <div class="tag">方案 C</div>
+    <div class="name">信号监视器</div>
+    <div class="desc">示波器波形：细网格上一条黄色主波 + 青色余晖，右下角信号读数。应用里可以让波形以极慢速度漂移。</div>
+    <div class="rail">
+      <div class="mon"><b>十月</b><span>2026 / 10</span></div>
+      <div class="nav"><span>‹ 上月</span><span class="on">今天</span><span>下月 ›</span></div>
+      <div class="cal">
+        <span class="dim">28</span><span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span>
+        <span>5</span><span class="tick">6</span><span>7</span><span>8</span><span class="tick">9</span><span>10</span><span>11</span>
+        <span>12</span><span>13</span><span class="tick">14</span><span>15</span><span class="tick">16</span><span>17</span><span>18</span>
+        <span>19</span><span class="tick">20</span><span class="tick">21</span><span class="tick">22</span><span class="tick">23</span><span class="today">24</span><span class="dim">25</span>
+        <span class="dim">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span>
+      </div>
+      <div class="deco">
+        <svg width="204" height="212" viewBox="0 0 210 220" fill="none">
+          <!-- 切角外框 -->
+          <path d="M10 8 L202 8 L202 200 L192 212 L10 212 Z" stroke="#A8ACB4" stroke-opacity=".25" stroke-width="1"/>
+          <!-- 细网格 -->
+          <g stroke="#3AE0E6" stroke-opacity=".10" stroke-width=".6">
+            <path d="M10 36 L202 36 M10 64 L202 64 M10 92 L202 92 M10 120 L202 120 M10 148 L202 148 M10 176 L202 176"/>
+            <path d="M38 8 L38 212 M66 8 L66 212 M94 8 L94 212 M122 8 L122 212 M150 8 L150 212 M178 8 L178 212"/>
+          </g>
+          <path d="M10 106 L202 106" stroke="#A8ACB4" stroke-opacity=".3" stroke-width=".8"/>
+          <!-- 波形余晖（青，偏移） -->
+          <path d="M10 106 L30 106 L38 70 L48 138 L58 106 L74 106 L82 88 L92 124 L102 106 L118 106 L126 62 L136 148 L146 106 L164 106 L172 92 L182 118 L192 106 L202 106"
+                stroke="#3AE0E6" stroke-opacity=".3" stroke-width="1.2" transform="translate(3 0)"/>
+          <!-- 主波（黄） -->
+          <path d="M10 106 L30 106 L38 70 L48 138 L58 106 L74 106 L82 88 L92 124 L102 106 L118 106 L126 62 L136 148 L146 106 L164 106 L172 92 L182 118 L192 106 L202 106"
+                stroke="#FCEE0A" stroke-opacity=".9" stroke-width="1.8" stroke-linejoin="round"/>
+          <!-- 采样点亮标 -->
+          <rect x="122" y="58" width="7" height="7" fill="#FCEE0A" transform="rotate(45 125.5 61.5)"/>
+          <circle cx="125.5" cy="61.5" r="12" stroke="#FCEE0A" stroke-opacity=".3" stroke-width=".8"/>
+          <!-- 读数 -->
+          <text x="140" y="200" font-family="Menlo" font-size="7.5" fill="#7A8088" letter-spacing="1.5">SIG-04 // 98.2%</text>
+          <text x="16" y="24" font-family="Menlo" font-size="7.5" fill="#7A8088" letter-spacing="1.5">LIVE</text>
+          <circle cx="58" cy="21" r="2.5" fill="#FF3A6C" opacity=".8"/>
+        </svg>
+      </div>
+      <div class="sys">SYS OK · 数据全部本地<br>NO CLOUD · NO ADS</div>
+    </div>
+  </div>
+
+  <!-- ═══ D 轨道雷达 ═══ -->
+  <div class="card">
+    <div class="tag">方案 D</div>
+    <div class="name">轨道雷达</div>
+    <div class="desc">线框球体（经纬网格）+ 虚线轨道与一枚在轨信标，右上角轨道读数。应用里可以让轨道整体极慢旋转。</div>
+    <div class="rail">
+      <div class="mon"><b>十月</b><span>2026 / 10</span></div>
+      <div class="nav"><span>‹ 上月</span><span class="on">今天</span><span>下月 ›</span></div>
+      <div class="cal">
+        <span class="dim">28</span><span class="dim">29</span><span class="dim">30</span><span>1</span><span>2</span><span>3</span><span>4</span>
+        <span>5</span><span class="tick">6</span><span>7</span><span>8</span><span class="tick">9</span><span>10</span><span>11</span>
+        <span>12</span><span>13</span><span class="tick">14</span><span>15</span><span class="tick">16</span><span>17</span><span>18</span>
+        <span>19</span><span class="tick">20</span><span class="tick">21</span><span class="tick">22</span><span class="tick">23</span><span class="today">24</span><span class="dim">25</span>
+        <span class="dim">26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="dim">1</span>
+      </div>
+      <div class="deco">
+        <svg width="204" height="212" viewBox="0 0 210 220" fill="none">
+          <!-- 切角外框 -->
+          <path d="M10 8 L202 8 L202 200 L192 212 L10 212 Z" stroke="#A8ACB4" stroke-opacity=".25" stroke-width="1"/>
+          <!-- 球体：外圆 + 纬线 + 经线 -->
+          <circle cx="106" cy="112" r="58" stroke="#A8ACB4" stroke-opacity=".4" stroke-width="1"/>
+          <ellipse cx="106" cy="112" rx="58" ry="20" stroke="#A8ACB4" stroke-opacity=".25" stroke-width=".8"/>
+          <ellipse cx="106" cy="112" rx="58" ry="42" stroke="#A8ACB4" stroke-opacity=".2" stroke-width=".7"/>
+          <ellipse cx="106" cy="112" rx="22" ry="58" stroke="#A8ACB4" stroke-opacity=".22" stroke-width=".8"/>
+          <ellipse cx="106" cy="112" rx="44" ry="58" stroke="#A8ACB4" stroke-opacity=".18" stroke-width=".7"/>
+          <path d="M48 112 L164 112" stroke="#A8ACB4" stroke-opacity=".22" stroke-width=".7"/>
+          <!-- 轨道（虚线）+ 信标 -->
+          <circle cx="106" cy="112" r="84" stroke="#3AE0E6" stroke-opacity=".35" stroke-width=".9" stroke-dasharray="3 5"/>
+          <rect x="158" y="42" width="8" height="8" fill="#FCEE0A" transform="rotate(45 162 46)"/>
+          <circle cx="162" cy="46" r="12" stroke="#FCEE0A" stroke-opacity=".3" stroke-width=".8"/>
+          <path d="M162 46 L106 112" stroke="#FCEE0A" stroke-opacity=".25" stroke-width=".8" stroke-dasharray="2 4"/>
+          <!-- 十字刻度 -->
+          <g stroke="#A8ACB4" stroke-opacity=".45" stroke-width=".9">
+            <path d="M106 46 L106 54 M106 170 L106 178 M40 112 L48 112 M164 112 L172 112"/>
+          </g>
+          <!-- 中心点 -->
+          <circle cx="106" cy="112" r="2.5" fill="#FCEE0A" opacity=".8"/>
+          <!-- 读数 -->
+          <text x="20" y="30" font-family="Menlo" font-size="7.5" fill="#7A8088" letter-spacing="1.5">ORBIT · DAY 297</text>
+          <text x="128" y="204" font-family="Menlo" font-size="7.5" fill="#7A8088" letter-spacing="1.5">SAT // LOCK</text>
+        </svg>
+      </div>
+      <div class="sys">SYS OK · 数据全部本地<br>NO CLOUD · NO ADS</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
