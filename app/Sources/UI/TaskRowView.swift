@@ -191,6 +191,8 @@ public struct TaskRowView: View {
     public let showsRing: Bool
     /// 主线的完成动作（夜之城：不配勾选框，用行尾按钮完成）。
     public let mainCompleteAction: (() -> Void)?
+    /// 已完成主线的退回动作（夜之城：行尾「退回未完成」按钮）。
+    public let mainRevertAction: (() -> Void)?
 
     @State private var hovering = false
     @State private var rowWidth: CGFloat = 0
@@ -210,7 +212,8 @@ public struct TaskRowView: View {
         onCard: Bool = false,
         showsFolio: Bool = false,
         showsRing: Bool = true,
-        mainCompleteAction: (() -> Void)? = nil
+        mainCompleteAction: (() -> Void)? = nil,
+        mainRevertAction: (() -> Void)? = nil
     ) {
         self.task = task
         self.level = level
@@ -224,6 +227,7 @@ public struct TaskRowView: View {
         self.showsFolio = showsFolio
         self.showsRing = showsRing
         self.mainCompleteAction = mainCompleteAction
+        self.mainRevertAction = mainRevertAction
     }
 
     private var ci: Color { onCard ? Theme.cardInk : Theme.ink }
@@ -321,6 +325,23 @@ public struct TaskRowView: View {
                         }
                         .buttonStyle(.plain)
                         .help("完成今天的主线")
+                    }
+                    if let revert = mainRevertAction, task.done {
+                        Button(action: revert) {
+                            HStack(spacing: 5) {
+                                Image(systemName: "arrow.uturn.backward").font(.system(size: 9, weight: .bold))
+                                Text("退回未完成").font(Theme.sans(11, .semibold)).tracking(1)
+                            }
+                            .foregroundStyle(hovering ? Theme.fillInk : Theme.ink2)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(hovering ? Theme.ink2 : Color.clear)
+                            .clipShape(CutCornerShape(radius: 4))
+                            .overlay(CutCornerShape(radius: 4).stroke(Theme.ink2.opacity(0.7), lineWidth: 1))
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .help("把主线退回未完成")
                     }
 
                     if !readOnly {

@@ -341,7 +341,7 @@ public struct DayPageView: View {
                         TaskRowView(task: goal, level: 1, isMain: true, showsRoleGlyph: false, onCard: true, showsFolio: false)
                             .padding(.top, 16)
                         if !collapseCards {
-                            TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
+                            TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true, showsFolio: true)
                                 .padding(.top, 10)
                         }
                     }
@@ -393,7 +393,8 @@ public struct DayPageView: View {
                                         onCard: true,
                                         showsFolio: false,
                                         showsRing: false,
-                                        mainCompleteAction: goal.done ? nil : { store.complete(goal.id) }
+                                        mainCompleteAction: goal.done ? nil : { store.complete(goal.id) },
+                                        mainRevertAction: goal.done ? { store.revert(goal.id) } : nil
                                     )
                                     .padding(.top, 10)
                                     if !collapseCards {
@@ -401,19 +402,9 @@ public struct DayPageView: View {
                                         Rectangle().fill(Theme.rule).frame(height: 1).padding(.top, 14)
                                         objectivesLabel
                                             .padding(.top, 12)
-                                        TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
+                                        TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true, showsFolio: true)
                                     }
                                 }
-                            }
-                            if goal.done {
-                                writingLine(
-                                    text: $mainDraft,
-                                    placeholder: "写一条新的主线",
-                                    prominent: true,
-                                    commit: commitMainContinue,
-                                    onTab: commitMainContinue
-                                )
-                                .padding(.top, 16)
                             }
                             rootDropZone
                         } else {
@@ -479,7 +470,7 @@ public struct DayPageView: View {
                                 VStack(alignment: .leading, spacing: 0) {
                                     TaskRowView(task: task, level: 1, showsRoleGlyph: false, onCard: true, showsFolio: true)
                                     if !collapseCards {
-                                        TaskSubtreeView(parentId: task.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true)
+                                        TaskSubtreeView(parentId: task.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true, showsFolio: true)
                                     }
                                 }
                                 .padding(.vertical, 6)
