@@ -16,9 +16,8 @@ repl = {
     "{{ST}}": (src / "ScrollTrigger.min.js").read_text(encoding="utf-8"),
     "{{IMG_HERO}}": b64("img-hero.png"),
     "{{IMG_OLD}}": b64("old-2.0.png"),
-    "{{IMG_INPUT}}": b64("img-input.png"),
+    "{{IMG_RIKE}}": b64("img-rike.png"),
     "{{IMG_POOL}}": b64("img-pool.png"),
-    "{{IMG_CYBER}}": b64("img-cyber.png"),
 }
 for k, v in repl.items():
     assert k in html, f"missing placeholder {k}"

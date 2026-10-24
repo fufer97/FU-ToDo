@@ -89,6 +89,18 @@ struct RenderMain {
             to: outDir.appendingPathComponent("07-main-night.png")
         )
 
+        // 夜之城下的清单与已结束（发布页用）
+        render(
+            PoolSheetView(onClose: {}).environmentObject(seeded).environmentObject(DragController()),
+            size: CGSize(width: 620, height: 560),
+            to: outDir.appendingPathComponent("21-pool-night.png")
+        )
+        render(
+            DoneSheetView(onClose: {}).environmentObject(seeded).environmentObject(DragController()),
+            size: CGSize(width: 620, height: 560),
+            to: outDir.appendingPathComponent("22-done-night.png")
+        )
+
         // 只有支线、没有主线的状态
         let branchesOnly = makeStore(seeded: false)
         branchesOnly.addTopLevel("回一封邮件", on: branchesOnly.currentDay)
