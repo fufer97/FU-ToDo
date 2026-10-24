@@ -202,11 +202,9 @@ public struct DayPageView: View {
                 .frame(height: 280)
             HStack(alignment: .top, spacing: 22) {
                 nightSidePanel
-                    .frame(maxHeight: .infinity)
                     .frame(maxWidth: .infinity)
                 if !nightFinished.isEmpty {
                     nightDonePanel
-                        .frame(maxHeight: .infinity)
                         .frame(width: logRowWidth >= 100 ? max(0, logRowWidth - 22) * 0.425 : 320)
                 }
             }

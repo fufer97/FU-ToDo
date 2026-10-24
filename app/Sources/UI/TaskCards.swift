@@ -72,7 +72,7 @@ public struct NightPanel<Content: View>: View {
         content
             .padding(.horizontal, 26)
             .padding(.vertical, 20)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(Theme.cardBackground)
             .clipShape(CutCornerShape(radius: corner))
             .overlay(
