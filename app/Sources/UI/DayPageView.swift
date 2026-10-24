@@ -67,6 +67,10 @@ public struct DayPageView: View {
                 // 夜之城：整页固定视口（不滚动），滚动只发生在三个面板内部
                 nightLayout
                     .frame(maxHeight: .infinity, alignment: .top)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if drag.draggingId == nil { session.finishByClickingAway(store: store) }
+                    }
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     header
@@ -351,8 +355,7 @@ public struct DayPageView: View {
                     text: $mainDraft,
                     placeholder: isToday ? "写下今天最重要的一件事" : "写下这一天最重要的事",
                     prominent: true,
-                    commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" },
-                    onTab: commitMainContinue
+                    commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" }
                 )
                 .padding(.top, 18)
                 if !roots.isEmpty {
@@ -368,8 +371,8 @@ public struct DayPageView: View {
 
     // MARK: 夜之城三面板
 
-    /// 主线任务面板（22pt 大切角）：黄标签 + JOB 码 + DIN 标题 + 目标列表。
-    /// 主线不配勾选框——完成用行尾的「完成」按钮；完成后留在面板里标「今日主线已完成」。
+    /// 主线任务面板（22pt 大切角）：只有标题槽——主线没有二级，
+    /// 二级只存在于支线与已完成面板。完成/退回走行尾按钮。
     @ViewBuilder
     private var nightMainPanel: some View {
         NightPanel(corner: 22) {
@@ -379,54 +382,37 @@ public struct DayPageView: View {
                 } else {
                     nightQuestHeader
                 }
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        if let goal = mainAny {
-                            draggableCard(goal, at: 0, in: [goal]) {
-                                VStack(alignment: .leading, spacing: 0) {
-                                    TaskRowView(
-                                        task: goal,
-                                        level: 1,
-                                        isMain: true,
-                                        showsRoleGlyph: false,
-                                        onCard: true,
-                                        showsFolio: false,
-                                        showsRing: false,
-                                        mainCompleteAction: goal.done ? nil : { store.complete(goal.id) },
-                                        mainRevertAction: goal.done ? { store.revert(goal.id) } : nil
-                                    )
-                                    .padding(.top, 10)
-                                    if !collapseCards {
-                                        // 主线下方的横线：把它衬成「这一天的主题」，而不是一条任务
-                                        Rectangle().fill(Theme.rule).frame(height: 1).padding(.top, 14)
-                                        objectivesLabel
-                                            .padding(.top, 12)
-                                        TaskSubtreeView(parentId: goal.id, level: 2, showsRails: false, showsRoleGlyph: false, onCard: true, showsFolio: true)
-                                    }
-                                }
-                            }
-                            rootDropZone
-                        } else {
-                            writingLine(
-                                text: $mainDraft,
-                                placeholder: isToday ? "写下今天最重要的一件事" : "写下这一天最重要的事",
-                                prominent: true,
-                                commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" },
-                                onTab: commitMainContinue
-                            )
-                            .padding(.top, 12)
-                            if !roots.isEmpty {
-                                Text("NO MAIN JOB · 今天还没有主线")
-                                    .font(Theme.mono(9))
-                                    .tracking(1.5)
-                                    .foregroundStyle(Theme.ink3)
-                                    .padding(.top, 10)
-                            }
-                        }
+                if let goal = mainAny {
+                    draggableCard(goal, at: 0, in: [goal]) {
+                        TaskRowView(
+                            task: goal,
+                            level: 1,
+                            isMain: true,
+                            showsRoleGlyph: false,
+                            onCard: true,
+                            showsFolio: false,
+                            showsRing: false,
+                            mainCompleteAction: goal.done ? nil : { store.complete(goal.id) },
+                            mainRevertAction: goal.done ? { store.revert(goal.id) } : nil
+                        )
+                        .padding(.top, 10)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    writingLine(
+                        text: $mainDraft,
+                        placeholder: isToday ? "写下今天最重要的一件事" : "写下这一天最重要的事",
+                        prominent: true,
+                        commit: { let m = store.addMain(mainDraft, on: day); mainDraft = "" }
+                    )
+                    .padding(.top, 12)
+                    if !roots.isEmpty {
+                        Text("NO MAIN JOB · 今天还没有主线")
+                            .font(Theme.mono(9))
+                            .tracking(1.5)
+                            .foregroundStyle(Theme.ink3)
+                            .padding(.top, 10)
+                    }
                 }
-                .frame(maxHeight: .infinity)
             }
         }
     }
@@ -453,7 +439,7 @@ public struct DayPageView: View {
 
     /// 支线面板（14pt 切角）：菱形角色标 + 行间 hairline；固定高度，超出内部滚动。
     private var nightSidePanel: some View {
-        NightPanel(corner: 14) {
+        NightPanel(corner: 14, fillHeight: true) {
             VStack(alignment: .leading, spacing: 0) {
                 nightPanelLabel("SIDE JOBS · 支线任务", targeted: branchTargeted, hint: "拖到这里 = 作为支线")
                     .modifier(OptionalDropTarget(
@@ -521,7 +507,7 @@ public struct DayPageView: View {
 
     /// 已完成面板（窄列）：灰化 + 划线 + ✓；固定高度，超出内部滚动。
     private var nightDonePanel: some View {
-        NightPanel(corner: 14) {
+        NightPanel(corner: 14, fillHeight: true) {
             VStack(alignment: .leading, spacing: 0) {
                 nightPanelLabel("COMPLETED · 已完成 · \(nightFinished.count)")
                 ScrollView {
@@ -603,15 +589,6 @@ public struct DayPageView: View {
             action: { store.setMain($0) },
             enabled: { store.canBecomeMain($0.id, on: day) }
         ))
-    }
-
-    /// 夜之城：目标区的青色小标。
-    private var objectivesLabel: some View {
-        Text("目标 OBJECTIVES")
-            .font(Theme.mono(9.5, .semibold))
-            .tracking(3)
-            .foregroundStyle(Theme.signal)
-            .padding(.bottom, 6)
     }
 
     private var branchSection: some View {
@@ -928,15 +905,6 @@ public struct DayPageView: View {
                 .frame(height: 1)
         }
         .animation(reduceMotion ? nil : Motion.quick, value: active)
-    }
-
-    /// 提交主线并直接开始写它的第一步（Tab）。
-    private var commitMainContinue: () -> Void {
-        {
-            let m = store.addMain(mainDraft, on: day)
-            mainDraft = ""
-            if let m { session.startCreate(store: store, at: m.id, mode: .child) }
-        }
     }
 
     /// 回车：提交支线，刚创建的那条进入编辑态——

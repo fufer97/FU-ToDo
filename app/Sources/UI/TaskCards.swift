@@ -61,10 +61,13 @@ public struct CutCornerShape: Shape {
 /// 夜之城的面板：切角容器（主线 22pt / 子面板 14pt），内容自带留白。
 public struct NightPanel<Content: View>: View {
     var corner: CGFloat
+    /// true = 纵向撑满所给空间（支线/已完成）；false = 包住内容（主线）
+    var fillHeight: Bool
     private let content: Content
 
-    public init(corner: CGFloat, @ViewBuilder content: () -> Content) {
+    public init(corner: CGFloat, fillHeight: Bool = false, @ViewBuilder content: () -> Content) {
         self.corner = corner
+        self.fillHeight = fillHeight
         self.content = content()
     }
 
@@ -72,7 +75,7 @@ public struct NightPanel<Content: View>: View {
         content
             .padding(.horizontal, 26)
             .padding(.vertical, 20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: fillHeight ? .infinity : nil, alignment: .topLeading)
             .background(Theme.cardBackground)
             .clipShape(CutCornerShape(radius: corner))
             .overlay(

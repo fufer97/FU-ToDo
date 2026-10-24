@@ -558,11 +558,13 @@ public struct TaskRowView: View {
                     if showsSiblingButton {
                         addButton("同级", mode: .sibling)
                     }
-                    addButton("下级", mode: .child)
+                    if !(isMain && level == 1) {
+                        addButton("下级", mode: .child)
+                    }
                     IconButton(systemName: "trash", help: "删除这件事") {
                         store.delete(task.id)
                     }
-                } else {
+                } else if !(isMain && level == 1) {
                     Button {
                         session.startCreate(store: store, at: task.id, mode: .child)
                     } label: {
