@@ -220,7 +220,7 @@ public struct DayPageView: View {
         }
         .padding(.horizontal, 34)
         .padding(.top, 28)
-        .padding(.bottom, 20)
+        .padding(.bottom, 6)
     }
 
     /// 当天的主线（含已完成）：优先进行中的那条；只有全部完成时才显示完成态主线。

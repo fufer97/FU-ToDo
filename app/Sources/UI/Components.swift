@@ -380,47 +380,28 @@ public struct HudButton: View {
 }
 
 
-/// 数据雨（夜之城左栏装饰）：字符流从月历底下缓缓落下。
-/// 列与月历 26pt 网格对齐（天然居中）；三层景深，一列黄色信标，其余青色。
-/// 极慢、低调、不参与交互；「减少动态效果」时静止。
+/// 字符球（夜之城左栏装饰）：混排字符（日/中/英/数）散布在一个缓慢自转的
+/// 球面上，正面亮、背面暗——混沌、成球、不参与交互。
+/// 「减少动态效果」时静止在初始相位。
 public struct DataRain: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private struct Column {
-        let x: CGFloat
-        let layer: Int      // 0 远 / 1 中 / 2 近
-        let yellow: Bool
-        let chars: [Character]
-        let phase: CGFloat
-        let speedJitter: CGFloat
-    }
+    /// 混排字符池：片假名 + 汉字 + 拉丁 + 数字
+    private static let pool = Array("サケンミソカテワ定稿方向云终端夜城雨字符流数据本地光SIGNALDAY297RAIN CityX0741ツヘほ界录")
+    private static let count = 130
 
-    private static let glyphPool = Array("サケン7F2ミ9A1Bソ3D6ン4E8カ5C0テ7M2ワ9F4")
-    private static let columns: [Column] = {
-        let xs: [CGFloat] = [13, 39, 65, 91, 117, 143, 169]
-        // 层：0 远 / 1 中 / 2 近；黄信标在第三列
-        let layers = [2, 1, 2, 0, 1, 2, 0]
-        let yellowIndex = 2
-        var out: [Column] = []
-        for (i, x) in xs.enumerated() {
-            let start = (i * 3) % DataRain.glyphPool.count
-            let head = Array(DataRain.glyphPool[start...])
-            let tail = Array(DataRain.glyphPool.prefix(2))
-            let col = Column(
-                x: x,
-                layer: layers[i],
-                yellow: i == yellowIndex,
-                chars: head + tail,
-                phase: CGFloat(i) * 47.0,
-                speedJitter: 0.9 + CGFloat((i * 37) % 5) * 0.05
-            )
-            out.append(col)
+    /// 斐波那契球面布点（一次性）
+    private static let points: [(x: CGFloat, y: CGFloat, z: CGFloat)] = {
+        var out: [(CGFloat, CGFloat, CGFloat)] = []
+        let ga: CGFloat = 2.39996323
+        for i in 0..<count {
+            let y = 1 - 2 * (CGFloat(i) + 0.5) / CGFloat(count)
+            let r = (1 - y * y).squareRoot()
+            let a = ga * CGFloat(i)
+            out.append((r * cos(a), y, r * sin(a)))
         }
         return out
     }()
-
-    private func layerSpeed(_ layer: Int) -> CGFloat { [7, 10.5, 14][layer] }
-    private func layerBase(_ layer: Int) -> CGFloat { [0.38, 0.62, 1.0][layer] }
 
     public init() {}
 
@@ -428,7 +409,7 @@ public struct DataRain: View {
         TimelineView(.animation(minimumInterval: 1.0 / 15.0)) { timeline in
             Canvas { ctx, size in
                 let t: CGFloat = reduceMotion
-                    ? 37.0
+                    ? 91.0
                     : CGFloat(timeline.date.timeIntervalSinceReferenceDate)
                 draw(&ctx, size: size, t: t)
             }
@@ -439,45 +420,35 @@ public struct DataRain: View {
     }
 
     private func draw(_ ctx: inout GraphicsContext, size: CGSize, t: CGFloat) {
-        let lineHeight: CGFloat = 14
-        let pad: CGFloat = 40                       // 图案上下各留一段循环缓冲
+        let cx = size.width / 2
+        let cy = size.height / 2
+        let radius = min(size.width, size.height) / 2 - 8
+        let omega: CGFloat = 0.11           // 自转角速度（rad/s，极慢）
+        let tilt: CGFloat = 0.38            // 固定倾角，让球体不被读成圆
+        let cosT = cos(tilt), sinT = sin(tilt)
 
-        for col in Self.columns {
-            let period = size.height + pad * 2
-            let offset = ((t * layerSpeed(col.layer) * col.speedJitter + col.phase)
-                .truncatingRemainder(dividingBy: period) + period)
-                .truncatingRemainder(dividingBy: period)
-            let count = Int(ceil(period / lineHeight))
-            let color = col.yellow ? Theme.accent : Theme.signal
-            var headY: CGFloat = -.infinity
+        for i in 0..<Self.count {
+            let p = Self.points[i]
+            // 绕 Y 轴自转
+            let cosW = cos(t * omega), sinW = sin(t * omega)
+            let x1 = p.x * cosW + p.z * sinW
+            let z1 = -p.x * sinW + p.z * cosW
+            // 绕 X 轴倾角
+            let y2 = p.y * cosT - z1 * sinT
+            let z2 = p.y * sinT + z1 * cosT
 
-            for i in 0..<count {
-                let y = (CGFloat(i) * lineHeight + offset)
-                    .truncatingRemainder(dividingBy: period) - pad
-                guard y > -lineHeight, y < size.height + lineHeight else { continue }
-                headY = max(headY, y)
-                // 亮度：越接近底部（雨头方向）越亮
-                let u = min(max(y / size.height, 0), 1)
-                let b = pow(u, 1.7)
-                let opacity = layerBase(col.layer) * (0.14 + 0.86 * b)
-                let ch = String(col.chars[i % col.chars.count])
-                ctx.draw(
-                    Text(ch).font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(color.opacity(opacity)),
-                    at: CGPoint(x: col.x, y: y)
-                )
-            }
-
-            // 雨头加亮
-            if headY > 0, headY < size.height {
-                let u = min(max(headY / size.height, 0), 1)
-                let head = String(col.chars[Int((t * 2).rounded()) % col.chars.count])
-                ctx.draw(
-                    Text(head).font(.system(size: 10.5, weight: .semibold, design: .monospaced))
-                        .foregroundColor(color.opacity(0.25 + 0.65 * u)),
-                    at: CGPoint(x: col.x, y: headY)
-                )
-            }
+            let depth = (z2 + 1) / 2            // 0 背面 → 1 正面
+            let px = cx + radius * x1
+            let py = cy + radius * y2
+            let ch = String(Self.pool[(i * 7 + Int(t * 0.45)) % Self.pool.count])
+            let fs: CGFloat = 7.5 + 4.5 * depth
+            let opacity = 0.05 + 0.75 * pow(depth, 1.6)
+            let color = (i % 11 == 3) ? Theme.accent : Theme.signal
+            ctx.draw(
+                Text(ch).font(.system(size: fs, design: .monospaced))
+                    .foregroundColor(color.opacity(opacity)),
+                at: CGPoint(x: px, y: py)
+            )
         }
     }
 }
