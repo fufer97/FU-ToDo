@@ -450,7 +450,7 @@ public final class TaskStore: ObservableObject {
     public func setMain(_ id: UUID) {
         guard let target = task(id) else { return }
         snapshotForUndo()
-        for i in tasks.indices where tasks[i].day == target.day { tasks[i].isMain = false }
+        for i in tasks.indices where tasks[i].day == target.day && !tasks[i].done { tasks[i].isMain = false }
         if let idx = tasks.firstIndex(where: { $0.id == id }) {
             tasks[idx].isMain = true
             tasks[idx].parentId = nil
@@ -504,7 +504,7 @@ public final class TaskStore: ObservableObject {
         if let idx = tasks.firstIndex(where: { $0.id == id }) {
             let becomeMain = asMain && !targetHasMain
             if becomeMain {
-                for i in tasks.indices where tasks[i].day == day && !affected.contains(tasks[i].id) {
+                for i in tasks.indices where tasks[i].day == day && !affected.contains(tasks[i].id) && !tasks[i].done {
                     tasks[i].isMain = false
                 }
             }
@@ -697,7 +697,8 @@ public final class TaskStore: ObservableObject {
     public func addMain(_ title: String, on day: String) -> Task? {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        for i in tasks.indices where tasks[i].day == day { tasks[i].isMain = false }
+        // 已完成的主线保留身份：它是「今天做完的那件事」，不是普通支线
+        for i in tasks.indices where tasks[i].day == day && !tasks[i].done { tasks[i].isMain = false }
         let t = Task(title: trimmed, parentId: nil, order: -1, day: day, isMain: true)
         tasks.append(t)
         normalizeOrders(day: day)

@@ -219,7 +219,11 @@ public struct RootView: View {
             }
             .padding(.top, 24)
 
-            Spacer(minLength: 24)
+            Spacer(minLength: 16)
+
+            WireframeFlora()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.bottom, 14)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("SYS OK · 数据全部本地")

@@ -225,10 +225,11 @@ public struct DayPageView: View {
         .padding(.bottom, 20)
     }
 
-    /// 当天的主线（含已完成）：一天只有一个；完成后留在主线面板里，
-    /// 不进已完成面板，并且可以接着写新的主线。
+    /// 当天的主线（含已完成）：优先进行中的那条；只有全部完成时才显示完成态主线。
+    /// 一天只有一个主线——完成后留在主线面板，不产生第二条。
     private var mainAny: Task? {
-        store.tasks.first { $0.day == day && $0.isMain && $0.parentId == nil }
+        let mains = store.tasks.filter { $0.day == day && $0.isMain && $0.parentId == nil }
+        return mains.first { !$0.done } ?? mains.first
     }
 
     /// 夜之城的已完成面板：只收支线（主线留在主线面板）。

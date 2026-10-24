@@ -913,6 +913,20 @@ do {
     try? FileManager.default.removeItem(at: legacy)
 }
 
+print("\n二十八点五、主线身份与完成")
+do {
+    let s = makeStore()
+    let m = s.addTopLevel("今天的主线")!
+    s.setMain(m.id)
+    _ = s.addChild(of: m.id, title: "第一步")
+    s.complete(m.id)
+    let m2 = s.addMain("接续的新主线")!
+    check("已完成的主线保留主线身份", s.task(m.id)!.isMain)
+    check("新主线成为进行中的主线", s.task(m2.id)!.isMain)
+    check("进行中的主线唯一", s.tasks.filter { $0.isMain && !$0.done && $0.parentId == nil }.count == 1)
+    check("已完成主线的子级仍是主线编号", s.children(of: m.id).allSatisfy { s.folio(of: $0).hasPrefix("0") })
+}
+
 print("\n二十九、页边编号（folio）")
 do {
     let s = makeStore()
