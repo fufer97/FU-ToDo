@@ -939,12 +939,13 @@ public struct DayPageView: View {
         }
     }
 
-    /// 回车：提交支线，锚点跟到这条——继续回车＝再写一条支线（同级），Tab＝写它的下级。
+    /// 回车：提交支线，刚创建的那条进入编辑态——
+    /// 回车＝再写一条支线（同级），Tab＝写它的下级（用户定案的大纲流）。
     private var commitBranchEnter: () -> Void {
         {
-            let b = store.addTopLevel(branchDraft, on: day)
+            guard let b = store.addTopLevel(branchDraft, on: day) else { return }
             branchDraft = ""
-            if let b { session.startCreate(store: store, at: b.id, mode: .sibling) }
+            session.startEdit(store: store, at: b.id, currentTitle: b.title)
         }
     }
 

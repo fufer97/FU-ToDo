@@ -105,12 +105,14 @@ public final class InputSession: ObservableObject {
             case .child:
                 created = store.addChild(of: targetId, title: trimmed)
             }
-            text = ""
             if let created {
-                // 锚点移到刚创建的那一条：下一次回车就是它的同级
+                // 刚创建的那条直接进入编辑态：
+                // 回车＝在它后面新增同级，Tab＝在它下面新建下级（用户定案的大纲流）
                 self.targetId = created.id
-                kind = .create(.sibling)
+                kind = .edit
+                text = created.title
             } else {
+                text = ""
                 close()
             }
         }

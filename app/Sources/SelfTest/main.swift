@@ -459,21 +459,25 @@ MainActor.assumeIsolated {
     check("新建下级落在主线下面", s.children(of: main.id).map(\.title) == ["步骤一"])
     let step1 = s.children(of: main.id)[0]
     check("锚点移到刚创建的那一条", session.targetId == step1.id)
-    check("下一次默认同级", session.createMode == .sibling)
+    check("新建后进入该条的编辑态", session.isEditing && session.text == "步骤一")
 
-    // 回车继续：仍是 2 级
+    // 编辑态回车：新增同级（出现下一行输入框）
+    session.commit(store: s, editContinue: .sibling)
+    check("回车后出现同级输入框", session.isCreating && session.createMode == .sibling && session.targetId == step1.id)
     session.text = "步骤二"
     session.commit(store: s)
     check("回车继续同级，仍是 2 级", s.children(of: main.id).map(\.title) == ["步骤一", "步骤二"])
     let step2 = s.children(of: main.id)[1]
-    check("新条目层级为 2", s.level(of: step2) == 2)
+    check("新建后进入该条的编辑态", session.isEditing && session.targetId == step2.id)
 
-    // Tab → 在刚创建的那条下面开 3 级
-    session.toggleMode()
-    check("Tab 后模式变成下级", session.createMode == .child)
+    // 编辑态 Tab：在刚创建的那条下面开 3 级
+    session.commit(store: s, editContinue: .child)
+    check("Tab 后模式变成下级", session.isCreating && session.createMode == .child && session.targetId == step2.id)
     session.text = "细节"
     session.commit(store: s)
     check("Tab 新建的是 3 级", s.children(of: step2.id).map(\.title) == ["细节"])
+    // 全程锁在主线子树里，不产生新的支线（回归：2 级漂成支线的 bug）
+    check("新建链没有产生第二条支线", s.roots().count == 1)
 
     // 编辑：带出原文；回车提交后接着往下写
     let edit = InputSession()

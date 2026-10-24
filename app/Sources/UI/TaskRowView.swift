@@ -275,10 +275,14 @@ public struct TaskRowView: View {
                 HStack(alignment: .center, spacing: 8) {
                     if showsFolio {
                         // 编号是行内元素（跟缩进走，原型语义）：编号 → 勾选框 → 文字
-                        Text(store.folio(of: task))
+                        // 列宽随编号字符数自适应：B-01 / B-01.1 / B-01.1.1 都单行排下
+                        let folio = store.folio(of: task)
+                        Text(folio)
                             .font(Theme.mono(Theme.folioSize))
                             .foregroundStyle(ci3)
-                            .frame(width: folioColumn, alignment: .trailing)
+                            .lineLimit(1)
+                            .fixedSize()
+                            .frame(width: CGFloat(folio.count) * 5.5 + 6, alignment: .trailing)
                             .help("页边编号：任务的地址")
                     }
                     if showsRoleGlyph {
