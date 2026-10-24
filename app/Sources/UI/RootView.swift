@@ -222,7 +222,7 @@ public struct RootView: View {
             // 数据雨紧跟月历下方，不沉底；剩余空间留给底部状态行
             DataRain()
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 22)
+                .padding(.top, 62)
                 .padding(.bottom, 14)
 
             Spacer(minLength: 16)

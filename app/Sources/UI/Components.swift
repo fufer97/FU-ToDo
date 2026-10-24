@@ -479,12 +479,5 @@ public struct DataRain: View {
                 )
             }
         }
-
-        // 终端读出
-        ctx.draw(
-            Text("STREAM // OK").font(.system(size: 7, design: .monospaced))
-                .foregroundColor(Theme.ink3.opacity(0.75)),
-            at: CGPoint(x: 34, y: size.height - 5)
-        )
     }
 }
