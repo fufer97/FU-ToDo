@@ -256,6 +256,8 @@ public struct TaskRowView: View {
     private var isCreatingUnderThis: Bool { session.isCreating && session.targetId == task.id }
     /// glitch 套印只给夜之城的主线标题，且未完成时才亮。
     private var glitch: Bool { Theme.isNight && isMain && level == 1 && !task.done }
+    /// 主线标题的编辑只改标题本身：回车/Tab 不续接新建（二级走「＋下级」或它的编辑链）。
+    private var mainEditContinues: Bool { !(isMain && level == 1) }
     /// 夜之城：支线一级行的勾选框是菱形（Side Job 的角色语言），其余照旧。
     private var useDiamondRing: Bool { Theme.isNight && level == 1 && !isMain }
 
@@ -471,16 +473,17 @@ public struct TaskRowView: View {
         VStack(alignment: .leading, spacing: 1) {
             if isEditingThis {
                 HStack(spacing: 8) {
-                    TextField("", text: $session.text)
+                        TextField("", text: $session.text)
                         .textFieldStyle(.plain)
                         .font(Theme.titleFont(level, isMain: isMain))
                         .foregroundStyle(ci)
                         .focused($inputFocused)
                         .onAppear { focusSoon() }
-                        .onSubmit { session.commit(store: store, editContinue: continueMode) }
+                        // 主线标题只编辑本身：回车/Tab 都不续接（主线面板里不会开出支线）
+                        .onSubmit { session.commit(store: store, editContinue: mainEditContinues ? continueMode : nil) }
                         .onExitCommand { session.close() }
                         .onKeyPress(.tab) {
-                            session.commit(store: store, editContinue: .child)
+                            session.commit(store: store, editContinue: mainEditContinues ? .child : nil)
                             return .handled
                         }
                 }

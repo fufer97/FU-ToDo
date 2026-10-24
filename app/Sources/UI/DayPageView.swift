@@ -530,7 +530,7 @@ public struct DayPageView: View {
                             VStack(alignment: .leading, spacing: 0) {
                                 TaskRowView(task: task, level: 1, readOnly: true, showsRevert: true, showsRoleGlyph: false, onCard: true, showsFolio: true)
                                 if !collapseCards {
-                                    TaskSubtreeView(parentId: task.id, level: 2, readOnly: true, showsRevert: true, showsRails: false, showsRoleGlyph: false, onCard: true)
+                                    TaskSubtreeView(parentId: task.id, level: 2, readOnly: true, showsRevert: true, showsRails: false, showsRoleGlyph: false, onCard: true, showsFolio: true)
                                 }
                             }
                             .padding(.vertical, 8)
